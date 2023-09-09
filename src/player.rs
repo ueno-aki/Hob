@@ -1,6 +1,6 @@
 use crate::components::ClientId;
 use crate::protocol::packet::{PacketKind, RequestNetworkSetting};
-use crate::protocol::transforms::framer::{self, parse_packet};
+use crate::protocol::transforms::framer;
 
 use anyhow::{Context, Result};
 use atomic_refcell::{AtomicRef, AtomicRefCell, AtomicRefMut};
@@ -61,7 +61,7 @@ impl Player {
     async fn handle(&mut self, buffer: Vec<u8>) -> Result<()> {
         let raw_pkts = framer::decode(buffer)?;
         for pkt in raw_pkts {
-            let packet = parse_packet(pkt)?;
+            let packet = framer::parse_packet(pkt)?;
             match packet {
                 PacketKind::RequestNetworkSetting(pkt) => {
                     if RequestNetworkSetting::is_valid_protocol(pkt.client_protocol)? {
