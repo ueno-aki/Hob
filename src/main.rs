@@ -1,5 +1,6 @@
 mod components;
 mod player;
+mod protocol;
 mod server;
 
 use server::Server;
