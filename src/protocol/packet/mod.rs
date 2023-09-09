@@ -1,0 +1,41 @@
+mod request_network_setting;
+#[macro_export]
+macro_rules! packet_id {
+    ($t:ty,$e:expr) => {
+        impl $t {
+            pub fn get_id(&self) -> u64 {
+                $e
+            }
+            pub fn id() -> u64 {
+                $e
+            }
+        }
+    };
+}
+
+pub use request_network_setting::RequestNetworkSetting;
+#[derive(Debug)]
+pub enum PacketKind {
+    RequestNetworkSetting(RequestNetworkSetting)
+}
+
+macro_rules! packet_impls {
+    ($($t:ident),*) => {
+        $(
+            impl From<$t> for PacketKind {
+                fn from(value: $t) -> Self {
+                    PacketKind::$t(value)
+                }
+            }
+            impl From<PacketKind> for $t {
+                fn from(value: PacketKind) -> Self {
+                    match value {
+                        PacketKind::$t(kind) => kind,
+                        _ => panic!("InvalidPacketKind")
+                    }
+                }
+            }
+        )*
+    };
+}
+packet_impls!(RequestNetworkSetting);

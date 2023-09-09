@@ -8,8 +8,8 @@ pub struct RequestNetworkSetting {
 }
 
 impl RequestNetworkSetting {
-    pub fn from_vec_u8(buf: Vec<u8>, offset: u64) -> Result<Self> {
-        let client_protocol = buf.read_i32(offset);
+    pub fn from_buf(buffer: Vec<u8>, offset: u64) -> Result<Self> {
+        let client_protocol = buffer.read_i32(offset);
         Ok(RequestNetworkSetting { client_protocol })
     }
 }

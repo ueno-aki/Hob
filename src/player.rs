@@ -1,5 +1,5 @@
 use crate::components::ClientId;
-use crate::protocol::transforms::framer;
+use crate::protocol::transforms::framer::{self, parse_packet};
 
 use anyhow::{Context, Result};
 use atomic_refcell::{AtomicRef, AtomicRefCell, AtomicRefMut};
@@ -58,8 +58,10 @@ impl Player {
         Ok(())
     }
     async fn handle(&mut self, buffer: Vec<u8>) -> Result<()> {
-        let decoded = framer::decode(buffer)?;
-        println!("{:?}", decoded);
+        let raw_pkts = framer::decode(buffer)?;
+        for pkt in raw_pkts {
+            println!("{:?}",parse_packet(pkt))
+        }
         Ok(())
     }
     fn destory_self_entity(&self) -> Result<()> {

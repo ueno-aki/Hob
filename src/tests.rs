@@ -1,4 +1,4 @@
-use crate::protocol::mcpe::Packets::RequestNetworkSetting;
+use crate::protocol::packet::RequestNetworkSetting;
 
 #[test]
 pub fn packet_id_macro() {
