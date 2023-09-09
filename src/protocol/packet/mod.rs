@@ -16,7 +16,7 @@ macro_rules! packet_id {
 pub use request_network_setting::RequestNetworkSetting;
 #[derive(Debug)]
 pub enum PacketKind {
-    RequestNetworkSetting(RequestNetworkSetting)
+    RequestNetworkSetting(RequestNetworkSetting),
 }
 
 macro_rules! packet_impls {

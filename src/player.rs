@@ -66,8 +66,7 @@ impl Player {
                 PacketKind::RequestNetworkSetting(pkt) => {
                     if RequestNetworkSetting::is_valid_protocol(pkt.client_protocol)? {
                         println!("valid client_protocol")
-                    }
-                    else {
+                    } else {
                         println!("invalid client_protocol")
                     }
                 }

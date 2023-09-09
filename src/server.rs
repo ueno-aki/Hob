@@ -1,6 +1,7 @@
 use crate::{
     components::{ClientId, Position},
-    player::Player, utils::get_option,
+    player::Player,
+    utils::get_option,
 };
 use anyhow::{anyhow, Result};
 use atomic_refcell::AtomicRefCell;

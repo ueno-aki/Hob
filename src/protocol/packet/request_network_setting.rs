@@ -1,6 +1,6 @@
+use crate::{packet_id, utils::get_option};
 use anyhow::Result;
 use protodef::prelude::*;
-use crate::{packet_id, utils::get_option};
 
 #[derive(Debug)]
 pub struct RequestNetworkSetting {
@@ -12,9 +12,9 @@ impl RequestNetworkSetting {
         let client_protocol = buffer.read_i32(offset);
         Ok(RequestNetworkSetting { client_protocol })
     }
-    pub fn is_valid_protocol(protocol:i32) -> Result<bool>{
+    pub fn is_valid_protocol(protocol: i32) -> Result<bool> {
         let current_protocol = get_option("protocol")?.parse::<i32>()?;
         Ok(current_protocol == protocol)
     }
 }
-packet_id!(RequestNetworkSetting,193);
+packet_id!(RequestNetworkSetting, 193);

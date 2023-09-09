@@ -3,8 +3,8 @@ use flate2::bufread::DeflateDecoder;
 use protodef::prelude::*;
 use std::io::Read as _;
 
-use crate::protocol::packet::{PacketKind, RequestNetworkSetting};
 use super::errors::TransFormError;
+use crate::protocol::packet::{PacketKind, RequestNetworkSetting};
 
 pub fn decode(buffer: Vec<u8>) -> Result<Vec<Vec<u8>>> {
     if buffer[0] != 0xfe {
@@ -34,11 +34,13 @@ fn decompress(buffer: Vec<u8>) -> Vec<u8> {
         Err(_) => buffer,
     }
 }
-pub fn parse_packet(buffer: Vec<u8>) -> Result<PacketKind>{
-    let (name,n_size) = buffer.read_varint(0)?;
+pub fn parse_packet(buffer: Vec<u8>) -> Result<PacketKind> {
+    let (name, n_size) = buffer.read_varint(0)?;
     let packet: PacketKind = match name {
-        x if x == RequestNetworkSetting::id() => RequestNetworkSetting::from_buf(buffer,n_size)?.into(),
-        _ => todo!()
+        x if x == RequestNetworkSetting::id() => {
+            RequestNetworkSetting::from_buf(buffer, n_size)?.into()
+        }
+        _ => todo!(),
     };
     Ok(packet)
 }
