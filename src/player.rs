@@ -64,7 +64,7 @@ impl Player {
             let packet = framer::parse_packet(pkt)?;
             match packet {
                 PacketKind::RequestNetworkSetting(pkt) => {
-                    if RequestNetworkSetting::is_valid_protocol(pkt.client_protocol)? {
+                    if RequestNetworkSetting::is_current_protocol(pkt.client_protocol)? {
                         println!("valid client_protocol")
                     } else {
                         println!("invalid client_protocol")
