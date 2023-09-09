@@ -1,5 +1,4 @@
 use std::fs;
-
 use anyhow::{Context, Result};
 use yaml_rust::YamlLoader;
 
