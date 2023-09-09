@@ -1,4 +1,5 @@
 use crate::components::ClientId;
+use crate::protocol::packet::PacketKind;
 use crate::protocol::transforms::framer::{self, parse_packet};
 
 use anyhow::{Context, Result};
@@ -60,10 +61,21 @@ impl Player {
     async fn handle(&mut self, buffer: Vec<u8>) -> Result<()> {
         let raw_pkts = framer::decode(buffer)?;
         for pkt in raw_pkts {
-            println!("{:?}",parse_packet(pkt))
+            let packet = parse_packet(pkt)?;
+            match packet {
+                PacketKind::RequestNetworkSetting(pkt) => {
+                    if Self::is_valid_protocol(pkt.client_protocol) {
+                        
+                    }
+                }
+            }
         }
         Ok(())
     }
+    fn is_valid_protocol(protocol:i32) -> bool{
+        protocol == 594
+    }
+
     fn destory_self_entity(&self) -> Result<()> {
         let mut me: Option<Entity> = None;
         self.get_world_mut().run(|clients: Comp<ClientId>| {

@@ -30,8 +30,7 @@ macro_rules! packet_impls {
             impl From<PacketKind> for $t {
                 fn from(value: PacketKind) -> Self {
                     match value {
-                        PacketKind::$t(kind) => kind,
-                        _ => panic!("InvalidPacketKind")
+                        PacketKind::$t(kind) => kind
                     }
                 }
             }

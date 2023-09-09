@@ -4,7 +4,6 @@ use protodef::prelude::*;
 use std::io::Read as _;
 
 use crate::protocol::packet::{PacketKind, RequestNetworkSetting};
-
 use super::errors::TransFormError;
 
 pub fn decode(buffer: Vec<u8>) -> Result<Vec<Vec<u8>>> {
