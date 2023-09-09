@@ -1,4 +1,5 @@
 mod request_network_setting;
+mod play_status;
 #[macro_export]
 macro_rules! packet_id {
     ($t:ty,$e:expr) => {
@@ -14,9 +15,11 @@ macro_rules! packet_id {
 }
 
 pub use request_network_setting::RequestNetworkSetting;
+pub use play_status::PlayStatus;
 #[derive(Debug)]
 pub enum PacketKind {
     RequestNetworkSetting(RequestNetworkSetting),
+    PlayStatus(PlayStatus)
 }
 
 macro_rules! packet_impls {
@@ -30,11 +33,12 @@ macro_rules! packet_impls {
             impl From<PacketKind> for $t {
                 fn from(value: PacketKind) -> Self {
                     match value {
-                        PacketKind::$t(kind) => kind
+                        PacketKind::$t(kind) => kind,
+                        _ => panic!("Invalid PacketKind")
                     }
                 }
             }
         )*
     };
 }
-packet_impls!(RequestNetworkSetting);
+packet_impls!(RequestNetworkSetting,PlayStatus);

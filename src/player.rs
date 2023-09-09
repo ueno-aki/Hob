@@ -61,7 +61,8 @@ impl Player {
                     } else {
                         println!("invalid client_protocol")
                     }
-                }
+                },
+                _ => todo!()
             }
         }
         Ok(())
