@@ -43,16 +43,8 @@ impl Player {
 
     pub async fn listen(&mut self) -> Result<()> {
         self.get_world_mut().create((ClientId { id: self.id },));
-        loop {
-            match self.socket.recv().await {
-                Ok(buffer) => {
-                    self.handle(buffer).await?;
-                }
-                Err(e) => {
-                    println!("RakNetError:{:?}", e);
-                    break;
-                }
-            }
+        while let Ok(buffer) = self.socket.recv().await {
+            self.handle(buffer).await?;
         }
         self.destory_self_entity()?;
         println!("disconnected,{}", self);
