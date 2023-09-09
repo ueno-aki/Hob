@@ -1,0 +1,6 @@
+version: "1.20.10"
+protocol: "594"
+server_name: "HobsDevelopingServer"
+description: "not secure"
+max_connection: "99999"
+port: "19132"
