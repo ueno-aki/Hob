@@ -1,5 +1,5 @@
 use crate::components::ClientId;
-use crate::protocol::packet::PacketKind;
+use crate::protocol::packet::{PacketKind, RequestNetworkSetting};
 use crate::protocol::transforms::framer::{self, parse_packet};
 
 use anyhow::{Context, Result};
@@ -64,16 +64,16 @@ impl Player {
             let packet = parse_packet(pkt)?;
             match packet {
                 PacketKind::RequestNetworkSetting(pkt) => {
-                    if Self::is_valid_protocol(pkt.client_protocol) {
-                        
+                    if RequestNetworkSetting::is_valid_protocol(pkt.client_protocol)? {
+                        println!("valid client_protocol")
+                    }
+                    else {
+                        println!("invalid client_protocol")
                     }
                 }
             }
         }
         Ok(())
-    }
-    fn is_valid_protocol(protocol:i32) -> bool{
-        protocol == 594
     }
 
     fn destory_self_entity(&self) -> Result<()> {
