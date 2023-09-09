@@ -2,6 +2,8 @@ mod components;
 mod player;
 mod protocol;
 mod server;
+#[cfg(test)]
+mod tests;
 
 use server::Server;
 
