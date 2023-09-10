@@ -36,36 +36,39 @@ impl Server {
             .map_err(|_| anyhow!("Failed to set full motd"))?;
         listener.listen().await;
 
-        let (tx,mut rx) = mpsc::channel::<InternalPacketKind>(32);
+        let (tx,mut rx) = mpsc::channel::<InternalPacketKind>(200);
         let world = self.world.clone();
         tokio::spawn(async move {
             while let Some(v) = rx.recv().await {
-                match v {
-                    InternalPacketKind::CreateClient(v) => {
-                        world.borrow_mut().create((ClientId{id:v.client_id},));
-                    },
-                    InternalPacketKind::DestoryClient(v) => {
-                        let mut me: Option<Entity> = None;
-                        world.borrow().run(|clients: Comp<ClientId>| {
-                            (&clients).for_each_with_entity(|(e, cl)| {
-                                if cl.id == v.client_id {
-                                    me = Some(e);
-                                }
-                            });
-                        });
-                        let me = me.context(format!("Failed to get {}'s entity",v.client_id)).unwrap();
-                        world.borrow_mut().destroy(me);
-                    }
-                }
+                Self::handle(v, world.clone()).await.unwrap();
             }
         });
-
         while let Ok(socket) = listener.accept().await {
             let tx_c = tx.clone();
             tokio::spawn(async move {
                 let mut player = Player::new(socket);
                 player.listen(tx_c).await.unwrap();
             });
+        }
+        Ok(())
+    }
+    async fn handle(kind:InternalPacketKind,world:Arc<AtomicRefCell<World>>) ->Result<()>{
+        match kind {
+            InternalPacketKind::CreateClient(v) => {
+                world.borrow_mut().create((ClientId{id:v.client_id},));
+            },
+            InternalPacketKind::DestoryClient(v) => {
+                let mut me: Option<Entity> = None;
+                world.borrow().run(|clients: Comp<ClientId>| {
+                    (&clients).for_each_with_entity(|(e, cl)| {
+                        if cl.id == v.client_id {
+                            me = Some(e);
+                        }
+                    });
+                });
+                let me = me.context(format!("Failed to get {}'s entity",v.client_id))?;
+                world.borrow_mut().destroy(me);
+            }
         }
         Ok(())
     }
