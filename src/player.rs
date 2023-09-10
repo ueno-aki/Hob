@@ -8,6 +8,7 @@ use rand::Rng;
 use rust_raknet::RaknetSocket;
 use sparsey::prelude::*;
 use sparsey::world::{Comp, World};
+use tokio::sync::mpsc::Sender;
 use std::fmt::Display;
 use std::sync::Arc;
 
@@ -41,23 +42,24 @@ impl Player {
         self.world.borrow_mut()
     }
 
-    pub async fn listen(&mut self) -> Result<()> {
+    pub async fn listen(&mut self,sender:Sender<i32>) -> Result<()> {
         self.get_world_mut().create((ClientId { id: self.id },));
         while let Ok(buffer) = self.socket.recv().await {
-            self.handle(buffer).await?;
+            self.handle(buffer,sender.clone()).await?;
         }
         self.destory_self_entity()?;
         println!("disconnected,{}", self);
         Ok(())
     }
-    async fn handle(&mut self, buffer: Vec<u8>) -> Result<()> {
+    async fn handle(&mut self, buffer: Vec<u8>,sender:Sender<i32>) -> Result<()> {
         let raw_pkts = framer::decode(buffer)?;
         for pkt in raw_pkts {
             let packet = framer::parse_packet(pkt)?;
             match packet {
                 PacketKind::RequestNetworkSetting(pkt) => {
                     if RequestNetworkSetting::is_current_protocol(pkt.client_protocol)? {
-                        println!("valid client_protocol")
+                        println!("valid client_protocol");
+                        sender.send(123).await?;
                     } else {
                         println!("invalid client_protocol")
                     }
@@ -70,7 +72,7 @@ impl Player {
 
     fn destory_self_entity(&self) -> Result<()> {
         let mut me: Option<Entity> = None;
-        self.get_world_mut().run(|clients: Comp<ClientId>| {
+        self.get_world().run(|clients: Comp<ClientId>| {
             (&clients).for_each_with_entity(|(e, cl)| {
                 if cl.id == self.id {
                     me = Some(e);
@@ -81,6 +83,7 @@ impl Player {
             "Failed to get {}'s socket",
             self.socket.peer_addr().unwrap()
         ))?;
+        
         self.get_world_mut().destroy(me);
         Ok(())
     }

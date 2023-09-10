@@ -7,6 +7,7 @@ use anyhow::{anyhow, Result};
 use atomic_refcell::AtomicRefCell;
 use rust_raknet::RaknetListener;
 use sparsey::prelude::*;
+use tokio::sync::mpsc;
 use std::sync::Arc;
 
 pub struct Server {
@@ -33,11 +34,18 @@ impl Server {
             .set_full_motd(Self::load_motd()?)
             .map_err(|_| anyhow!("Failed to set full motd"))?;
         listener.listen().await;
+        let (tx,mut rx) = mpsc::channel::<i32>(32);
+        tokio::spawn(async move {
+            while let Some(v) = rx.recv().await {
+                println!("receive::{}",v)
+            }
+        });
         while let Ok(socket) = listener.accept().await {
+            let tx_c = tx.clone();
             let w_clone = self.world.clone();
             tokio::spawn(async move {
                 let mut player = Player::new(socket, w_clone);
-                player.listen().await.unwrap();
+                player.listen(tx_c).await.unwrap();
             });
         }
         Ok(())
