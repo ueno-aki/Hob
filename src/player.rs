@@ -1,22 +1,16 @@
-use crate::components::ClientId;
-use crate::protocol::internal::packet::{CreateClient, InternalPacketKind};
+use crate::protocol::internal::packet::{CreateClient, InternalPacketKind, DestoryClient};
 use crate::protocol::mcpe::packet::{PacketKind, RequestNetworkSetting};
 use crate::protocol::mcpe::transforms::framer;
 
-use anyhow::{Context, Result};
-use atomic_refcell::{AtomicRef, AtomicRefCell, AtomicRefMut};
+use anyhow::Result;
 use rand::Rng;
 use rust_raknet::RaknetSocket;
-use sparsey::prelude::*;
-use sparsey::world::{Comp, World};
 use tokio::sync::mpsc::Sender;
 use std::fmt::Display;
-use std::sync::Arc;
 
 pub struct Player {
     id: u64,
     socket: RaknetSocket,
-    world: Arc<AtomicRefCell<World>>,
     status: PlayerStatus,
 }
 impl Display for Player {
@@ -26,31 +20,21 @@ impl Display for Player {
 }
 
 impl Player {
-    pub fn new(socket: RaknetSocket, world: Arc<AtomicRefCell<World>>) -> Self {
+    pub fn new(socket: RaknetSocket) -> Self {
         Player {
             socket,
-            world,
             id: rand::thread_rng().gen(),
             status: PlayerStatus::default(),
         }
     }
-    #[inline]
-    fn get_world(&self) -> AtomicRef<World> {
-        self.world.borrow()
-    }
-    #[inline]
-    fn get_world_mut(&self) -> AtomicRefMut<World> {
-        self.world.borrow_mut()
-    }
-
     pub async fn listen(&mut self,sender:Sender<InternalPacketKind>) -> Result<()> {
         let create_cl = CreateClient {client_id:self.id};
         sender.send(create_cl.into()).await?;
-        self.get_world_mut().create((ClientId { id: self.id },));
         while let Ok(buffer) = self.socket.recv().await {
             self.handle(buffer,sender.clone()).await?;
         }
-        self.destory_self_entity()?;
+        let destory_cl = DestoryClient {client_id:self.id};
+        sender.send(destory_cl.into()).await?;
         println!("disconnected,{}", self);
         Ok(())
     }
@@ -69,24 +53,6 @@ impl Player {
                 _ => todo!()
             }
         }
-        Ok(())
-    }
-
-    fn destory_self_entity(&self) -> Result<()> {
-        let mut me: Option<Entity> = None;
-        self.get_world().run(|clients: Comp<ClientId>| {
-            (&clients).for_each_with_entity(|(e, cl)| {
-                if cl.id == self.id {
-                    me = Some(e);
-                }
-            });
-        });
-        let me = me.context(format!(
-            "Failed to get {}'s socket",
-            self.socket.peer_addr().unwrap()
-        ))?;
-        
-        self.get_world_mut().destroy(me);
         Ok(())
     }
 }
