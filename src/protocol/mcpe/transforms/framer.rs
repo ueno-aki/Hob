@@ -44,3 +44,7 @@ pub fn parse_packet(buffer: Vec<u8>) -> Result<PacketKind> {
     };
     Ok(packet)
 }
+
+pub fn encode() {
+
+}

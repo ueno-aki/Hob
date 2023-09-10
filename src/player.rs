@@ -1,16 +1,20 @@
 use crate::protocol::internal::packet::{CreateClient, InternalPacketKind, DestoryClient};
 use crate::protocol::mcpe::packet::{PacketKind, RequestNetworkSetting};
 use crate::protocol::mcpe::transforms::framer;
+use crate::utils::get_option;
 
 use anyhow::Result;
+use atomic_refcell::{AtomicRefCell, AtomicRef, AtomicRefMut};
 use rand::Rng;
 use rust_raknet::RaknetSocket;
 use tokio::sync::mpsc::Sender;
 use std::fmt::Display;
+use std::sync::Arc;
 
+#[derive(Clone)]
 pub struct Player {
     id: u64,
-    socket: RaknetSocket,
+    socket: Arc<AtomicRefCell<RaknetSocket>>,
     status: PlayerStatus,
 }
 impl Display for Player {
@@ -22,15 +26,23 @@ impl Display for Player {
 impl Player {
     pub fn new(socket: RaknetSocket) -> Self {
         Player {
-            socket,
+            socket:Arc::new(AtomicRefCell::new(socket)),
             id: rand::thread_rng().gen(),
             status: PlayerStatus::default(),
         }
     }
+    #[inline]
+    pub fn get_socket(&self) ->AtomicRef<RaknetSocket>{
+        self.socket.borrow()
+    }
+    #[inline]
+    pub fn get_socket_mut(&self) ->AtomicRefMut<RaknetSocket>{
+        self.socket.borrow_mut()
+    }
     pub async fn listen(&mut self,sender:Sender<InternalPacketKind>) -> Result<()> {
         let create_cl = CreateClient {client_id:self.id};
         sender.send(create_cl.into()).await?;
-        while let Ok(buffer) = self.socket.recv().await {
+        while let Ok(buffer) = self.clone().get_socket().recv().await {
             self.handle(buffer,sender.clone()).await?;
         }
         let destory_cl = DestoryClient {client_id:self.id};
@@ -44,10 +56,11 @@ impl Player {
             let packet = framer::parse_packet(pkt)?;
             match packet {
                 PacketKind::RequestNetworkSetting(pkt) => {
-                    if RequestNetworkSetting::is_current_protocol(pkt.client_protocol)? {
-                        println!("valid client_protocol");
-                    } else {
-                        println!("invalid client_protocol")
+                    let current_p = get_option("protocol")?.parse::<i32>()?;
+                    match pkt.client_protocol {
+                        x if x > current_p => todo!(),
+                        x if x < current_p => todo!(),
+                        _ => todo!()
                     }
                 },
                 _ => todo!()
@@ -57,7 +70,7 @@ impl Player {
     }
 }
 
-#[derive(Debug, Default)]
+#[derive(Debug, Default,Clone)]
 pub struct PlayerStatus {
     encryption_enabled: bool,
 }
