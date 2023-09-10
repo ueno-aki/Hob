@@ -1,4 +1,5 @@
 use crate::components::ClientId;
+use crate::protocol::internal::packet::{CreateClient, InternalPacketKind};
 use crate::protocol::mcpe::packet::{PacketKind, RequestNetworkSetting};
 use crate::protocol::mcpe::transforms::framer;
 
@@ -42,7 +43,9 @@ impl Player {
         self.world.borrow_mut()
     }
 
-    pub async fn listen(&mut self,sender:Sender<i32>) -> Result<()> {
+    pub async fn listen(&mut self,sender:Sender<InternalPacketKind>) -> Result<()> {
+        let create_cl = CreateClient {client_id:self.id};
+        sender.send(create_cl.into()).await?;
         self.get_world_mut().create((ClientId { id: self.id },));
         while let Ok(buffer) = self.socket.recv().await {
             self.handle(buffer,sender.clone()).await?;
@@ -51,7 +54,7 @@ impl Player {
         println!("disconnected,{}", self);
         Ok(())
     }
-    async fn handle(&mut self, buffer: Vec<u8>,sender:Sender<i32>) -> Result<()> {
+    async fn handle(&mut self, buffer: Vec<u8>,sender:Sender<InternalPacketKind>) -> Result<()> {
         let raw_pkts = framer::decode(buffer)?;
         for pkt in raw_pkts {
             let packet = framer::parse_packet(pkt)?;
@@ -59,7 +62,6 @@ impl Player {
                 PacketKind::RequestNetworkSetting(pkt) => {
                     if RequestNetworkSetting::is_current_protocol(pkt.client_protocol)? {
                         println!("valid client_protocol");
-                        sender.send(123).await?;
                     } else {
                         println!("invalid client_protocol")
                     }

@@ -3,15 +3,17 @@ pub enum InternalPacketKind {
     CreateClient(CreateClient),
     DestoryClient(DestoryClient)
 }
+unsafe impl Send for InternalPacketKind {
 
+}
 #[derive(Debug)]
 pub struct CreateClient {
-    client_id:u64
+    pub client_id:u64
 }
 
 #[derive(Debug)]
 pub struct DestoryClient {
-    client_id:u64
+    pub client_id:u64
 }
 
 macro_rules! packet_impls {

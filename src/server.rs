@@ -1,7 +1,7 @@
 use crate::{
     components::{ClientId, Position},
     player::Player,
-    utils::get_option,
+    utils::get_option, protocol::internal::packet::InternalPacketKind,
 };
 use anyhow::{anyhow, Result};
 use atomic_refcell::AtomicRefCell;
@@ -34,10 +34,10 @@ impl Server {
             .set_full_motd(Self::load_motd()?)
             .map_err(|_| anyhow!("Failed to set full motd"))?;
         listener.listen().await;
-        let (tx,mut rx) = mpsc::channel::<i32>(32);
+        let (tx,mut rx) = mpsc::channel(32);
         tokio::spawn(async move {
             while let Some(v) = rx.recv().await {
-                println!("receive::{}",v)
+                println!("receive::{:?}",v)
             }
         });
         while let Ok(socket) = listener.accept().await {
