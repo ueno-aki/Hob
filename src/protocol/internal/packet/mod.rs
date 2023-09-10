@@ -1,14 +1,14 @@
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug)]
 pub enum InternalPacketKind {
     CreateClient(CreateClient),
     DestoryClient(DestoryClient)
 }
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug)]
 pub struct CreateClient {
     pub client_id:u64
 }
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug)]
 pub struct DestoryClient {
     pub client_id:u64
 }
