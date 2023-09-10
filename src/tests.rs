@@ -1,5 +1,5 @@
 use anyhow::Result;
-use crate::protocol::packet::{RequestNetworkSetting, PlayStatus};
+use crate::protocol::mcpe::packet::{RequestNetworkSetting, PlayStatus};
 
 #[test]
 fn packet_id_macro() {

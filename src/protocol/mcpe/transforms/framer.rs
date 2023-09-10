@@ -4,7 +4,7 @@ use protodef::prelude::*;
 use std::io::Read as _;
 
 use super::errors::TransFormError;
-use crate::protocol::packet::{PacketKind, RequestNetworkSetting};
+use crate::protocol::mcpe::packet::{PacketKind, RequestNetworkSetting};
 
 pub fn decode(buffer: Vec<u8>) -> Result<Vec<Vec<u8>>> {
     if buffer[0] != 0xfe {

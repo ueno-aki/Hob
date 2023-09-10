@@ -1,6 +1,6 @@
 use crate::components::ClientId;
-use crate::protocol::packet::{PacketKind, RequestNetworkSetting};
-use crate::protocol::transforms::framer;
+use crate::protocol::mcpe::packet::{PacketKind, RequestNetworkSetting};
+use crate::protocol::mcpe::transforms::framer;
 
 use anyhow::{Context, Result};
 use atomic_refcell::{AtomicRef, AtomicRefCell, AtomicRefMut};
