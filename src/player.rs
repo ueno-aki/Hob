@@ -1,5 +1,5 @@
 use crate::protocol::internal::packet::{CreateClient, InternalPacketKind, DestoryClient};
-use crate::protocol::mcpe::packet::{PacketKind, RequestNetworkSetting, PlayStatus};
+use crate::protocol::mcpe::packet::{PacketKind, PlayStatus};
 use crate::protocol::mcpe::transforms::framer;
 use crate::utils::get_option;
 
