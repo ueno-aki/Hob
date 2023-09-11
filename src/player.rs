@@ -58,8 +58,8 @@ impl Player {
                 PacketKind::RequestNetworkSetting(pkt) => {
                     let current_p = get_option("protocol")?.parse::<i32>()?;
                     match pkt.client_protocol {
-                        x if x > current_p => self.send_packet(PlayStatus::FailedSpawn.into()).await?,
-                        x if x < current_p => self.send_packet(PlayStatus::FailedClient.into()).await?,
+                        x if x > current_p => self.send_packet(PlayStatus::FailedSpawn).await?,
+                        x if x < current_p => self.send_packet(PlayStatus::FailedClient).await?,
                         _ => todo!()
                     };
                 },
@@ -68,8 +68,8 @@ impl Player {
         }
         Ok(())
     }
-    async fn send_packet(&self,packet:PacketKind) -> Result<()>{
-        let buffer = framer::encode(packet)?;
+    async fn send_packet<T:Into<PacketKind>>(&self,packet:T) -> Result<()>{
+        let buffer = framer::encode(packet.into())?;
         self.get_socket()
             .send(&[vec![0xfe],buffer].concat(), rust_raknet::Reliability::ReliableOrdered)
             .await
