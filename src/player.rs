@@ -72,7 +72,9 @@ impl Player {
         Ok(())
     }
     async fn send_packet<T: Into<PacketKind>>(&self, packet: T) -> Result<()> {
-        let buffer = framer::encode(packet.into())?;
+        let packet:PacketKind = packet.into();
+        println!("[S=>C]{}",packet);
+        let buffer = framer::encode(packet)?;
         self.get_socket()
             .send(
                 &[vec![0xfe], buffer].concat(),
