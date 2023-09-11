@@ -73,7 +73,7 @@ impl Player {
         self.get_socket()
             .send(&[vec![0xfe],buffer].concat(), rust_raknet::Reliability::ReliableOrdered)
             .await
-            .map_err(|e|anyhow!("{:?}",e))?;
+            .map_err(|e|anyhow!("FailedToSendPacket:{:?}",e))?;
         Ok(())
     }
 }
