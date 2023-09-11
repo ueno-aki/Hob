@@ -1,16 +1,16 @@
 #[derive(Debug)]
 pub enum InternalPacketKind {
     CreateClient(CreateClient),
-    DestoryClient(DestoryClient)
+    DestoryClient(DestoryClient),
 }
 #[derive(Debug)]
 pub struct CreateClient {
-    pub client_id:u64
+    pub client_id: u64,
 }
 
 #[derive(Debug)]
 pub struct DestoryClient {
-    pub client_id:u64
+    pub client_id: u64,
 }
 
 macro_rules! packet_impls {
@@ -32,4 +32,4 @@ macro_rules! packet_impls {
         )*
     };
 }
-packet_impls!(CreateClient,DestoryClient);
+packet_impls!(CreateClient, DestoryClient);

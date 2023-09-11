@@ -1,2 +1,2 @@
-pub mod mcpe;
 pub mod internal;
+pub mod mcpe;

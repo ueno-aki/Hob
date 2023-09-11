@@ -1,14 +1,15 @@
 use crate::{
     components::{ClientId, Position},
     player::Player,
-    utils::get_option, protocol::internal::packet::InternalPacketKind,
+    protocol::internal::packet::InternalPacketKind,
+    utils::get_option,
 };
-use anyhow::{anyhow, Result, Context};
+use anyhow::{anyhow, Context, Result};
 use atomic_refcell::AtomicRefCell;
 use rust_raknet::RaknetListener;
 use sparsey::prelude::*;
-use tokio::sync::mpsc;
 use std::sync::Arc;
+use tokio::sync::mpsc;
 
 pub struct Server {
     world: Arc<AtomicRefCell<World>>,
@@ -25,7 +26,6 @@ impl Server {
     }
 
     pub async fn launch(&mut self) -> Result<()> {
-
         println!("Server Started");
         let mut listener = RaknetListener::bind(&"0.0.0.0:19132".parse().unwrap())
             .await
@@ -36,7 +36,7 @@ impl Server {
             .map_err(|_| anyhow!("Failed to set full motd"))?;
         listener.listen().await;
 
-        let (tx,mut rx) = mpsc::channel::<InternalPacketKind>(200);
+        let (tx, mut rx) = mpsc::channel::<InternalPacketKind>(200);
         let world = self.world.clone();
         tokio::spawn(async move {
             while let Some(v) = rx.recv().await {
@@ -52,11 +52,11 @@ impl Server {
         }
         Ok(())
     }
-    async fn handle(kind:InternalPacketKind,world:Arc<AtomicRefCell<World>>) ->Result<()>{
+    async fn handle(kind: InternalPacketKind, world: Arc<AtomicRefCell<World>>) -> Result<()> {
         match kind {
             InternalPacketKind::CreateClient(v) => {
-                world.borrow_mut().create((ClientId{id:v.client_id},));
-            },
+                world.borrow_mut().create((ClientId { id: v.client_id },));
+            }
             InternalPacketKind::DestoryClient(v) => {
                 let mut me: Option<Entity> = None;
                 world.borrow().run(|clients: Comp<ClientId>| {
@@ -66,7 +66,7 @@ impl Server {
                         }
                     });
                 });
-                let me = me.context(format!("Failed to get {}'s entity",v.client_id))?;
+                let me = me.context(format!("Failed to get {}'s entity", v.client_id))?;
                 world.borrow_mut().destroy(me);
             }
         }

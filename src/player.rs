@@ -1,15 +1,17 @@
-use crate::protocol::internal::packet::{CreateClient, InternalPacketKind, DestoryClient};
-use crate::protocol::mcpe::packet::{PacketKind, PlayStatus, NetworkSettings,CompressionAlgorithmType};
+use crate::protocol::internal::packet::{CreateClient, DestoryClient, InternalPacketKind};
+use crate::protocol::mcpe::packet::{
+    CompressionAlgorithmType, NetworkSettings, PacketKind, PlayStatus,
+};
 use crate::protocol::mcpe::transforms::framer;
 use crate::utils::get_option;
 
-use anyhow::{Result, anyhow};
-use atomic_refcell::{AtomicRefCell, AtomicRef, AtomicRefMut};
+use anyhow::{anyhow, Result};
+use atomic_refcell::{AtomicRef, AtomicRefCell, AtomicRefMut};
 use rand::Rng;
 use rust_raknet::RaknetSocket;
-use tokio::sync::mpsc::Sender;
 use std::fmt::Display;
 use std::sync::Arc;
+use tokio::sync::mpsc::Sender;
 
 #[derive(Clone)]
 pub struct Player {
@@ -26,31 +28,31 @@ impl Display for Player {
 impl Player {
     pub fn new(socket: RaknetSocket) -> Self {
         Player {
-            socket:Arc::new(AtomicRefCell::new(socket)),
+            socket: Arc::new(AtomicRefCell::new(socket)),
             id: rand::thread_rng().gen(),
             status: PlayerStatus::default(),
         }
     }
     #[inline]
-    pub fn get_socket(&self) ->AtomicRef<RaknetSocket>{
+    pub fn get_socket(&self) -> AtomicRef<RaknetSocket> {
         self.socket.borrow()
     }
     #[inline]
-    pub fn get_socket_mut(&self) ->AtomicRefMut<RaknetSocket>{
+    pub fn get_socket_mut(&self) -> AtomicRefMut<RaknetSocket> {
         self.socket.borrow_mut()
     }
-    pub async fn listen(&mut self,tx:Sender<InternalPacketKind>) -> Result<()> {
-        let create_cl = CreateClient {client_id:self.id};
+    pub async fn listen(&mut self, tx: Sender<InternalPacketKind>) -> Result<()> {
+        let create_cl = CreateClient { client_id: self.id };
         tx.send(create_cl.into()).await?;
         while let Ok(buffer) = self.clone().get_socket().recv().await {
-            self.handle(buffer,tx.clone()).await?;
+            self.handle(buffer, tx.clone()).await?;
         }
-        let destory_cl = DestoryClient {client_id:self.id};
+        let destory_cl = DestoryClient { client_id: self.id };
         tx.send(destory_cl.into()).await?;
         println!("disconnected,{}", self);
         Ok(())
     }
-    async fn handle(&mut self, buffer: Vec<u8>,tx:Sender<InternalPacketKind>) -> Result<()> {
+    async fn handle(&mut self, buffer: Vec<u8>, tx: Sender<InternalPacketKind>) -> Result<()> {
         let raw_pkts = framer::decode(buffer)?;
         for pkt in raw_pkts {
             let packet = framer::parse_packet(pkt)?;
@@ -60,23 +62,26 @@ impl Player {
                     match pkt.client_protocol {
                         x if x > current_p => self.send_packet(PlayStatus::FailedSpawn).await?,
                         x if x < current_p => self.send_packet(PlayStatus::FailedClient).await?,
-                        _ => self.send_network_setting().await?
+                        _ => self.send_network_setting().await?,
                     };
-                },
-                _ => todo!()
+                }
+                _ => todo!(),
             }
         }
         Ok(())
     }
-    async fn send_packet<T:Into<PacketKind>>(&self,packet:T) -> Result<()>{
+    async fn send_packet<T: Into<PacketKind>>(&self, packet: T) -> Result<()> {
         let buffer = framer::encode(packet.into())?;
         self.get_socket()
-            .send(&[vec![0xfe],buffer].concat(), rust_raknet::Reliability::ReliableOrdered)
+            .send(
+                &[vec![0xfe], buffer].concat(),
+                rust_raknet::Reliability::ReliableOrdered,
+            )
             .await
-            .map_err(|e|anyhow!("FailedToSendPacket:{:?}",e))?;
+            .map_err(|e| anyhow!("FailedToSendPacket:{:?}", e))?;
         Ok(())
     }
-    async fn send_network_setting(&self) -> Result<()>{
+    async fn send_network_setting(&self) -> Result<()> {
         let network_setting = NetworkSettings {
             compression_threshold: 512,
             compression_algorithm: CompressionAlgorithmType::Deflate,
@@ -89,7 +94,7 @@ impl Player {
     }
 }
 
-#[derive(Debug, Default,Clone)]
+#[derive(Debug, Default, Clone)]
 pub struct PlayerStatus {
     encryption_enabled: bool,
 }

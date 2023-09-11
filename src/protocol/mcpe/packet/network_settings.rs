@@ -13,7 +13,7 @@ pub struct NetworkSettings {
 }
 
 impl NetworkSettings {
-    pub fn read_to_buffer(&self,vec: &mut Vec<u8>) -> Result<()> {
+    pub fn read_to_buffer(&self, vec: &mut Vec<u8>) -> Result<()> {
         vec.write_u16(self.compression_threshold)?;
         vec.write_u16(self.compression_algorithm.clone() as u16)?;
         vec.write_bool(self.client_throttle)?;
@@ -22,9 +22,9 @@ impl NetworkSettings {
         Ok(())
     }
 }
-packet_id!(NetworkSettings,143);
+packet_id!(NetworkSettings, 143);
 
-#[derive(Debug,Clone)]
+#[derive(Debug, Clone)]
 pub enum CompressionAlgorithmType {
     Deflate,
     Snappy,

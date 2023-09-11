@@ -1,5 +1,5 @@
-use std::fs;
 use anyhow::{Context, Result};
+use std::fs;
 use yaml_rust::YamlLoader;
 
 pub fn get_option(option_name: &str) -> Result<String> {
