@@ -1,5 +1,5 @@
 use anyhow::Result;
-use flate2::bufread::DeflateDecoder;
+use flate2::{bufread::{DeflateDecoder, DeflateEncoder}, Compression};
 use protodef::prelude::*;
 use std::io::Read as _;
 
@@ -27,7 +27,7 @@ pub fn decode(buffer: Vec<u8>) -> Result<Vec<Vec<u8>>> {
     Ok(packets)
 }
 fn decompress(buffer: Vec<u8>) -> Vec<u8> {
-    let mut decoder: DeflateDecoder<&[u8]> = DeflateDecoder::new(&buffer[..]);
+    let mut decoder: DeflateDecoder<&[u8]> = DeflateDecoder::new(buffer.as_ref());
     let mut flate: Vec<u8> = Vec::new();
     match decoder.read_to_end(&mut flate) {
         Ok(_) => flate,
@@ -45,6 +45,15 @@ pub fn parse_packet(buffer: Vec<u8>) -> Result<PacketKind> {
     Ok(packet)
 }
 
-pub fn encode() {
-
+pub fn encode(packet:PacketKind) -> Result<Vec<u8>>{
+    let mut buffer:Vec<u8> = Vec::new();
+    todo!()
+}
+fn compress(buffer: Vec<u8>) -> Vec<u8>{
+    let mut encoder = DeflateEncoder::new(buffer.as_ref(), Compression::new(7));
+    let mut flate = Vec::new();
+    match encoder.read_to_end(&mut flate) {
+        Ok(_) => flate,
+        Err(_) => buffer
+    }
 }
