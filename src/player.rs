@@ -1,5 +1,5 @@
 use crate::protocol::internal::packet::{CreateClient, InternalPacketKind, DestoryClient};
-use crate::protocol::mcpe::packet::{PacketKind, RequestNetworkSetting};
+use crate::protocol::mcpe::packet::{PacketKind, RequestNetworkSetting, PlayStatus};
 use crate::protocol::mcpe::transforms::framer;
 use crate::utils::get_option;
 
@@ -58,10 +58,10 @@ impl Player {
                 PacketKind::RequestNetworkSetting(pkt) => {
                     let current_p = get_option("protocol")?.parse::<i32>()?;
                     match pkt.client_protocol {
-                        x if x > current_p => todo!(),
-                        x if x < current_p => todo!(),
+                        x if x > current_p => self.send_packet(PlayStatus::FailedSpawn.into()).await?,
+                        x if x < current_p => self.send_packet(PlayStatus::FailedClient.into()).await?,
                         _ => todo!()
-                    }
+                    };
                 },
                 _ => todo!()
             }
