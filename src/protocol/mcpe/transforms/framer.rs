@@ -53,6 +53,7 @@ pub fn encode(packet: PacketKind) -> Result<Vec<u8>> {
     content.write_var_int(packet.get_id())?;
     match packet {
         PacketKind::PlayStatus(v) => v.read_to_buffer(&mut content)?,
+        PacketKind::NetworkSettings(v) => v.read_to_buffer(&mut content)?,
         _ => todo!(),
     };
     let mut result = Vec::new();
