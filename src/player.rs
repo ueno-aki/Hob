@@ -39,18 +39,18 @@ impl Player {
     pub fn get_socket_mut(&self) ->AtomicRefMut<RaknetSocket>{
         self.socket.borrow_mut()
     }
-    pub async fn listen(&mut self,sender:Sender<InternalPacketKind>) -> Result<()> {
+    pub async fn listen(&mut self,tx:Sender<InternalPacketKind>) -> Result<()> {
         let create_cl = CreateClient {client_id:self.id};
-        sender.send(create_cl.into()).await?;
+        tx.send(create_cl.into()).await?;
         while let Ok(buffer) = self.clone().get_socket().recv().await {
-            self.handle(buffer,sender.clone()).await?;
+            self.handle(buffer,tx.clone()).await?;
         }
         let destory_cl = DestoryClient {client_id:self.id};
-        sender.send(destory_cl.into()).await?;
+        tx.send(destory_cl.into()).await?;
         println!("disconnected,{}", self);
         Ok(())
     }
-    async fn handle(&mut self, buffer: Vec<u8>,sender:Sender<InternalPacketKind>) -> Result<()> {
+    async fn handle(&mut self, buffer: Vec<u8>,tx:Sender<InternalPacketKind>) -> Result<()> {
         let raw_pkts = framer::decode(buffer)?;
         for pkt in raw_pkts {
             let packet = framer::parse_packet(pkt)?;
