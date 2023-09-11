@@ -1,5 +1,5 @@
 use crate::protocol::internal::packet::{CreateClient, InternalPacketKind, DestoryClient};
-use crate::protocol::mcpe::packet::{PacketKind, PlayStatus};
+use crate::protocol::mcpe::packet::{PacketKind, PlayStatus, NetworkSettings,CompressionAlgorithmType};
 use crate::protocol::mcpe::transforms::framer;
 use crate::utils::get_option;
 
@@ -60,7 +60,7 @@ impl Player {
                     match pkt.client_protocol {
                         x if x > current_p => self.send_packet(PlayStatus::FailedSpawn).await?,
                         x if x < current_p => self.send_packet(PlayStatus::FailedClient).await?,
-                        _ => todo!()
+                        _ => self.send_network_setting().await?
                     };
                 },
                 _ => todo!()
@@ -74,6 +74,17 @@ impl Player {
             .send(&[vec![0xfe],buffer].concat(), rust_raknet::Reliability::ReliableOrdered)
             .await
             .map_err(|e|anyhow!("FailedToSendPacket:{:?}",e))?;
+        Ok(())
+    }
+    async fn send_network_setting(&self) -> Result<()>{
+        let network_setting = NetworkSettings {
+            compression_threshold: 512,
+            compression_algorithm: CompressionAlgorithmType::Deflate,
+            client_throttle: false,
+            client_throttle_threshold: 0,
+            client_throttle_scalar: 0.0,
+        };
+        self.send_packet(network_setting).await?;
         Ok(())
     }
 }
