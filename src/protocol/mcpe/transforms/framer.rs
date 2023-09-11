@@ -47,7 +47,12 @@ pub fn parse_packet(buffer: Vec<u8>) -> Result<PacketKind> {
 
 pub fn encode(packet:PacketKind) -> Result<Vec<u8>>{
     let mut buffer:Vec<u8> = Vec::new();
-    todo!()
+    buffer.write_var_int(packet.get_id())?;
+    match packet {
+        PacketKind::PlayStatus(v) => v.read_to_buffer(&mut buffer)?,
+        _ => todo!()
+    };
+    Ok(buffer)
 }
 fn compress(buffer: Vec<u8>) -> Vec<u8>{
     let mut encoder = DeflateEncoder::new(buffer.as_ref(), Compression::new(7));

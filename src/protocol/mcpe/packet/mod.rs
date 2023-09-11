@@ -39,6 +39,13 @@ macro_rules! packet_impls {
                 }
             }
         )*
+        impl PacketKind {
+            pub fn get_id(&self) -> u64{
+                match self {
+                    $(PacketKind::$t(kind) => kind.get_id(),)*
+                }
+            }
+        }
     };
 }
 packet_impls!(RequestNetworkSetting,PlayStatus);
