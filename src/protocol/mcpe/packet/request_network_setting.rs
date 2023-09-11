@@ -1,4 +1,4 @@
-use crate::{packet_id, utils::get_option};
+use crate::packet_id;
 use anyhow::Result;
 use protodef::prelude::*;
 
