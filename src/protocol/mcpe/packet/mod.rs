@@ -29,7 +29,7 @@ pub enum PacketKind {
 
 impl Display for PacketKind {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f,"{{id:{},pkt:{:?}}}",self.get_id(),self)
+        write!(f,"{{id:{},{:?}}}",self.get_id(),self)
     }
 }
 
