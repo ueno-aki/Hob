@@ -56,6 +56,7 @@ impl Player {
         let raw_pkts = framer::decode(buffer)?;
         for pkt in raw_pkts {
             let packet = framer::parse_packet(pkt)?;
+            println!("[C=>S]{}",packet);
             match packet {
                 PacketKind::RequestNetworkSetting(pkt) => {
                     let current_p = get_option("protocol")?.parse::<i32>()?;

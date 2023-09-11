@@ -15,6 +15,8 @@ macro_rules! packet_id {
     };
 }
 
+use std::fmt::Display;
+
 pub use network_settings::{CompressionAlgorithmType, NetworkSettings};
 pub use play_status::PlayStatus;
 pub use request_network_setting::RequestNetworkSetting;
@@ -23,6 +25,12 @@ pub enum PacketKind {
     PlayStatus(PlayStatus),
     NetworkSettings(NetworkSettings),
     RequestNetworkSetting(RequestNetworkSetting),
+}
+
+impl Display for PacketKind {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f,"{{id:{},pkt:{:?}}}",self.get_id(),self)
+    }
 }
 
 macro_rules! packet_impls {
