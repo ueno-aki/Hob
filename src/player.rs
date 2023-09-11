@@ -68,7 +68,6 @@ impl Player {
         }
         Ok(())
     }
-    #[inline]
     async fn send_packet(&self,packet:PacketKind) -> Result<()>{
         let buffer = framer::encode(packet)?;
         self.get_socket()
