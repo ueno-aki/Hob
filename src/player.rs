@@ -3,7 +3,7 @@ use crate::protocol::mcpe::packet::{PacketKind, RequestNetworkSetting};
 use crate::protocol::mcpe::transforms::framer;
 use crate::utils::get_option;
 
-use anyhow::Result;
+use anyhow::{Result, anyhow};
 use atomic_refcell::{AtomicRefCell, AtomicRef, AtomicRefMut};
 use rand::Rng;
 use rust_raknet::RaknetSocket;
@@ -66,6 +66,15 @@ impl Player {
                 _ => todo!()
             }
         }
+        Ok(())
+    }
+    #[inline]
+    async fn send_packet(&self,packet:PacketKind) -> Result<()>{
+        let buffer = framer::encode(packet)?;
+        self.get_socket()
+            .send(&[vec![0xfe],buffer].concat(), rust_raknet::Reliability::ReliableOrdered)
+            .await
+            .map_err(|e|anyhow!("{:?}",e))?;
         Ok(())
     }
 }
