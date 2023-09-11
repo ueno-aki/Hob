@@ -43,7 +43,7 @@ pub fn parse_packet(buffer: Vec<u8>) -> Result<PacketKind> {
         x if x == RequestNetworkSetting::id() => {
             RequestNetworkSetting::from_buf(buffer, n_size)?.into()
         }
-        _ => todo!(),
+        _ => todo!("packet_id:{}",name),
     };
     Ok(packet)
 }
