@@ -58,6 +58,7 @@ impl Player {
             let packet = framer::parse_packet(pkt)?;
             println!("[C=>S]{}",packet);
             match packet {
+                PacketKind::Login(pkt) => todo!(),
                 PacketKind::RequestNetworkSetting(pkt) => {
                     let current_p = get_option("protocol")?.parse::<i32>()?;
                     match pkt.client_protocol {
