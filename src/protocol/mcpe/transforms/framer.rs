@@ -7,7 +7,7 @@ use protodef::prelude::*;
 use std::io::Read as _;
 
 use super::errors::TransFormError;
-use crate::protocol::mcpe::packet::{PacketKind, RequestNetworkSetting};
+use crate::protocol::mcpe::packet::{PacketKind, RequestNetworkSetting, Login};
 
 pub fn decode(buffer: Vec<u8>) -> Result<Vec<Vec<u8>>> {
     if buffer[0] != 0xfe {
@@ -40,6 +40,7 @@ fn decompress(buffer: Vec<u8>) -> Vec<u8> {
 pub fn parse_packet(buffer: Vec<u8>) -> Result<PacketKind> {
     let (name, n_size) = buffer.read_varint(0)?;
     let packet: PacketKind = match name {
+        x if x == Login::id() => Login::from_buf(buffer, n_size)?.into(),
         x if x == RequestNetworkSetting::id() => {
             RequestNetworkSetting::from_buf(buffer, n_size)?.into()
         }

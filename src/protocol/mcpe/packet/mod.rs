@@ -1,9 +1,11 @@
-mod network_settings;
+mod login;
 mod play_status;
+mod network_settings;
 mod request_network_setting;
 
-pub use network_settings::{CompressionAlgorithmType, NetworkSettings};
+pub use login::Login;
 pub use play_status::PlayStatus;
+pub use network_settings::{CompressionAlgorithmType, NetworkSettings};
 pub use request_network_setting::RequestNetworkSetting;
 #[macro_export]
 macro_rules! packet_id {
@@ -21,6 +23,7 @@ macro_rules! packet_id {
 
 #[derive(Debug)]
 pub enum PacketKind {
+    Login(Login),
     PlayStatus(PlayStatus),
     NetworkSettings(NetworkSettings),
     RequestNetworkSetting(RequestNetworkSetting),
@@ -59,4 +62,4 @@ macro_rules! packet_impls {
         }
     };
 }
-packet_impls!(PlayStatus, NetworkSettings, RequestNetworkSetting);
+packet_impls!(Login, PlayStatus, NetworkSettings, RequestNetworkSetting);
