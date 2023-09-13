@@ -80,7 +80,7 @@ impl Server {
             get_option("server_name")?,
             get_option("protocol")?,
             get_option("version")?,
-            100,
+            0,
             get_option("max_connection")?,
             rand::random::<u64>(),
             get_option("description")?,
