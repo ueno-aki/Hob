@@ -1,11 +1,11 @@
 mod login;
-mod play_status;
 mod network_settings;
+mod play_status;
 mod request_network_setting;
 
 pub use login::Login;
-pub use play_status::PlayStatus;
 pub use network_settings::{CompressionAlgorithmType, NetworkSettings};
+pub use play_status::PlayStatus;
 pub use request_network_setting::RequestNetworkSetting;
 #[macro_export]
 macro_rules! packet_id {
@@ -32,7 +32,7 @@ pub enum PacketKind {
 use std::fmt::Display;
 impl Display for PacketKind {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f,"{{id:{},{:?}}}",self.get_id(),self)
+        write!(f, "{{id:{},{:?}}}", self.get_id(), self)
     }
 }
 

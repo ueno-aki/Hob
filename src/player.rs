@@ -56,7 +56,7 @@ impl Player {
         let raw_pkts = framer::decode(buffer)?;
         for pkt in raw_pkts {
             let packet = framer::parse_packet(pkt)?;
-            println!("[C=>S]{}",packet);
+            println!("[C=>S]{}", packet);
             match packet {
                 PacketKind::RequestNetworkSetting(pkt) => {
                     let current_p = get_option("protocol")?.parse::<i32>()?;
@@ -73,8 +73,8 @@ impl Player {
         Ok(())
     }
     async fn send_packet<T: Into<PacketKind>>(&self, packet: T) -> Result<()> {
-        let packet:PacketKind = packet.into();
-        println!("[S=>C]{}",packet);
+        let packet: PacketKind = packet.into();
+        println!("[S=>C]{}", packet);
         let buffer = framer::encode(packet)?;
         self.get_socket()
             .send(
