@@ -2,6 +2,8 @@ use crate::packet_id;
 use anyhow::Result;
 use protodef::prelude::*;
 
+pub mod constants;
+
 #[derive(Debug)]
 pub struct Login {
     pub protocol_version: i32,
