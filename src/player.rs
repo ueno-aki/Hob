@@ -1,5 +1,5 @@
 use crate::protocol::internal::packet::{CreateClient, DestoryClient, InternalPacketKind};
-use crate::protocol::mcpe::packet::login_verify::{verify_login, verify_client_data};
+use crate::protocol::mcpe::packet::login_verify::{verify_login, verify_skin_data};
 use crate::protocol::mcpe::packet::{
     CompressionAlgorithmType, NetworkSettings, PacketKind, PlayStatus,
 };
@@ -69,8 +69,8 @@ impl Player {
                 }
                 PacketKind::Login(pkt) => {
                     let (key, data) = verify_login(&pkt.identity)?;
-                    let skin_data = verify_client_data(&key, &pkt.client)?;
-                    println!("{}",skin_data);
+                    let skin_data = verify_skin_data(&key, &pkt.client)?;
+                    println!("\n\n\n{:?}",skin_data);
                 },
                 _ => todo!(),
             }
