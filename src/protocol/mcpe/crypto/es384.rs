@@ -45,10 +45,9 @@ impl ES384PublicKey {
 
             let mut r_p = payload.rsplitn(2, ".");
             if let (Some(claim), Some(header)) = (r_p.next(), r_p.next()) {
-                use serde_json::from_slice;
                 let claim = decode_b64_nopad(claim)?;
                 let header = decode_b64_nopad(header)?;
-                Ok((from_slice(&header)?, from_slice(&claim)?))
+                Ok((serde_json::from_slice(&header)?, serde_json::from_slice(&claim)?))
             } else {
                 Err(CryptoErrors::InvalidJWTPayload(payload.to_owned()).into())
             }
