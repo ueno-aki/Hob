@@ -1,4 +1,4 @@
-use anyhow::Result;
+use anyhow::{Result, Context};
 use serde::{Serialize, Deserialize};
 use serde_json::Value;
 
@@ -22,7 +22,8 @@ pub fn verify_auth(chains: &str) -> Result<()> {
         if header.x5u == MOJANG_PUBKEY {
             verified = true;
         }
-        println!("header{:?},claim:{}",header,claim);
+        pubkey = claim.get("identityPublicKey").unwrap().as_str().unwrap().to_owned();
+        println!("\n\n\nheader{:?},claim:{}",header,claim);
     }
     if verified == false {
         return Err(LoginErrors::NotAuthenticated.into());

@@ -45,7 +45,7 @@ impl ES384PublicKey {
     {
         let mut r_token = token.rsplitn(2, ".");
         if let (Some(sig), Some(payload)) = (r_token.next(), r_token.next()) {
-            let signature = Signature::try_from(sig.as_bytes())?;
+            let signature = Signature::try_from(decode_b64_nopad(sig)?.as_ref())?;
             let mut digest = sha384::Hash::new();
             digest.update(payload.as_bytes());
             self.as_ref()
