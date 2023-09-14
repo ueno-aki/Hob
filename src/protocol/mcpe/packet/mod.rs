@@ -1,12 +1,12 @@
 mod login;
 mod play_status;
-mod s_to_c_handshake;
+mod handshake;
 mod network_settings;
 mod request_network_setting;
 
 pub use login::{Login,login_verify};
 pub use play_status::PlayStatus;
-pub use s_to_c_handshake::ServerToClientHandshake;
+pub use handshake::{ServerToClientHandshake,key_exchange};
 pub use network_settings::{CompressionAlgorithmType, NetworkSettings};
 pub use request_network_setting::RequestNetworkSetting;
 #[macro_export]

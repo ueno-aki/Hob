@@ -1,4 +1,4 @@
-pub mod handshake;
+pub mod key_exchange;
 pub mod constants;
 
 use anyhow::Result;
