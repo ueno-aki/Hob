@@ -27,7 +27,7 @@ impl Server {
 
     pub async fn launch(&mut self) -> Result<()> {
         println!("Server Started");
-        let addr = format!("127.0.0.1:{}", get_option("port")?);
+        let addr = format!("0.0.0.0:{}", get_option("port")?);
         let mut listener = RaknetListener::bind(&addr.parse()?)
             .await
             .map_err(|_| anyhow!("Failed to bind RaknetListener"))?;
