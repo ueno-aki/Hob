@@ -71,7 +71,6 @@ impl Player {
                     let (key, _data) = verify_login(&pkt.identity)?;
                     let _skin_data = verify_skin_data(&key, &pkt.client)?;
                     let (secret,token) = key_exchange::shared_secret(&key)?;
-                    println!("{secret:?},{token}");
                 },
                 _ => todo!(),
             }

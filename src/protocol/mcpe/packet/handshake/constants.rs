@@ -1,1 +1,1 @@
-pub const salt:&str = "🧂";
+pub const SALT:&str = "🧂";
