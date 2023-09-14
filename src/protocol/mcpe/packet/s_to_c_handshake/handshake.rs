@@ -1,16 +1,33 @@
-use anyhow::Result;
-
-use crate::protocol::mcpe::crypto::es384::{ES384PrivateKey, ES384PublicKey};
+use anyhow::{Result, Ok};
+use serde::{Serialize,Deserialize};
+use crate::protocol::mcpe::crypto::es384::{ES384PrivateKey, ES384PublicKey, ES384Header};
 use super::constants::salt;
 
-pub fn shared_secret(peer_pubkey: &str) -> Result<(ES384PrivateKey,[u8;32])>{
+pub fn shared_secret(peer_pubkey: &str) -> Result<([u8;32],String)>{
     let my_secret = ES384PrivateKey::generate();
     let peer_pubkey = ES384PublicKey::from_der(&base64::decode(peer_pubkey)?)?;
     let ss_key = peer_pubkey.diffie_hellman(&my_secret);
-    
+
     let mut digest = hmac_sha256::Hash::new();
     digest.update(salt);
     digest.update(ss_key);
     let secret_key_bytes = digest.finalize();
-    Ok((my_secret,secret_key_bytes))
+
+    let my_x509 = base64::encode(my_secret.public_key().to_der()?);
+    let header = ES384Header {
+        alg:"ES384".to_owned(),
+        x5u:my_x509.clone()
+    };
+    let claim = HandshakeClaim {
+        salt:salt.to_owned(),
+        signedToken:my_x509
+    };
+    let token = my_secret.sign(header, claim)?;
+    Ok((secret_key_bytes,token))
+}
+
+#[derive(Serialize,Deserialize)]
+struct HandshakeClaim {
+    salt:String,
+    signedToken:String
 }
