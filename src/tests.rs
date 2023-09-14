@@ -1,9 +1,10 @@
 use crate::protocol::mcpe::{
+    crypto::es384::{ES384Header, ES384PrivateKey},
     packet::{PlayStatus, RequestNetworkSetting},
-    transforms::framer::encode, crypto::es384::{ES384PrivateKey, ES384Header},
+    transforms::framer::encode,
 };
 use anyhow::Result;
-use serde::{Serialize,Deserialize};
+use serde::{Deserialize, Serialize};
 
 #[test]
 fn packet_id_macro() {
@@ -22,7 +23,7 @@ fn write_play_status() -> Result<()> {
     Ok(())
 }
 #[test]
-fn sign_jwt(){
+fn sign_jwt() {
     let secret = ES384PrivateKey::generate();
     let secret_pem = secret.to_pem().unwrap();
     let pub_key_pem = secret.public_key().to_pem().unwrap();
@@ -32,15 +33,15 @@ fn sign_jwt(){
         x5u:"MHYwEAYHKoZIzj0CAQYFK4EEACIDYgAECRXueJeTDqNRRgJi/vlRufByu/2G0i2Ebt6YMar5QX/R0DIIyrJMcUpruK4QveTfJSTp3Shlq4Gk34cD/4GUWwkv0DVuzeuB+tXija7HBxii03NHDbPAD0AKnLr2wdAp".to_owned()
     };
     let claim = NoCustomClaim {
-        salt:base64::encode("🧂")
+        salt: base64::encode("🧂"),
     };
     let token = secret.sign(header, claim).unwrap();
 
-    println!("{}\n{}\n{}",token,pub_key_pem,secret_pem)
+    println!("{}\n{}\n{}", token, pub_key_pem, secret_pem)
     //https://jwt.io/
 }
 
-#[derive(Serialize,Deserialize)]
+#[derive(Serialize, Deserialize)]
 struct NoCustomClaim {
-    salt:String
+    salt: String,
 }

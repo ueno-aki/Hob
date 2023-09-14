@@ -1,8 +1,9 @@
 use crate::protocol::internal::packet::{CreateClient, DestoryClient, InternalPacketKind};
-use crate::protocol::mcpe::crypto::cipher::{Cipher, Aes256Ctr64BE};
+use crate::protocol::mcpe::crypto::cipher::{Aes256Ctr64BE, Cipher};
 use crate::protocol::mcpe::packet::login_verify::{verify_login, verify_skin_data};
 use crate::protocol::mcpe::packet::{
-    CompressionAlgorithmType, NetworkSettings, PacketKind, PlayStatus, key_exchange, ServerToClientHandshake,
+    key_exchange, CompressionAlgorithmType, NetworkSettings, PacketKind, PlayStatus,
+    ServerToClientHandshake,
 };
 use crate::protocol::mcpe::transforms::framer;
 use crate::utils::get_option;
@@ -55,7 +56,11 @@ impl Player {
         Ok(())
     }
     async fn handle(&mut self, buffer: Vec<u8>, tx: Sender<InternalPacketKind>) -> Result<()> {
-        let raw_pkts = framer::decode(buffer,&self.status.encryption_enabled,&mut self.status.decipher)?;
+        let raw_pkts = framer::decode(
+            buffer,
+            &self.status.encryption_enabled,
+            &mut self.status.decipher,
+        )?;
         for pkt in raw_pkts {
             let packet = framer::parse_packet(pkt)?;
             println!("[C=>S]{}", packet);
@@ -71,12 +76,12 @@ impl Player {
                 PacketKind::Login(pkt) => {
                     let (key, data) = verify_login(&pkt.identity)?;
                     let skin_data = verify_skin_data(&key, &pkt.client)?;
-                    let (secret,token) = key_exchange::shared_secret(&key)?;
-                    self.send_packet(ServerToClientHandshake {token}).await?;
+                    let (secret, token) = key_exchange::shared_secret(&key)?;
+                    self.send_packet(ServerToClientHandshake { token }).await?;
                     self.status.encryption_enabled = true;
                     println!("{secret:?}");
                     self.setup_cipher(secret)?;
-                },
+                }
                 _ => todo!(),
             }
         }
@@ -107,22 +112,22 @@ impl Player {
         Ok(())
     }
 
-    fn setup_cipher(&mut self,key:[u8;32]) -> Result<()>{
-            use aes::cipher::KeyIvInit;
-            match (&self.status.cipher,&self.status.decipher) {
-            (None,None) => {
-                let iv = [key.clone()[0..12].to_vec(),vec![0,0,0,2]].concat();
-                let iv:[u8;16] = iv.try_into().unwrap();
-                self.status.cipher = Some(Aes256Ctr64BE::new(&key.into(),&iv.into()));
-                self.status.decipher = Some(Aes256Ctr64BE::new(&key.into(),&iv.into()));
+    fn setup_cipher(&mut self, key: [u8; 32]) -> Result<()> {
+        use aes::cipher::KeyIvInit;
+        match (&self.status.cipher, &self.status.decipher) {
+            (None, None) => {
+                let iv = [key.clone()[0..12].to_vec(), vec![0, 0, 0, 2]].concat();
+                let iv: [u8; 16] = iv.try_into().unwrap();
+                self.status.cipher = Some(Aes256Ctr64BE::new(&key.into(), &iv.into()));
+                self.status.decipher = Some(Aes256Ctr64BE::new(&key.into(), &iv.into()));
                 Ok(())
             }
-            _ => panic!("")
+            _ => panic!(""),
         }
     }
 }
 
-#[derive(Default,Clone)]
+#[derive(Default, Clone)]
 pub struct PlayerStatus {
     encryption_enabled: bool,
     cipher: Option<Cipher>,

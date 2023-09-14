@@ -3,8 +3,8 @@ use anyhow::Result;
 use protodef::prelude::*;
 
 pub mod constants;
-pub mod login_verify;
 pub mod errors;
+pub mod login_verify;
 
 #[derive(Debug)]
 pub struct Login {

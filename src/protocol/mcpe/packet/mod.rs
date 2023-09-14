@@ -1,13 +1,13 @@
-mod login;
-mod play_status;
 mod handshake;
+mod login;
 mod network_settings;
+mod play_status;
 mod request_network_setting;
 
-pub use login::{Login,login_verify};
-pub use play_status::PlayStatus;
-pub use handshake::{ServerToClientHandshake,ClientToServerHandshake,key_exchange};
+pub use handshake::{key_exchange, ClientToServerHandshake, ServerToClientHandshake};
+pub use login::{login_verify, Login};
 pub use network_settings::{CompressionAlgorithmType, NetworkSettings};
+pub use play_status::PlayStatus;
 pub use request_network_setting::RequestNetworkSetting;
 #[macro_export]
 macro_rules! packet_feature {
@@ -74,4 +74,11 @@ macro_rules! packet_impls {
         }
     };
 }
-packet_impls!(Login, PlayStatus, ServerToClientHandshake, ClientToServerHandshake, NetworkSettings, RequestNetworkSetting);
+packet_impls!(
+    Login,
+    PlayStatus,
+    ServerToClientHandshake,
+    ClientToServerHandshake,
+    NetworkSettings,
+    RequestNetworkSetting
+);

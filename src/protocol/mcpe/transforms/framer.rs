@@ -8,9 +8,16 @@ use protodef::prelude::*;
 use std::io::Read as _;
 
 use super::errors::TransFormError;
-use crate::protocol::mcpe::{packet::{Login, PacketKind, RequestNetworkSetting}, crypto::cipher::Cipher};
+use crate::protocol::mcpe::{
+    crypto::cipher::Cipher,
+    packet::{Login, PacketKind, RequestNetworkSetting},
+};
 
-pub fn decode(buffer: Vec<u8>,encryption_enabled:&bool,decipher:&mut Option<Cipher>) -> Result<Vec<Vec<u8>>> {
+pub fn decode(
+    buffer: Vec<u8>,
+    encryption_enabled: &bool,
+    decipher: &mut Option<Cipher>,
+) -> Result<Vec<Vec<u8>>> {
     if buffer[0] != 0xfe {
         return Err(TransFormError::ClientUnspecifiedPacket(buffer).into());
     }

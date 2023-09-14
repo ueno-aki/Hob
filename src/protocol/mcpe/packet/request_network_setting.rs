@@ -13,4 +13,8 @@ impl RequestNetworkSetting {
         Ok(RequestNetworkSetting { client_protocol })
     }
 }
-packet_feature!(RequestNetworkSetting, 193, "request_network_settings_packet");
+packet_feature!(
+    RequestNetworkSetting,
+    193,
+    "request_network_settings_packet"
+);

@@ -1,25 +1,28 @@
+use crate::protocol::mcpe::crypto::errors::CryptoErrors;
 use anyhow::{anyhow, Result};
 use hmac_sha512::sha384;
 use p384::{
-    ecdsa::{signature::{DigestVerifier, RandomizedDigestSigner}, Signature, SigningKey, VerifyingKey},
+    ecdsa::{
+        signature::{DigestVerifier, RandomizedDigestSigner},
+        Signature, SigningKey, VerifyingKey,
+    },
     pkcs8::{DecodePublicKey, EncodePrivateKey, EncodePublicKey},
     NonZeroScalar,
 };
 use serde::{de::DeserializeOwned, Deserialize, Serialize};
-use crate::protocol::mcpe::crypto::errors::CryptoErrors;
 
-#[derive(Debug,Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct ES384Header {
     pub alg: String,
     pub x5u: String,
 }
 #[inline]
-fn decode_b64_nopad<T: AsRef<[u8]>>(input:T) -> Result<Vec<u8>> {
+fn decode_b64_nopad<T: AsRef<[u8]>>(input: T) -> Result<Vec<u8>> {
     let decoded = base64::decode_config(input, base64::URL_SAFE_NO_PAD)?;
     Ok(decoded)
 }
 #[inline]
-fn encode_b64_nopad<T: AsRef<[u8]>>(input:T) -> String {
+fn encode_b64_nopad<T: AsRef<[u8]>>(input: T) -> String {
     base64::encode_config(input, base64::URL_SAFE_NO_PAD)
 }
 
@@ -47,8 +50,7 @@ impl ES384PublicKey {
         let p384_pubkey = p384::PublicKey::from(self.as_ref());
         Ok(p384_pubkey
             .to_public_key_pem(Default::default())
-            .map_err(|e| anyhow!("{}", e))?
-        )
+            .map_err(|e| anyhow!("{}", e))?)
     }
     pub fn decode_header(token: &str) -> Result<ES384Header> {
         match token.split(".").next() {
@@ -56,7 +58,7 @@ impl ES384PublicKey {
                 let header = decode_b64_nopad(header)?;
                 Ok(serde_json::from_slice(&header)?)
             }
-            None => Err(CryptoErrors::InvalidJWTFormat(token.to_owned()).into())
+            None => Err(CryptoErrors::InvalidJWTFormat(token.to_owned()).into()),
         }
     }
     pub fn verify_token<Claim>(&self, token: &str) -> Result<(ES384Header, Claim)>
@@ -76,7 +78,10 @@ impl ES384PublicKey {
             if let (Some(claim), Some(header)) = (r_p.next(), r_p.next()) {
                 let claim = decode_b64_nopad(claim)?;
                 let header = decode_b64_nopad(header)?;
-                Ok((serde_json::from_slice(&header)?, serde_json::from_slice(&claim)?))
+                Ok((
+                    serde_json::from_slice(&header)?,
+                    serde_json::from_slice(&claim)?,
+                ))
             } else {
                 Err(CryptoErrors::InvalidJWTPayload(payload.to_owned()).into())
             }
@@ -109,20 +114,20 @@ impl ES384PrivateKey {
             .to_string())
     }
 
-    pub fn sign<Claim>(&self,header:ES384Header,claim:Claim) -> Result<String>
+    pub fn sign<Claim>(&self, header: ES384Header, claim: Claim) -> Result<String>
     where
-        Claim: Serialize + DeserializeOwned
+        Claim: Serialize + DeserializeOwned,
     {
         let header_json = encode_b64_nopad(serde_json::to_string(&header)?);
         let claim_json = encode_b64_nopad(serde_json::to_string(&claim)?);
-        let payload = format!("{}.{}",header_json,claim_json);
+        let payload = format!("{}.{}", header_json, claim_json);
 
         let mut rng = rand::thread_rng();
         let mut digest = sha384::Hash::new();
         digest.update(payload.as_bytes());
-        let signature:Signature = self.as_ref().sign_digest_with_rng(&mut rng, digest);
+        let signature: Signature = self.as_ref().sign_digest_with_rng(&mut rng, digest);
 
-        let token = format!("{}.{}",payload,encode_b64_nopad(signature.to_vec()));
+        let token = format!("{}.{}", payload, encode_b64_nopad(signature.to_vec()));
         Ok(token)
     }
 }

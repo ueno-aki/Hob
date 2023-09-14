@@ -1,6 +1,6 @@
 use thiserror::Error;
 
-#[derive(Debug,Error)]
+#[derive(Debug, Error)]
 pub enum LoginErrors {
     #[error("Invalid chains length. found:{0},expected:3")]
     InvalidChainLength(usize),
@@ -9,5 +9,5 @@ pub enum LoginErrors {
     #[error("Failed to find ExtraUserdata")]
     ExtraUserdataNotFound,
     #[error("WrongSkinData:{0}")]
-    WrongSkinData(String)
+    WrongSkinData(String),
 }

@@ -1,11 +1,14 @@
 use anyhow::Result;
-use serde::{Serialize, Deserialize};
+use serde::{Deserialize, Serialize};
 
-use crate::protocol::mcpe::{packet::login::{errors::LoginErrors, constants::MOJANG_PUBKEY}, crypto::es384::ES384PublicKey};
+use crate::protocol::mcpe::{
+    crypto::es384::ES384PublicKey,
+    packet::login::{constants::MOJANG_PUBKEY, errors::LoginErrors},
+};
 
 #[derive(Serialize, Deserialize)]
 struct AuthChain {
-    chain:Vec<String>
+    chain: Vec<String>,
 }
 
 #[derive(Serialize, Deserialize)]
@@ -22,10 +25,10 @@ pub struct ExtraUserdata {
     pub identity: String,
     pub displayName: String,
     pub titleId: String,
-    pub sandboxId: String
+    pub sandboxId: String,
 }
 
-pub fn verify_login(chains: &str) -> Result<(String,ExtraUserdata)> {
+pub fn verify_login(chains: &str) -> Result<(String, ExtraUserdata)> {
     let chains = serde_json::from_str::<AuthChain>(chains)?.chain;
     if chains.len() != 3 {
         return Err(LoginErrors::InvalidChainLength(chains.len()).into());
@@ -35,7 +38,7 @@ pub fn verify_login(chains: &str) -> Result<(String,ExtraUserdata)> {
     let mut user_data = None;
     for chain in chains {
         let key = ES384PublicKey::from_der(&base64::decode(&public_key)?)?;
-        let (header,claim) = key.verify_token::<LoginIdentityClaim>(&chain)?;
+        let (header, claim) = key.verify_token::<LoginIdentityClaim>(&chain)?;
         if header.x5u == MOJANG_PUBKEY {
             verified = true;
         }
@@ -45,11 +48,11 @@ pub fn verify_login(chains: &str) -> Result<(String,ExtraUserdata)> {
         public_key = claim.identityPublicKey;
     }
     if verified == false {
-        return Err(LoginErrors::NotAuthenticated.into())
+        return Err(LoginErrors::NotAuthenticated.into());
     }
     match user_data {
-        Some(data) => Ok((public_key,data)),
-        None => Err(LoginErrors::ExtraUserdataNotFound.into())
+        Some(data) => Ok((public_key, data)),
+        None => Err(LoginErrors::ExtraUserdataNotFound.into()),
     }
 }
 
@@ -61,76 +64,76 @@ pub fn verify_skin_data(public_key: &str, client: &str) -> Result<SkinData> {
     }
 }
 
-#[derive(Serialize, Deserialize,Debug)]
+#[derive(Serialize, Deserialize, Debug)]
 #[allow(non_snake_case)]
 pub struct SkinData {
-    pub AnimatedImageData:Vec<AnimatedImageDataType>,
-    pub ArmSize:String,
-    pub CapeData:String,
-    pub CapeId:String,
-    pub CapeImageHeight:u64,
-    pub CapeImageWidth:u64,
-    pub CapeOnClassicSkin:bool,
-    pub ClientRandomId:u64,
-    pub CompatibleWithClientSideChunkGen:bool,
-    pub CurrentInputMode:u8,
-    pub DefaultInputMode:u8,
-    pub DeviceId:String,
-    pub DeviceModel:String,
-    pub DeviceOS:u8,
-    pub GameVersion:String,
-    pub GuiScale:i8,
-    pub IsEditorMode:bool,
-    pub LanguageCode:String,
-    pub OverrideSkin:bool,
-    pub PersonaPieces:Vec<PersonaPiecesType>,
-    pub PersonaSkin:bool,
-    pub PieceTintColors:Vec<PieceTintColorsType>,
-    pub PlatformOfflineId:String,
-    pub PlatformOnlineId:String,
-    pub PlayFabId:String,
-    pub PremiumSkin:bool,
-    pub SelfSignedId:String,
-    pub ServerAddress:String,
-    pub SkinAnimationData:String,
-    pub SkinColor:String,
-    pub SkinData:String,
-    pub SkinGeometryData:String,
-    pub SkinGeometryDataEngineVersion:String,
-    pub SkinId:String,
-    pub SkinImageHeight:u64,
-    pub SkinImageWidth:u64,
-    pub SkinResourcePatch:String,
-    pub ThirdPartyName:String,
-    pub ThirdPartyNameOnly:bool,
-    pub TrustedSkin:bool,
-    pub UIProfile:u8
+    pub AnimatedImageData: Vec<AnimatedImageDataType>,
+    pub ArmSize: String,
+    pub CapeData: String,
+    pub CapeId: String,
+    pub CapeImageHeight: u64,
+    pub CapeImageWidth: u64,
+    pub CapeOnClassicSkin: bool,
+    pub ClientRandomId: u64,
+    pub CompatibleWithClientSideChunkGen: bool,
+    pub CurrentInputMode: u8,
+    pub DefaultInputMode: u8,
+    pub DeviceId: String,
+    pub DeviceModel: String,
+    pub DeviceOS: u8,
+    pub GameVersion: String,
+    pub GuiScale: i8,
+    pub IsEditorMode: bool,
+    pub LanguageCode: String,
+    pub OverrideSkin: bool,
+    pub PersonaPieces: Vec<PersonaPiecesType>,
+    pub PersonaSkin: bool,
+    pub PieceTintColors: Vec<PieceTintColorsType>,
+    pub PlatformOfflineId: String,
+    pub PlatformOnlineId: String,
+    pub PlayFabId: String,
+    pub PremiumSkin: bool,
+    pub SelfSignedId: String,
+    pub ServerAddress: String,
+    pub SkinAnimationData: String,
+    pub SkinColor: String,
+    pub SkinData: String,
+    pub SkinGeometryData: String,
+    pub SkinGeometryDataEngineVersion: String,
+    pub SkinId: String,
+    pub SkinImageHeight: u64,
+    pub SkinImageWidth: u64,
+    pub SkinResourcePatch: String,
+    pub ThirdPartyName: String,
+    pub ThirdPartyNameOnly: bool,
+    pub TrustedSkin: bool,
+    pub UIProfile: u8,
 }
 
-#[derive(Serialize, Deserialize,Debug)]
+#[derive(Serialize, Deserialize, Debug)]
 #[allow(non_snake_case)]
 pub struct AnimatedImageDataType {
-    pub AnimationExpression:u64,
-    pub Frames:f64,
-    pub Image:String,
-    pub ImageHeight:u64,
-    pub ImageWidth:u64,
-    pub Type:u64
+    pub AnimationExpression: u64,
+    pub Frames: f64,
+    pub Image: String,
+    pub ImageHeight: u64,
+    pub ImageWidth: u64,
+    pub Type: u64,
 }
 
-#[derive(Serialize, Deserialize,Debug)]
+#[derive(Serialize, Deserialize, Debug)]
 #[allow(non_snake_case)]
 pub struct PersonaPiecesType {
-    pub IsDefault:bool,
-    pub PackId:String,
-    pub PieceId:String,
-    pub PieceType:String,
-    pub ProductId:String,
+    pub IsDefault: bool,
+    pub PackId: String,
+    pub PieceId: String,
+    pub PieceType: String,
+    pub ProductId: String,
 }
 
-#[derive(Serialize, Deserialize,Debug)]
+#[derive(Serialize, Deserialize, Debug)]
 #[allow(non_snake_case)]
 pub struct PieceTintColorsType {
-    pub Colors:Vec<String>,
-    pub PieceType:String
+    pub Colors: Vec<String>,
+    pub PieceType: String,
 }

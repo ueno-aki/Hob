@@ -1,4 +1,4 @@
-pub mod es384;
-pub mod errors;
-pub mod ecdh;
 pub mod cipher;
+pub mod ecdh;
+pub mod errors;
+pub mod es384;
