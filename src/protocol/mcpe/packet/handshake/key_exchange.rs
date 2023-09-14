@@ -10,7 +10,7 @@ pub fn shared_secret(peer_pubkey: &str) -> Result<([u8;32],String)>{
 
     let mut digest = hmac_sha256::Hash::new();
     digest.update(SALT);
-    digest.update(ss_key);
+    digest.update(ss_key.raw_secret_bytes());
     let secret_key_bytes = digest.finalize();
 
     let my_x509 = base64::encode(my_secret.public_key().to_der()?);
@@ -19,7 +19,7 @@ pub fn shared_secret(peer_pubkey: &str) -> Result<([u8;32],String)>{
         x5u:my_x509.clone()
     };
     let claim = HandshakeClaim {
-        salt:SALT.to_owned(),
+        salt:base64::encode(SALT),
         signedToken:my_x509
     };
     let token = my_secret.sign(header, claim)?;

@@ -1,3 +1,4 @@
+use aes::cipher::StreamCipher;
 use anyhow::Result;
 use flate2::{
     bufread::{DeflateDecoder, DeflateEncoder},
@@ -7,14 +8,17 @@ use protodef::prelude::*;
 use std::io::Read as _;
 
 use super::errors::TransFormError;
-use crate::protocol::mcpe::packet::{Login, PacketKind, RequestNetworkSetting};
+use crate::protocol::mcpe::{packet::{Login, PacketKind, RequestNetworkSetting}, crypto::cipher::Cipher};
 
-pub fn decode(buffer: Vec<u8>) -> Result<Vec<Vec<u8>>> {
+pub fn decode(buffer: Vec<u8>,encryption_enabled:&bool,decipher:&mut Option<Cipher>) -> Result<Vec<Vec<u8>>> {
     if buffer[0] != 0xfe {
         return Err(TransFormError::ClientUnspecifiedPacket(buffer).into());
     }
-
-    let flate = decompress(buffer[1..].to_vec());
+    let mut decoded = buffer[1..].to_vec();
+    if *encryption_enabled {
+        decipher.as_mut().unwrap().apply_keystream(&mut decoded);
+    }
+    let flate = decompress(decoded);
     let mut packets: Vec<Vec<u8>> = Vec::new();
     let mut offset: usize = 0;
 
@@ -54,6 +58,7 @@ pub fn encode(packet: PacketKind) -> Result<Vec<u8>> {
     content.write_var_int(packet.get_id())?;
     match packet {
         PacketKind::PlayStatus(v) => v.read_to_buffer(&mut content)?,
+        PacketKind::ServerToClientHandshake(v) => v.read_to_buffer(&mut content)?,
         PacketKind::NetworkSettings(v) => v.read_to_buffer(&mut content)?,
         _ => todo!(),
     };

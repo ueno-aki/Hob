@@ -1,17 +1,14 @@
 use crate::protocol::internal::packet::{CreateClient, DestoryClient, InternalPacketKind};
+use crate::protocol::mcpe::crypto::cipher::{Cipher, Aes256Ctr64BE};
 use crate::protocol::mcpe::packet::login_verify::{verify_login, verify_skin_data};
 use crate::protocol::mcpe::packet::{
-    CompressionAlgorithmType, NetworkSettings, PacketKind, PlayStatus, key_exchange,
+    CompressionAlgorithmType, NetworkSettings, PacketKind, PlayStatus, key_exchange, ServerToClientHandshake,
 };
 use crate::protocol::mcpe::transforms::framer;
 use crate::utils::get_option;
 
-use aes::Aes256;
-use aes::cipher::{StreamCipherCoreWrapper,KeyIvInit};
 use anyhow::{anyhow, Result};
 use atomic_refcell::{AtomicRef, AtomicRefCell, AtomicRefMut};
-use ctr::CtrCore;
-use ctr::flavors::Ctr64BE;
 use rand::Rng;
 use rust_raknet::RaknetSocket;
 use std::fmt::Display;
@@ -58,7 +55,7 @@ impl Player {
         Ok(())
     }
     async fn handle(&mut self, buffer: Vec<u8>, tx: Sender<InternalPacketKind>) -> Result<()> {
-        let raw_pkts = framer::decode(buffer)?;
+        let raw_pkts = framer::decode(buffer,&self.status.encryption_enabled,&mut self.status.decipher)?;
         for pkt in raw_pkts {
             let packet = framer::parse_packet(pkt)?;
             println!("[C=>S]{}", packet);
@@ -75,6 +72,9 @@ impl Player {
                     let (key, data) = verify_login(&pkt.identity)?;
                     let skin_data = verify_skin_data(&key, &pkt.client)?;
                     let (secret,token) = key_exchange::shared_secret(&key)?;
+                    self.send_packet(ServerToClientHandshake {token}).await?;
+                    self.status.encryption_enabled = true;
+                    println!("{secret:?}");
                     self.setup_cipher(secret)?;
                 },
                 _ => todo!(),
@@ -108,21 +108,19 @@ impl Player {
     }
 
     fn setup_cipher(&mut self,key:[u8;32]) -> Result<()>{
-        match (&self.status.cipher,&self.status.decipher) {
+            use aes::cipher::KeyIvInit;
+            match (&self.status.cipher,&self.status.decipher) {
             (None,None) => {
                 let iv = [key.clone()[0..12].to_vec(),vec![0,0,0,2]].concat();
-                let iv:[u8;16] = iv.try_into().map_err(|e|anyhow!(""))?;
+                let iv:[u8;16] = iv.try_into().unwrap();
                 self.status.cipher = Some(Aes256Ctr64BE::new(&key.into(),&iv.into()));
                 self.status.decipher = Some(Aes256Ctr64BE::new(&key.into(),&iv.into()));
+                Ok(())
             }
             _ => panic!("")
         }
-        unreachable!()
     }
 }
-
-type Cipher = StreamCipherCoreWrapper<CtrCore<Aes256,Ctr64BE>>;
-type Aes256Ctr64BE = ctr::Ctr64BE<Aes256>;
 
 #[derive(Default,Clone)]
 pub struct PlayerStatus {
