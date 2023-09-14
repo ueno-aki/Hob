@@ -6,8 +6,12 @@ use crate::protocol::mcpe::packet::{
 use crate::protocol::mcpe::transforms::framer;
 use crate::utils::get_option;
 
+use aes::Aes256;
+use aes::cipher::{StreamCipherCoreWrapper,KeyIvInit};
 use anyhow::{anyhow, Result};
 use atomic_refcell::{AtomicRef, AtomicRefCell, AtomicRefMut};
+use ctr::CtrCore;
+use ctr::flavors::Ctr64BE;
 use rand::Rng;
 use rust_raknet::RaknetSocket;
 use std::fmt::Display;
@@ -22,7 +26,7 @@ pub struct Player {
 }
 impl Display for Player {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{{id:{},status:{:?}}}", self.id, self.status)
+        write!(f, "{{id:{}}}", self.id)
     }
 }
 
@@ -68,9 +72,10 @@ impl Player {
                     };
                 }
                 PacketKind::Login(pkt) => {
-                    let (key, _data) = verify_login(&pkt.identity)?;
-                    let _skin_data = verify_skin_data(&key, &pkt.client)?;
+                    let (key, data) = verify_login(&pkt.identity)?;
+                    let skin_data = verify_skin_data(&key, &pkt.client)?;
                     let (secret,token) = key_exchange::shared_secret(&key)?;
+                    self.setup_cipher(secret)?;
                 },
                 _ => todo!(),
             }
@@ -101,9 +106,27 @@ impl Player {
         self.send_packet(network_setting).await?;
         Ok(())
     }
+
+    fn setup_cipher(&mut self,key:[u8;32]) -> Result<()>{
+        match (&self.status.cipher,&self.status.decipher) {
+            (None,None) => {
+                let iv = [key.clone()[0..12].to_vec(),vec![0,0,0,2]].concat();
+                let iv:[u8;16] = iv.try_into().map_err(|e|anyhow!(""))?;
+                self.status.cipher = Some(Aes256Ctr64BE::new(&key.into(),&iv.into()));
+                self.status.decipher = Some(Aes256Ctr64BE::new(&key.into(),&iv.into()));
+            }
+            _ => panic!("")
+        }
+        unreachable!()
+    }
 }
 
-#[derive(Debug, Default, Clone)]
+type Cipher = StreamCipherCoreWrapper<CtrCore<Aes256,Ctr64BE>>;
+type Aes256Ctr64BE = ctr::Ctr64BE<Aes256>;
+
+#[derive(Default,Clone)]
 pub struct PlayerStatus {
     encryption_enabled: bool,
+    cipher: Option<Cipher>,
+    decipher: Option<Cipher>,
 }
