@@ -10,7 +10,7 @@ use std::io::Read as _;
 use super::errors::TransFormError;
 use crate::protocol::mcpe::{
     crypto::cipher::Cipher,
-    packet::{Login, PacketKind, RequestNetworkSetting},
+    packet::{Login, PacketKind, RequestNetworkSetting, ClientToServerHandshake},
 };
 
 pub fn decode(
@@ -52,6 +52,7 @@ pub fn parse_packet(buffer: Vec<u8>) -> Result<PacketKind> {
     let (name, n_size) = buffer.read_varint(0)?;
     let packet: PacketKind = match name {
         x if x == Login::id() => Login::from_buf(buffer, n_size)?.into(),
+        x if x == ClientToServerHandshake::id() => ClientToServerHandshake().into(),
         x if x == RequestNetworkSetting::id() => {
             RequestNetworkSetting::from_buf(buffer, n_size)?.into()
         }

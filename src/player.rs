@@ -82,6 +82,9 @@ impl Player {
                     println!("{secret:?}");
                     self.setup_cipher(secret)?;
                 }
+                PacketKind::ClientToServerHandshake(_) => {
+                    
+                }
                 _ => todo!(),
             }
         }
