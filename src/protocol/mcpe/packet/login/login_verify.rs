@@ -7,12 +7,16 @@ use crate::protocol::mcpe::{packet::login::{errors::LoginErrors, constants::MOJA
 struct AuthChain {
     chain:Vec<String>
 }
+
 #[derive(Serialize, Deserialize)]
+#[allow(non_snake_case)]
 pub struct LoginIdentityClaim {
     extraData: Option<ExtraUserdata>,
     identityPublicKey: String,
 }
+
 #[derive(Deserialize, Serialize)]
+#[allow(non_snake_case)]
 pub struct ExtraUserdata {
     pub XUID: String,
     pub identity: String,
@@ -58,6 +62,7 @@ pub fn verify_skin_data(public_key: &str, client: &str) -> Result<SkinData> {
 }
 
 #[derive(Serialize, Deserialize,Debug)]
+#[allow(non_snake_case)]
 pub struct SkinData {
     pub AnimatedImageData:Vec<AnimatedImageDataType>,
     pub ArmSize:String,
@@ -103,6 +108,7 @@ pub struct SkinData {
 }
 
 #[derive(Serialize, Deserialize,Debug)]
+#[allow(non_snake_case)]
 pub struct AnimatedImageDataType {
     pub AnimationExpression:u64,
     pub Frames:f64,
@@ -113,6 +119,7 @@ pub struct AnimatedImageDataType {
 }
 
 #[derive(Serialize, Deserialize,Debug)]
+#[allow(non_snake_case)]
 pub struct PersonaPiecesType {
     pub IsDefault:bool,
     pub PackId:String,
@@ -122,6 +129,7 @@ pub struct PersonaPiecesType {
 }
 
 #[derive(Serialize, Deserialize,Debug)]
+#[allow(non_snake_case)]
 pub struct PieceTintColorsType {
     pub Colors:Vec<String>,
     pub PieceType:String

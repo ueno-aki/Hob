@@ -70,7 +70,7 @@ impl Player {
                 PacketKind::Login(pkt) => {
                     let (key, data) = verify_login(&pkt.identity)?;
                     let skin_data = verify_skin_data(&key, &pkt.client)?;
-                    println!("\n\n\n{:?}",skin_data);
+                    println!("{:?}",skin_data);
                 },
                 _ => todo!(),
             }
