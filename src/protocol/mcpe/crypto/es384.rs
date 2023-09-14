@@ -30,13 +30,22 @@ impl ES384PublicKey {
             .as_ref()
             .to_vec())
     }
+    pub fn decode_header(token: &str) -> Result<ES384Header> {
+        match token.split(".").next() {
+            Some(header) => {
+                let header = decode_b64_nopad(header)?;
+                Ok(serde_json::from_slice(&header)?)
+            }
+            None => Err(CryptoErrors::InvalidJWTFormat(token.to_owned()).into())
+        }
+    }
     pub fn verify_token<Claim>(&self, token: &str) -> Result<(ES384Header, Claim)>
     where
         Claim: Serialize + DeserializeOwned,
     {
         let mut r_token = token.rsplitn(2, ".");
         if let (Some(sig), Some(payload)) = (r_token.next(), r_token.next()) {
-            let signature = Signature::try_from(sig.as_ref())?;
+            let signature = Signature::try_from(sig.as_bytes())?;
             let mut digest = sha384::Hash::new();
             digest.update(payload.as_bytes());
             self.as_ref()
@@ -57,7 +66,7 @@ impl ES384PublicKey {
     }
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Debug,Serialize, Deserialize)]
 pub struct ES384Header {
     pub alg: String,
     pub x5u: String,
@@ -67,13 +76,13 @@ fn decode_b64_nopad(str: &str) -> Result<Vec<u8>> {
     Ok(decoded)
 }
 
-pub struct ES384SecretKey(SigningKey);
-impl AsRef<SigningKey> for ES384SecretKey {
+pub struct ES384PrivateKey(SigningKey);
+impl AsRef<SigningKey> for ES384PrivateKey {
     fn as_ref(&self) -> &SigningKey {
         &self.0
     }
 }
-impl ES384SecretKey {
+impl ES384PrivateKey {
     pub fn generate() -> Self {
         let mut rng = rand::thread_rng();
         Self(SigningKey::random(&mut rng))

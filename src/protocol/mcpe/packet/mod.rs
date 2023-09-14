@@ -3,7 +3,7 @@ mod network_settings;
 mod play_status;
 mod request_network_setting;
 
-pub use login::Login;
+pub use login::{Login,login_verify};
 pub use network_settings::{CompressionAlgorithmType, NetworkSettings};
 pub use play_status::PlayStatus;
 pub use request_network_setting::RequestNetworkSetting;

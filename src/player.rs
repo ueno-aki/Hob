@@ -1,4 +1,5 @@
 use crate::protocol::internal::packet::{CreateClient, DestoryClient, InternalPacketKind};
+use crate::protocol::mcpe::packet::login_verify::verify_auth;
 use crate::protocol::mcpe::packet::{
     CompressionAlgorithmType, NetworkSettings, PacketKind, PlayStatus,
 };
@@ -66,7 +67,7 @@ impl Player {
                         _ => self.send_network_setting().await?,
                     };
                 }
-                PacketKind::Login(pkt) => todo!(),
+                PacketKind::Login(pkt) => verify_auth(&pkt.identity)?,
                 _ => todo!(),
             }
         }
