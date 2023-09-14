@@ -68,9 +68,8 @@ impl Player {
                     };
                 }
                 PacketKind::Login(pkt) => {
-                    let (key, data) = verify_login(&pkt.identity)?;
-                    let skin_data = verify_skin_data(&key, &pkt.client)?;
-                    println!("{:?}",skin_data);
+                    let (key, _data) = verify_login(&pkt.identity)?;
+                    let _skin_data = verify_skin_data(&key, &pkt.client)?;
                 },
                 _ => todo!(),
             }

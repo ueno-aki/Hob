@@ -8,14 +8,17 @@ pub use network_settings::{CompressionAlgorithmType, NetworkSettings};
 pub use play_status::PlayStatus;
 pub use request_network_setting::RequestNetworkSetting;
 #[macro_export]
-macro_rules! packet_id {
-    ($t:ty,$e:expr) => {
+macro_rules! packet_feature {
+    ($t:ty,$id:expr,$name:expr) => {
         impl $t {
             pub fn get_id(&self) -> u64 {
-                $e
+                $id
             }
             pub fn id() -> u64 {
-                $e
+                $id
+            }
+            pub fn name(&self) -> String {
+                $name.to_owned()
             }
         }
     };
@@ -32,7 +35,7 @@ pub enum PacketKind {
 use std::fmt::Display;
 impl Display for PacketKind {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{{id:{},{:?}}}", self.get_id(), self)
+        write!(f, "{{name:{},id:{}}}", self.get_name(), self.get_id())
     }
 }
 
@@ -57,6 +60,11 @@ macro_rules! packet_impls {
             pub fn get_id(&self) -> u64{
                 match self {
                     $(PacketKind::$t(kind) => kind.get_id(),)*
+                }
+            }
+            pub fn get_name(&self) -> String{
+                match self {
+                    $(PacketKind::$t(kind) => kind.name(),)*
                 }
             }
         }

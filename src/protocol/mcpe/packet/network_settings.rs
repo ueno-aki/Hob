@@ -1,7 +1,7 @@
 use anyhow::Result;
 use protodef::prelude::*;
 
-use crate::packet_id;
+use crate::packet_feature;
 
 #[derive(Debug)]
 pub struct NetworkSettings {
@@ -22,7 +22,7 @@ impl NetworkSettings {
         Ok(())
     }
 }
-packet_id!(NetworkSettings, 143);
+packet_feature!(NetworkSettings, 143, "network_settings_packet");
 
 #[derive(Debug, Clone)]
 pub enum CompressionAlgorithmType {

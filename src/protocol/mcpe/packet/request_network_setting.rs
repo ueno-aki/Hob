@@ -1,4 +1,4 @@
-use crate::packet_id;
+use crate::packet_feature;
 use anyhow::Result;
 use protodef::prelude::*;
 
@@ -13,4 +13,4 @@ impl RequestNetworkSetting {
         Ok(RequestNetworkSetting { client_protocol })
     }
 }
-packet_id!(RequestNetworkSetting, 193);
+packet_feature!(RequestNetworkSetting, 193, "request_network_settings_packet");

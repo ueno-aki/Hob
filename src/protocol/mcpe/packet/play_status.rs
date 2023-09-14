@@ -1,7 +1,7 @@
 use anyhow::Result;
 use protodef::prelude::*;
 
-use crate::packet_id;
+use crate::packet_feature;
 
 #[derive(Debug, Clone)]
 pub enum PlayStatus {
@@ -23,4 +23,4 @@ impl PlayStatus {
         Ok(())
     }
 }
-packet_id!(PlayStatus, 2);
+packet_feature!(PlayStatus, 2, "play_status_packet");
