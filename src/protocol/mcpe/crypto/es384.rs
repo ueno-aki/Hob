@@ -1,13 +1,27 @@
 use anyhow::{anyhow, Result};
 use hmac_sha512::sha384;
 use p384::{
-    ecdsa::{signature::DigestVerifier, Signature, SigningKey, VerifyingKey},
+    ecdsa::{signature::{DigestVerifier, RandomizedDigestSigner}, Signature, SigningKey, VerifyingKey},
     pkcs8::{DecodePublicKey, EncodePrivateKey, EncodePublicKey},
     NonZeroScalar,
 };
 use serde::{de::DeserializeOwned, Deserialize, Serialize};
-
 use crate::protocol::mcpe::crypto::errors::CryptoErrors;
+
+#[derive(Debug,Serialize, Deserialize)]
+pub struct ES384Header {
+    pub alg: String,
+    pub x5u: String,
+}
+#[inline]
+fn decode_b64_nopad<T: AsRef<[u8]>>(input:T) -> Result<Vec<u8>> {
+    let decoded = base64::decode_config(input, base64::URL_SAFE_NO_PAD)?;
+    Ok(decoded)
+}
+#[inline]
+fn encode_b64_nopad<T: AsRef<[u8]>>(input:T) -> String {
+    base64::encode_config(input, base64::URL_SAFE_NO_PAD)
+}
 
 pub struct ES384PublicKey(VerifyingKey);
 impl AsRef<VerifyingKey> for ES384PublicKey {
@@ -15,7 +29,6 @@ impl AsRef<VerifyingKey> for ES384PublicKey {
         &self.0
     }
 }
-
 impl ES384PublicKey {
     pub fn from_der(bytes: &[u8]) -> Result<Self> {
         Ok(Self(
@@ -29,6 +42,13 @@ impl ES384PublicKey {
             .map_err(|e| anyhow!("{}", e))?
             .as_ref()
             .to_vec())
+    }
+    pub fn to_pem(&self) -> Result<String> {
+        let p384_pubkey = p384::PublicKey::from(self.as_ref());
+        Ok(p384_pubkey
+            .to_public_key_pem(Default::default())
+            .map_err(|e| anyhow!("{}", e))?
+        )
     }
     pub fn decode_header(token: &str) -> Result<ES384Header> {
         match token.split(".").next() {
@@ -66,16 +86,6 @@ impl ES384PublicKey {
     }
 }
 
-#[derive(Debug,Serialize, Deserialize)]
-pub struct ES384Header {
-    pub alg: String,
-    pub x5u: String,
-}
-fn decode_b64_nopad(str: &str) -> Result<Vec<u8>> {
-    let decoded = base64::decode_config(str, base64::URL_SAFE_NO_PAD)?;
-    Ok(decoded)
-}
-
 pub struct ES384PrivateKey(SigningKey);
 impl AsRef<SigningKey> for ES384PrivateKey {
     fn as_ref(&self) -> &SigningKey {
@@ -97,5 +107,22 @@ impl ES384PrivateKey {
             .to_pkcs8_pem(Default::default())
             .map_err(|e| anyhow!("{}", e))?
             .to_string())
+    }
+
+    pub fn sign<Claim>(&self,header:ES384Header,claim:Claim) -> Result<String>
+    where
+        Claim: Serialize + DeserializeOwned
+    {
+        let header_json = encode_b64_nopad(serde_json::to_string(&header)?);
+        let claim_json = encode_b64_nopad(serde_json::to_string(&claim)?);
+        let payload = format!("{}.{}",header_json,claim_json);
+
+        let mut rng = rand::thread_rng();
+        let mut digest = sha384::Hash::new();
+        digest.update(payload.as_bytes());
+        let signature:Signature = self.as_ref().sign_digest_with_rng(&mut rng, digest);
+
+        let token = format!("{}.{}",payload,encode_b64_nopad(signature.to_vec()));
+        Ok(token)
     }
 }
