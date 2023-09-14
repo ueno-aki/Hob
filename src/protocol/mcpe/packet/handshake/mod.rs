@@ -17,3 +17,8 @@ impl ServerToClientHandshake {
     }
 }
 packet_feature!(ServerToClientHandshake, 3, "server_to_client_handshake_packet");
+
+#[derive(Debug)]
+pub struct ClientToServerHandshake();
+
+packet_feature!(ClientToServerHandshake, 4, "client_to_server_handshake_packet");

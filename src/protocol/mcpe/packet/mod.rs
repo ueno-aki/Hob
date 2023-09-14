@@ -6,7 +6,7 @@ mod request_network_setting;
 
 pub use login::{Login,login_verify};
 pub use play_status::PlayStatus;
-pub use handshake::{ServerToClientHandshake,key_exchange};
+pub use handshake::{ServerToClientHandshake,ClientToServerHandshake,key_exchange};
 pub use network_settings::{CompressionAlgorithmType, NetworkSettings};
 pub use request_network_setting::RequestNetworkSetting;
 #[macro_export]
@@ -30,9 +30,10 @@ macro_rules! packet_feature {
 pub enum PacketKind {
     Login(Login),
     PlayStatus(PlayStatus),
+    ServerToClientHandshake(ServerToClientHandshake),
+    ClientToServerHandshake(ClientToServerHandshake),
     NetworkSettings(NetworkSettings),
     RequestNetworkSetting(RequestNetworkSetting),
-    ServerToClientHandshake(ServerToClientHandshake)
 }
 
 use std::fmt::Display;
@@ -73,4 +74,4 @@ macro_rules! packet_impls {
         }
     };
 }
-packet_impls!(Login, PlayStatus, ServerToClientHandshake, NetworkSettings, RequestNetworkSetting);
+packet_impls!(Login, PlayStatus, ServerToClientHandshake, ClientToServerHandshake, NetworkSettings, RequestNetworkSetting);
