@@ -1,6 +1,6 @@
 use hmac_sha512::sha384;
 use p384::{ecdsa::{VerifyingKey, SigningKey, Signature,signature::DigestVerifier}, pkcs8::{DecodePublicKey, EncodePublicKey, EncodePrivateKey}, NonZeroScalar};
-use anyhow::{Result, anyhow, Context};
+use anyhow::{Result, anyhow};
 use serde::{Serialize, de::DeserializeOwned, Deserialize};
 
 use crate::protocol::mcpe::crypto::errors::CryptoErrors;
