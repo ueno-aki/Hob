@@ -9,7 +9,7 @@ use crate::protocol::mcpe::transforms::framer;
 use crate::utils::get_option;
 
 use anyhow::{anyhow, Result};
-use atomic_refcell::{AtomicRef, AtomicRefCell, AtomicRefMut};
+use atomic_refcell::{AtomicRef, AtomicRefCell};
 use rand::Rng;
 use rust_raknet::RaknetSocket;
 use std::fmt::Display;
@@ -47,10 +47,6 @@ impl Player {
     #[inline]
     pub fn get_socket(&self) -> AtomicRef<RaknetSocket> {
         self.socket.borrow()
-    }
-    #[inline]
-    pub fn get_socket_mut(&self) -> AtomicRefMut<RaknetSocket> {
-        self.socket.borrow_mut()
     }
     pub async fn listen(&mut self, tx: Sender<InternalPacketKind>) -> Result<()> {
         let create_cl = CreateClient { client_id: self.id };

@@ -6,8 +6,7 @@ use p384::{
         signature::{DigestVerifier, RandomizedDigestSigner},
         Signature, SigningKey, VerifyingKey,
     },
-    pkcs8::{DecodePublicKey, EncodePrivateKey, EncodePublicKey},
-    NonZeroScalar,
+    pkcs8::{DecodePublicKey, EncodePublicKey},
 };
 use serde::{de::DeserializeOwned, Deserialize, Serialize};
 
@@ -45,12 +44,6 @@ impl ES384PublicKey {
             .map_err(|e| anyhow!("{}", e))?
             .as_ref()
             .to_vec())
-    }
-    pub fn to_pem(&self) -> Result<String> {
-        let p384_pubkey = p384::PublicKey::from(self.as_ref());
-        Ok(p384_pubkey
-            .to_public_key_pem(Default::default())
-            .map_err(|e| anyhow!("{}", e))?)
     }
     pub fn decode_header(token: &str) -> Result<ES384Header> {
         match token.split(".").next() {
@@ -104,14 +97,6 @@ impl ES384PrivateKey {
     }
     pub fn public_key(&self) -> ES384PublicKey {
         ES384PublicKey(*self.0.verifying_key())
-    }
-    pub fn to_pem(&self) -> Result<String> {
-        let scalar = NonZeroScalar::from_repr(self.0.to_bytes()).unwrap();
-        let p384_sk = p384::SecretKey::from(scalar);
-        Ok(p384_sk
-            .to_pkcs8_pem(Default::default())
-            .map_err(|e| anyhow!("{}", e))?
-            .to_string())
     }
 
     pub fn sign<Claim>(&self, header: ES384Header, claim: Claim) -> Result<String>
