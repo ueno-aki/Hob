@@ -2,6 +2,8 @@ use thiserror::Error;
 
 #[derive(Debug, Error)]
 pub enum CryptoErrors {
+    #[error("AlreadyCipherExists")]
+    AlreadyCipherExists(),
     #[error("InvalidJWTFormat:{0}")]
     InvalidJWTFormat(String),
     #[error("InvalidJWTFormat:{0}")]
