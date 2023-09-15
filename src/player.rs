@@ -90,11 +90,7 @@ impl Player {
                     self.setup_cipher(secret, iv)?;
                 }
                 PacketKind::ClientToServerHandshake(_) => {
-                    self.send_packet(Disconnect {
-                        message: "キョムリ".to_owned(),
-                        hide_disconnect_reason: false,
-                    })
-                    .await?;
+                    self.send_packet(PlayStatus::LoginSuccess).await?;
                 }
                 _ => todo!(),
             }
