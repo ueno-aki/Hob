@@ -60,7 +60,7 @@ impl ES384PublicKey {
     {
         let mut r_token = token.rsplitn(2, ".");
         let (Some(sig), Some(payload)) = (r_token.next(), r_token.next()) else {
-            Err(CryptoErrors::InvalidJWTFormat(token.to_owned()).into())
+            return Err(CryptoErrors::InvalidJWTFormat(token.to_owned()).into())
         };
         let signature = Signature::try_from(decode_b64_nopad(sig)?.as_ref())?;
         let mut digest = sha384::Hash::new();
@@ -70,7 +70,7 @@ impl ES384PublicKey {
             .map_err(|_| CryptoErrors::FailedVerification)?;
         let mut r_p = payload.rsplitn(2, ".");
         let (Some(claim), Some(header)) = (r_p.next(), r_p.next()) else {
-            Err(CryptoErrors::InvalidJWTPayload(payload.to_owned()).into())
+            return Err(CryptoErrors::InvalidJWTPayload(payload.to_owned()).into())
         };
         let claim = decode_b64_nopad(claim)?;
         let header = decode_b64_nopad(header)?;
