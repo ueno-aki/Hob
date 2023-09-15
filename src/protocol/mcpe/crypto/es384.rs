@@ -59,28 +59,25 @@ impl ES384PublicKey {
         Claim: Serialize + DeserializeOwned,
     {
         let mut r_token = token.rsplitn(2, ".");
-        if let (Some(sig), Some(payload)) = (r_token.next(), r_token.next()) {
-            let signature = Signature::try_from(decode_b64_nopad(sig)?.as_ref())?;
-            let mut digest = sha384::Hash::new();
-            digest.update(payload.as_bytes());
-            self.as_ref()
-                .verify_digest(digest, &signature)
-                .map_err(|_| CryptoErrors::FailedVerification)?;
-
-            let mut r_p = payload.rsplitn(2, ".");
-            if let (Some(claim), Some(header)) = (r_p.next(), r_p.next()) {
-                let claim = decode_b64_nopad(claim)?;
-                let header = decode_b64_nopad(header)?;
-                Ok((
-                    serde_json::from_slice(&header)?,
-                    serde_json::from_slice(&claim)?,
-                ))
-            } else {
-                Err(CryptoErrors::InvalidJWTPayload(payload.to_owned()).into())
-            }
-        } else {
+        let (Some(sig), Some(payload)) = (r_token.next(), r_token.next()) else {
             Err(CryptoErrors::InvalidJWTFormat(token.to_owned()).into())
-        }
+        };
+        let signature = Signature::try_from(decode_b64_nopad(sig)?.as_ref())?;
+        let mut digest = sha384::Hash::new();
+        digest.update(payload.as_bytes());
+        self.as_ref()
+            .verify_digest(digest, &signature)
+            .map_err(|_| CryptoErrors::FailedVerification)?;
+        let mut r_p = payload.rsplitn(2, ".");
+        let (Some(claim), Some(header)) = (r_p.next(), r_p.next()) else {
+            Err(CryptoErrors::InvalidJWTPayload(payload.to_owned()).into())
+        };
+        let claim = decode_b64_nopad(claim)?;
+        let header = decode_b64_nopad(header)?;
+        Ok((
+            serde_json::from_slice(&header)?,
+            serde_json::from_slice(&claim)?,
+        ))
     }
 }
 
