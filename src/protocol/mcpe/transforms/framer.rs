@@ -7,7 +7,6 @@ use flate2::{
 use protodef::prelude::*;
 use std::io::Read as _;
 
-use super::errors::TransFormError;
 use crate::protocol::mcpe::{
     crypto::cipher::Cipher,
     packet::{Login, PacketKind, RequestNetworkSetting, ClientToServerHandshake},
@@ -15,17 +14,8 @@ use crate::protocol::mcpe::{
 
 pub fn decode(
     buffer: Vec<u8>,
-    encryption_enabled: &bool,
-    decipher: &mut Option<Cipher>,
 ) -> Result<Vec<Vec<u8>>> {
-    if buffer[0] != 0xfe {
-        return Err(TransFormError::ClientUnspecifiedPacket(buffer).into());
-    }
-    let mut decoded = buffer[1..].to_vec();
-    if *encryption_enabled {
-        decipher.as_mut().unwrap().apply_keystream(&mut decoded);
-    }
-    let flate = decompress(decoded);
+    let flate = decompress(buffer);
     let mut packets: Vec<Vec<u8>> = Vec::new();
     let mut offset: usize = 0;
 
@@ -61,22 +51,26 @@ pub fn parse_packet(buffer: Vec<u8>) -> Result<PacketKind> {
     Ok(packet)
 }
 
-pub fn encode(packet: PacketKind) -> Result<Vec<u8>> {
+pub fn encode(
+    packet: PacketKind,
+    force_deflate:bool
+) -> Result<Vec<u8>> {
     let mut content: Vec<u8> = Vec::new();
     content.write_var_int(packet.get_id())?;
     match packet {
         PacketKind::PlayStatus(v) => v.read_to_buffer(&mut content)?,
         PacketKind::ServerToClientHandshake(v) => v.read_to_buffer(&mut content)?,
+        PacketKind::Disconnect(v) => v.read_to_buffer(&mut content)?,
         PacketKind::NetworkSettings(v) => v.read_to_buffer(&mut content)?,
         _ => todo!(),
     };
     let mut result = Vec::new();
     result.write_var_int(content.len() as u64)?;
-    result = [result, content].concat();
-    Ok(compress(result)?)
+    result = compress([result, content].concat(),force_deflate)?;
+    Ok(result)
 }
-fn compress(buffer: Vec<u8>) -> Result<Vec<u8>> {
-    if buffer.len() > 512 {
+fn compress(buffer: Vec<u8>,force:bool) -> Result<Vec<u8>> {
+    if buffer.len() > 512 || force {
         let mut encoder = DeflateEncoder::new(buffer.as_ref(), Compression::new(7));
         let mut flate = Vec::new();
         encoder.read_to_end(&mut flate)?;

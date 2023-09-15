@@ -3,11 +3,12 @@ use crate::protocol::mcpe::crypto::cipher::{Cipher, Aes256CtrCipherManager};
 use crate::protocol::mcpe::packet::login_verify::{verify_login, verify_skin_data};
 use crate::protocol::mcpe::packet::{
     key_exchange, CompressionAlgorithmType, NetworkSettings, PacketKind, PlayStatus,
-    ServerToClientHandshake,
+    ServerToClientHandshake, Disconnect,
 };
 use crate::protocol::mcpe::transforms::framer;
 use crate::utils::get_option;
 
+use aes::cipher::StreamCipher;
 use anyhow::{anyhow, Result};
 use atomic_refcell::{AtomicRef, AtomicRefCell};
 use rand::Rng;
@@ -26,6 +27,8 @@ pub struct Player {
 #[derive(Default, Clone)]
 pub struct PlayerStatus {
     pub encryption_enabled: bool,
+    pub send_counter:u64,
+    pub ss_key:Option<[u8;32]>,
     pub cipher: Option<Cipher>,
     pub decipher: Option<Cipher>,
 }
@@ -52,7 +55,7 @@ impl Player {
         let create_cl = CreateClient { client_id: self.id };
         tx.send(create_cl.into()).await?;
         while let Ok(buffer) = self.clone().get_socket().recv().await {
-            self.handle(buffer, tx.clone()).await?;
+            self.handle(buffer, tx.clone()).await.unwrap();
         }
         let destory_cl = DestoryClient { client_id: self.id };
         tx.send(destory_cl.into()).await?;
@@ -60,11 +63,7 @@ impl Player {
         Ok(())
     }
     async fn handle(&mut self, buffer: Vec<u8>, tx: Sender<InternalPacketKind>) -> Result<()> {
-        let raw_pkts = framer::decode(
-            buffer,
-            &self.status.encryption_enabled,
-            &mut self.status.decipher,
-        )?;
+        let raw_pkts = framer::decode(self.decrypt_or(buffer[1..].to_vec()))?;
         for pkt in raw_pkts {
             let packet = framer::parse_packet(pkt)?;
             println!("[C=>S]{}", packet);
@@ -82,32 +81,34 @@ impl Player {
                     let skin_data = verify_skin_data(&key, &pkt.client)?;
                     let (secret, token) = key_exchange::shared_secret(&key)?;
                     let iv: [u8; 16] = [secret.clone()[0..12].to_vec(), vec![0, 0, 0, 2]].concat().try_into().unwrap();
-                    self.status.encryption_enabled = true;
-                    self.setup_cipher(secret, iv)?;
                     self.send_packet(ServerToClientHandshake { token }).await?;
+                    self.status.encryption_enabled = true;
+                    self.status.ss_key = Some(secret.clone());
+                    self.setup_cipher(secret, iv)?;
                 }
                 PacketKind::ClientToServerHandshake(_) => {
-                    
+                    self.send_packet(PlayStatus::LoginSuccess).await?;
                 }
                 _ => todo!(),
             }
         }
         Ok(())
     }
-    async fn send_packet<T: Into<PacketKind>>(&self, packet: T) -> Result<()> {
+    async fn send_packet<T: Into<PacketKind>>(&mut self, packet: T) -> Result<()> {
         let packet: PacketKind = packet.into();
         println!("[S=>C]{}", packet);
-        let buffer = framer::encode(packet)?;
+        let bind = framer::encode(packet,self.status.encryption_enabled)?;
+        let buffer = self.encrypt_or(bind);
         self.get_socket()
             .send(
                 &[vec![0xfe], buffer].concat(),
-                rust_raknet::Reliability::ReliableOrdered,
+                rust_raknet::Reliability::Reliable,
             )
             .await
             .map_err(|e| anyhow!("FailedToSendPacket:{:?}", e))?;
         Ok(())
     }
-    async fn send_network_setting(&self) -> Result<()> {
+    async fn send_network_setting(&mut self) -> Result<()> {
         let network_setting = NetworkSettings {
             compression_threshold: 512,
             compression_algorithm: CompressionAlgorithmType::Deflate,
@@ -117,5 +118,30 @@ impl Player {
         };
         self.send_packet(network_setting).await?;
         Ok(())
+    }
+    fn decrypt_or (&mut self,buffer: Vec<u8>) -> Vec<u8>{
+        let mut result = buffer;
+        if self.status.encryption_enabled {
+            self.status.decipher.as_mut().unwrap().apply_keystream(&mut result);
+        }
+        result
+    }
+    fn encrypt_or (&mut self,buffer: Vec<u8>) -> Vec<u8>{
+        let mut result = buffer;
+        if self.status.encryption_enabled {
+            result = [result.clone(),self.compute_packet_tag(result)].concat();
+            self.status.cipher.as_mut().unwrap().apply_keystream(&mut result);
+            self.status.send_counter += 1;
+        }
+        result
+    }
+    fn compute_packet_tag(&self,plain_pkt:Vec<u8>) -> Vec<u8>{
+        println!("{:?}",plain_pkt);
+        let mut digest = hmac_sha256::Hash::new();
+        digest.update(self.status.send_counter.to_be_bytes());
+        digest.update(plain_pkt);
+        digest.update(self.status.ss_key.unwrap());
+        let result = digest.finalize();
+        result[0..8].to_vec()
     }
 }
