@@ -1,15 +1,15 @@
+mod disconnect;
 mod handshake;
 mod login;
 mod network_settings;
 mod play_status;
 mod request_network_setting;
-mod disconnect;
 
-pub use login::{login_verify, Login};
-pub use play_status::PlayStatus;
-pub use handshake::{key_exchange, ClientToServerHandshake, ServerToClientHandshake};
 pub use disconnect::Disconnect;
+pub use handshake::{key_exchange, ClientToServerHandshake, ServerToClientHandshake};
+pub use login::{login_verify, Login};
 pub use network_settings::{CompressionAlgorithmType, NetworkSettings};
+pub use play_status::PlayStatus;
 pub use request_network_setting::RequestNetworkSetting;
 #[macro_export]
 macro_rules! packet_feature {

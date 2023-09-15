@@ -16,4 +16,4 @@ impl Disconnect {
         Ok(())
     }
 }
-packet_feature!(Disconnect,5,"disconnect_packet");
+packet_feature!(Disconnect, 5, "disconnect_packet");

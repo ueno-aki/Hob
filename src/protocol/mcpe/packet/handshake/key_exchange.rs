@@ -1,5 +1,8 @@
 use super::constants::SALT;
-use crate::protocol::mcpe::crypto::{es384::{ES384Header, ES384PrivateKey, ES384PublicKey}, ecdh::DiffieHellman};
+use crate::protocol::mcpe::crypto::{
+    ecdh::DiffieHellman,
+    es384::{ES384Header, ES384PrivateKey, ES384PublicKey},
+};
 use anyhow::{Ok, Result};
 use serde::{Deserialize, Serialize};
 

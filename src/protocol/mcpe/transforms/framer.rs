@@ -1,4 +1,3 @@
-use aes::cipher::StreamCipher;
 use anyhow::Result;
 use flate2::{
     bufread::{DeflateDecoder, DeflateEncoder},
@@ -7,14 +6,11 @@ use flate2::{
 use protodef::prelude::*;
 use std::io::Read as _;
 
-use crate::protocol::mcpe::{
-    crypto::cipher::Cipher,
-    packet::{Login, PacketKind, RequestNetworkSetting, ClientToServerHandshake},
+use crate::protocol::mcpe::packet::{
+    ClientToServerHandshake, Login, PacketKind, RequestNetworkSetting,
 };
 
-pub fn decode(
-    buffer: Vec<u8>,
-) -> Result<Vec<Vec<u8>>> {
+pub fn decode(buffer: Vec<u8>) -> Result<Vec<Vec<u8>>> {
     let flate = decompress(buffer);
     let mut packets: Vec<Vec<u8>> = Vec::new();
     let mut offset: usize = 0;
@@ -51,10 +47,7 @@ pub fn parse_packet(buffer: Vec<u8>) -> Result<PacketKind> {
     Ok(packet)
 }
 
-pub fn encode(
-    packet: PacketKind,
-    force_deflate:bool
-) -> Result<Vec<u8>> {
+pub fn encode(packet: PacketKind, force_deflate: bool) -> Result<Vec<u8>> {
     let mut content: Vec<u8> = Vec::new();
     content.write_var_int(packet.get_id())?;
     match packet {
@@ -66,10 +59,10 @@ pub fn encode(
     };
     let mut result = Vec::new();
     result.write_var_int(content.len() as u64)?;
-    result = compress([result, content].concat(),force_deflate)?;
+    result = compress([result, content].concat(), force_deflate)?;
     Ok(result)
 }
-fn compress(buffer: Vec<u8>,force:bool) -> Result<Vec<u8>> {
+fn compress(buffer: Vec<u8>, force: bool) -> Result<Vec<u8>> {
     if buffer.len() > 512 || force {
         let mut encoder = DeflateEncoder::new(buffer.as_ref(), Compression::new(7));
         let mut flate = Vec::new();
