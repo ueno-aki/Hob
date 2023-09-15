@@ -92,6 +92,9 @@ impl Player {
                 PacketKind::ClientToServerHandshake(_) => {
                     self.send_packet(PlayStatus::LoginSuccess).await?;
                 }
+                PacketKind::ClientCacheStatus(_) => {
+                    
+                }
                 _ => todo!(),
             }
         }
