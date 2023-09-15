@@ -23,7 +23,7 @@ fn write_play_status() -> Result<()> {
     Ok(())
 }
 #[test]
-fn write_play_status_encrypteed() -> Result<()> {
+fn write_play_status_encrypted() -> Result<()> {
     let ss: [u8; 32] = [
         97, 160, 94, 73, 44, 96, 222, 15, 164, 99, 156, 254, 55, 25, 124, 119, 215, 168, 192, 40,
         163, 56, 0, 101, 223, 190, 165, 130, 206, 171, 178, 160,
