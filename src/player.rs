@@ -91,7 +91,7 @@ impl Player {
                 }
                 PacketKind::ClientToServerHandshake(_) => {
                     self.send_packet(Disconnect {
-                        message: "bye".to_owned(),
+                        message: "キョムリ".to_owned(),
                         hide_disconnect_reason: false,
                     })
                     .await?;

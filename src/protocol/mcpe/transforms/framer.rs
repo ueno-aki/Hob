@@ -47,7 +47,7 @@ pub fn parse_packet(buffer: Vec<u8>) -> Result<PacketKind> {
     Ok(packet)
 }
 
-pub fn encode(packet: PacketKind, force_deflate: bool) -> Result<Vec<u8>> {
+pub fn encode(packet: PacketKind, force_compress: bool) -> Result<Vec<u8>> {
     let mut content: Vec<u8> = Vec::new();
     content.write_var_int(packet.get_id())?;
     match packet {
@@ -59,7 +59,7 @@ pub fn encode(packet: PacketKind, force_deflate: bool) -> Result<Vec<u8>> {
     };
     let mut result = Vec::new();
     result.write_var_int(content.len() as u64)?;
-    result = compress([result, content].concat(), force_deflate)?;
+    result = compress([result, content].concat(), force_compress)?;
     Ok(result)
 }
 fn compress(buffer: Vec<u8>, force: bool) -> Result<Vec<u8>> {
