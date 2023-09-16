@@ -11,7 +11,7 @@ use crate::utils::get_option;
 use aes::cipher::StreamCipher;
 use anyhow::{anyhow, Result};
 use atomic_refcell::{AtomicRef, AtomicRefCell};
-use rand::Rng;
+use rand::{random, Rng};
 use rust_raknet::RaknetSocket;
 use std::fmt::Display;
 use std::sync::Arc;
@@ -43,7 +43,7 @@ impl Player {
     pub fn new(socket: RaknetSocket) -> Self {
         Player {
             socket: Arc::new(AtomicRefCell::new(socket)),
-            id: rand::thread_rng().gen(),
+            id: random(),
             status: PlayerStatus::default(),
         }
     }
@@ -57,8 +57,8 @@ impl Player {
         while let Ok(buffer) = self.clone().get_socket().recv().await {
             self.handle(buffer, tx.clone()).await.unwrap();
         }
-        let destory_cl = DestoryClient { client_id: self.id };
-        tx.send(destory_cl.into()).await?;
+        let destroy_cl = DestoryClient { client_id: self.id };
+        tx.send(destroy_cl.into()).await?;
         println!("disconnected,{}", self);
         Ok(())
     }
