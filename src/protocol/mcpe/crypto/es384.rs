@@ -73,8 +73,8 @@ impl ES384PublicKey {
             return Err(CryptoErrors::InvalidJWTPayload(payload.to_owned()).into());
         };
         Ok((
-            serde_json::from_slice(&decode_nopad_base64(claim)?)?,
             serde_json::from_slice(&decode_nopad_base64(header)?)?,
+            serde_json::from_slice(&decode_nopad_base64(claim)?)?,
         ))
     }
 }
