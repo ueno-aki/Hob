@@ -6,7 +6,7 @@ pub struct Position {
 }
 
 macro_rules! os {
-    ($($name:ident),*) => {
+    ($($name:tt),*) => {
         #[derive(Debug)]
         pub enum DeviceOS {
             $($name,)*
@@ -22,7 +22,7 @@ macro_rules! os {
         }
     }
 }
-os!(
+os![
     Undefined,
     Android,
     IOS,
@@ -39,4 +39,4 @@ os!(
     Xbox,
     WindowsPhone,
     Linux
-);
+];

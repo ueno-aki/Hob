@@ -22,7 +22,6 @@ use sparsey::{query::Query, storage::Entity, world::Comp};
 use std::fmt::Display;
 use std::sync::Arc;
 
-#[derive(Clone)]
 pub struct Player {
     pub entity: Entity,
     world: Arc<AtomicRefCell<World>>,
@@ -30,7 +29,7 @@ pub struct Player {
     pub status: PlayerStatus,
 }
 
-#[derive(Default, Clone)]
+#[derive(Default)]
 pub struct PlayerStatus {
     pub encryption_enabled: bool,
     pub send_counter: u64,
@@ -101,7 +100,7 @@ impl Player {
                     .unwrap();
                 self.status.encryption_enabled = true;
                 self.status.ss_key = Some(secret.clone());
-                self.setup_cipher(secret, iv)?;
+                self.setup_cipher(&secret, &iv)?;
                 self.get_world_mut()
                     .insert(self.entity, (DeviceOS::from(skin_data.DeviceOS),));
             }
