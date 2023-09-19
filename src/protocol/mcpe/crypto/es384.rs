@@ -93,7 +93,7 @@ impl ES384PrivateKey {
         ES384PublicKey(*self.0.verifying_key())
     }
 
-    pub fn sign<Claim>(&self, header: ES384Header, claim: Claim) -> Result<String>
+    pub fn sign<Claim>(&self, header: &ES384Header, claim: &Claim) -> Result<String>
     where
         Claim: Serialize + DeserializeOwned,
     {

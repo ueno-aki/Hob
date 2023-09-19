@@ -25,7 +25,7 @@ pub fn shared_secret(peer_pubkey: &str) -> Result<([u8; 32], String)> {
         salt: base64::encode(SALT),
         signedToken: my_x509,
     };
-    let token = my_secret.sign(header, claim)?;
+    let token = my_secret.sign(&header, &claim)?;
     Ok((secret_key_bytes, token))
 }
 
