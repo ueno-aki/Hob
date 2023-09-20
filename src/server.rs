@@ -1,7 +1,7 @@
 use std::sync::Arc;
 
 use crate::{
-    components::{DeviceOS, Position},
+    components::{DeviceOS, PlayerName, Position},
     player::Player,
     utils::get_option,
 };
@@ -28,6 +28,7 @@ impl Server {
         let mut world = World::default();
         world.register::<Position>();
         world.register::<DeviceOS>();
+        world.register::<PlayerName>();
         Server {
             world: Arc::new(AtomicRefCell::new(world)),
         }

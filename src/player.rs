@@ -1,24 +1,22 @@
-use crate::utils::get_option;
-use crate::{
-    components::DeviceOS,
-    protocol::mcpe::{
-        crypto::cipher::{Aes256CtrCipherManager, Cipher},
-        packet::{
-            key_exchange,
-            login_verify::{verify_login, verify_skin_data},
-            CompressionAlgorithmType, NetworkSettings, PacketKind, PlayStatus,
-            ServerToClientHandshake,
-        },
-        transforms::framer,
+use crate::components::{DeviceOS, PlayerName};
+use crate::protocol::mcpe::{
+    crypto::cipher::{Aes256CtrCipherManager, Cipher},
+    packet::{
+        key_exchange,
+        login_verify::{verify_login, verify_skin_data},
+        CompressionAlgorithmType, Login, NetworkSettings, PacketKind, PlayStatus,
+        ServerToClientHandshake,
     },
+    transforms::framer,
 };
+use crate::utils::get_option;
 
 use aes::cipher::StreamCipher;
 use anyhow::{anyhow, Result};
 use atomic_refcell::{AtomicRef, AtomicRefCell, AtomicRefMut};
 use rust_raknet::RaknetSocket;
+use sparsey::storage::Entity;
 use sparsey::world::World;
-use sparsey::{query::Query, storage::Entity, world::Comp};
 use std::fmt::Display;
 use std::sync::Arc;
 
@@ -40,11 +38,10 @@ pub struct PlayerStatus {
 
 impl Display for Player {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(
-            f,
-            "{{id:{}}}",
-            self.socket.borrow().peer_addr().unwrap().to_string()
-        )
+        match self.get_world().borrow::<PlayerName>().get(self.entity) {
+            Some(v) => write!(f, "{}", v.display_name),
+            None => write!(f, "{:?}", self.socket.borrow().peer_addr()),
+        }
     }
 }
 
@@ -68,18 +65,18 @@ impl Player {
     pub async fn listen(&mut self) -> Result<()> {
         let socket = self.socket.clone();
         while let Ok(buffer) = socket.borrow().recv().await {
-            let pkts = framer::decode(self.decrypt_or(buffer[1..].to_vec()))?;
-            for pkt in pkts {
+            let mut buffer = buffer[1..].to_vec();
+            for pkt in framer::decode(self.decrypt_or(&mut buffer))? {
                 let packet = framer::parse_packet(pkt)?;
                 println!("[C=>S]{}", packet);
-                self.handle(packet).await.unwrap();
+                self.handle(&packet).await.unwrap();
             }
         }
-        self.get_world_mut().destroy(self.entity);
         println!("disconnected,{}", self);
+        self.get_world_mut().destroy(self.entity);
         Ok(())
     }
-    async fn handle(&mut self, packet: PacketKind) -> Result<()> {
+    async fn handle(&mut self, packet: &PacketKind) -> Result<()> {
         match packet {
             PacketKind::RequestNetworkSetting(pkt) => {
                 let current_p = get_option("protocol")?.parse::<i32>()?;
@@ -89,25 +86,9 @@ impl Player {
                     _ => self.send_network_setting().await?,
                 };
             }
-            PacketKind::Login(pkt) => {
-                let (key, data) = verify_login(&pkt.identity)?;
-                let skin_data = verify_skin_data(&key, &pkt.client)?;
-                let (secret, token) = key_exchange::shared_secret(&key)?;
-                self.send_packet(ServerToClientHandshake { token }).await?;
-                let iv: [u8; 16] = [secret[0..12].to_vec(), vec![0, 0, 0, 2]]
-                    .concat()
-                    .try_into()
-                    .unwrap();
-                self.status.encryption_enabled = true;
-                self.status.ss_key = Some(secret.clone());
-                self.setup_cipher(&secret, &iv)?;
-                self.get_world_mut()
-                    .insert(self.entity, (DeviceOS::from(skin_data.DeviceOS),));
-            }
+            PacketKind::Login(pkt) => self.login_handshake(pkt).await?,
             PacketKind::ClientToServerHandshake(_) => {
                 self.send_packet(PlayStatus::LoginSuccess).await?;
-                self.get_world()
-                    .run(|os: Comp<DeviceOS>| (&os).for_each(|os| println!("{:?}", os)))
             }
             PacketKind::ClientCacheStatus(_) => {}
             _ => todo!(),
@@ -118,7 +99,7 @@ impl Player {
         let packet: PacketKind = packet.into();
         println!("[S=>C]{}", packet);
         let bind = framer::encode(packet, self.status.encryption_enabled)?;
-        let buffer = self.encrypt_or(bind);
+        let buffer = self.encrypt_or(&bind);
         self.socket
             .borrow()
             .send(
@@ -140,19 +121,47 @@ impl Player {
         self.send_packet(network_setting).await?;
         Ok(())
     }
-    fn decrypt_or(&mut self, buffer: Vec<u8>) -> Vec<u8> {
-        let mut result = buffer;
+    async fn login_handshake(&mut self, login: &Login) -> Result<()> {
+        let (key, data) = verify_login(&login.identity)?;
+        let skin_data = verify_skin_data(&key, &login.client)?;
+
+        let (secret, token) = key_exchange::shared_secret(&key)?;
+        let iv: [u8; 16] = [secret[0..12].to_vec(), vec![0, 0, 0, 2]]
+            .concat()
+            .try_into()
+            .unwrap();
+
+        self.send_packet(ServerToClientHandshake { token }).await?;
+
+        self.status.encryption_enabled = true;
+        self.status.ss_key = Some(secret.clone());
+        self.setup_cipher(&secret, &iv)?;
+
+        self.get_world_mut().insert(
+            self.entity,
+            (
+                DeviceOS::from(skin_data.DeviceOS),
+                PlayerName {
+                    xuid: data.XUID,
+                    identity: data.identity,
+                    display_name: data.displayName,
+                },
+            ),
+        );
+        Ok(())
+    }
+    fn decrypt_or<'a>(&mut self, buffer: &'a mut [u8]) -> &'a [u8] {
         if self.status.encryption_enabled {
             self.status
                 .decipher
                 .as_mut()
                 .unwrap()
-                .apply_keystream(&mut result);
+                .apply_keystream(buffer);
         }
-        result
+        buffer
     }
-    fn encrypt_or(&mut self, buffer: Vec<u8>) -> Vec<u8> {
-        let mut result = buffer;
+    fn encrypt_or(&mut self, buffer: &[u8]) -> Vec<u8> {
+        let mut result = buffer.to_vec();
         if self.status.encryption_enabled {
             let tag = self.compute_packet_tag(&result);
             result = [result, tag].concat();

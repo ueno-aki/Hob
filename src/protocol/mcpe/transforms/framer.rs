@@ -10,7 +10,7 @@ use crate::protocol::mcpe::packet::{
     ClientCacheStatus, ClientToServerHandshake, Login, PacketKind, RequestNetworkSetting,
 };
 
-pub fn decode(buffer: Vec<u8>) -> Result<Vec<Vec<u8>>> {
+pub fn decode(buffer: &[u8]) -> Result<Vec<Vec<u8>>> {
     let flate = decompress(buffer);
     let mut packets: Vec<Vec<u8>> = Vec::new();
     let mut offset: usize = 0;
@@ -26,12 +26,12 @@ pub fn decode(buffer: Vec<u8>) -> Result<Vec<Vec<u8>>> {
     }
     Ok(packets)
 }
-fn decompress(buffer: Vec<u8>) -> Vec<u8> {
-    let mut decoder: DeflateDecoder<&[u8]> = DeflateDecoder::new(buffer.as_ref());
+fn decompress(buffer: &[u8]) -> Vec<u8> {
+    let mut decoder = DeflateDecoder::new(buffer);
     let mut flate: Vec<u8> = Vec::new();
     match decoder.read_to_end(&mut flate) {
         Ok(_) => flate,
-        Err(_) => buffer,
+        Err(_) => buffer.to_vec(),
     }
 }
 pub fn parse_packet(buffer: Vec<u8>) -> Result<PacketKind> {

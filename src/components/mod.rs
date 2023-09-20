@@ -5,6 +5,13 @@ pub struct Position {
     pub z: f64,
 }
 
+#[derive(Debug)]
+pub struct PlayerName {
+    pub xuid: String,
+    pub identity: String,
+    pub display_name: String,
+}
+
 macro_rules! os {
     ($($name:tt),*) => {
         #[derive(Debug)]
