@@ -43,8 +43,7 @@ pub enum PacketKind {
     RequestNetworkSetting(RequestNetworkSetting),
 }
 
-use std::fmt::Display;
-impl Display for PacketKind {
+impl std::fmt::Display for PacketKind {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "{{name:{},id:{}}}", self.get_name(), self.get_id())
     }

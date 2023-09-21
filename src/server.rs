@@ -45,15 +45,19 @@ impl Server {
             .set_full_motd(Self::load_motd()?)
             .map_err(|_| anyhow!("Failed to set full motd"))?;
         listener.listen().await;
-
-        while let Ok(socket) = listener.accept().await {
-            let world = self.world.clone();
-            let entity = self.get_world_mut().create(());
-            let mut player = Player::new(socket, entity, world);
-            tokio::spawn(async move {
-                player.listen().await.unwrap();
-            });
-        }
+        
+        let world = self.world.clone();
+        tokio::spawn(async move {
+            let world = world.clone();
+            while let Ok(socket) = listener.accept().await {
+                let world = world.clone();
+                tokio::spawn(async move {
+                    let entity = world.borrow_mut().create(());
+                    let mut player = Player::new(socket, entity, world);
+                    player.listen().await.unwrap();
+                });
+            }
+        }).await.unwrap();
         Ok(())
     }
 

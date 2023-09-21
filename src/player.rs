@@ -20,11 +20,12 @@ use sparsey::world::World;
 use std::fmt::Display;
 use std::sync::Arc;
 
+#[derive(Clone)]
 pub struct Player {
     pub entity: Entity,
     world: Arc<AtomicRefCell<World>>,
-    socket: Arc<AtomicRefCell<RaknetSocket>>,
-    pub status: PlayerStatus,
+    pub socket: Arc<RaknetSocket>,
+    pub status: Arc<AtomicRefCell<PlayerStatus>>,
 }
 
 #[derive(Default)]
@@ -40,7 +41,7 @@ impl Display for Player {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self.get_world().borrow::<PlayerName>().get(self.entity) {
             Some(v) => write!(f, "{}", v.display_name),
-            None => write!(f, "{:?}", self.socket.borrow().peer_addr()),
+            None => write!(f, "{:?}", self.socket.peer_addr()),
         }
     }
 }
@@ -48,10 +49,10 @@ impl Display for Player {
 impl Player {
     pub fn new(socket: RaknetSocket, entity: Entity, world: Arc<AtomicRefCell<World>>) -> Self {
         Player {
-            socket: Arc::new(AtomicRefCell::new(socket)),
+            socket: Arc::new(socket),
             world,
             entity,
-            status: PlayerStatus::default(),
+            status: Arc::new(AtomicRefCell::new(PlayerStatus::default())),
         }
     }
     #[inline]
@@ -62,9 +63,17 @@ impl Player {
     fn get_world_mut(&self) -> AtomicRefMut<World> {
         self.world.borrow_mut()
     }
+    #[inline]
+    pub fn get_status(&self) -> AtomicRef<PlayerStatus> {
+        self.status.borrow()
+    }
+    #[inline]
+    pub fn get_status_mut(&self) -> AtomicRefMut<PlayerStatus> {
+        self.status.borrow_mut()
+    }
     pub async fn listen(&mut self) -> Result<()> {
         let socket = self.socket.clone();
-        while let Ok(buffer) = socket.borrow().recv().await {
+        while let Ok(buffer) = socket.recv().await {
             let mut buffer = buffer[1..].to_vec();
             for pkt in framer::decode(self.decrypt_or(&mut buffer))? {
                 let packet = framer::parse_packet(pkt)?;
@@ -90,7 +99,9 @@ impl Player {
             PacketKind::ClientToServerHandshake(_) => {
                 self.send_packet(PlayStatus::LoginSuccess).await?;
             }
-            PacketKind::ClientCacheStatus(_) => {}
+            PacketKind::ClientCacheStatus(pkt) => {
+                println!("{:?}", pkt);
+            }
             _ => todo!(),
         }
         Ok(())
@@ -98,10 +109,9 @@ impl Player {
     pub async fn send_packet<T: Into<PacketKind>>(&mut self, packet: T) -> Result<()> {
         let packet: PacketKind = packet.into();
         println!("[S=>C]{}", packet);
-        let bind = framer::encode(packet, self.status.encryption_enabled)?;
+        let bind = framer::encode(packet, self.get_status().encryption_enabled)?;
         let buffer = self.encrypt_or(&bind);
         self.socket
-            .borrow()
             .send(
                 &[vec![0xfe], buffer].concat(),
                 rust_raknet::Reliability::Reliable,
@@ -133,8 +143,8 @@ impl Player {
 
         self.send_packet(ServerToClientHandshake { token }).await?;
 
-        self.status.encryption_enabled = true;
-        self.status.ss_key = Some(secret.clone());
+        self.get_status_mut().encryption_enabled = true;
+        self.get_status_mut().ss_key = Some(secret.clone());
         self.setup_cipher(&secret, &iv)?;
 
         self.get_world_mut().insert(
@@ -151,8 +161,9 @@ impl Player {
         Ok(())
     }
     fn decrypt_or<'a>(&mut self, buffer: &'a mut [u8]) -> &'a [u8] {
-        if self.status.encryption_enabled {
-            self.status
+        let bool = self.get_status().encryption_enabled;
+        if bool {
+            self.get_status_mut()
                 .decipher
                 .as_mut()
                 .unwrap()
@@ -162,23 +173,24 @@ impl Player {
     }
     fn encrypt_or(&mut self, buffer: &[u8]) -> Vec<u8> {
         let mut result = buffer.to_vec();
-        if self.status.encryption_enabled {
+        let bool = self.get_status().encryption_enabled;
+        if bool {
             let tag = self.compute_packet_tag(&result);
             result = [result, tag].concat();
-            self.status
+            self.get_status_mut()
                 .cipher
                 .as_mut()
                 .unwrap()
                 .apply_keystream(&mut result);
-            self.status.send_counter += 1;
+            self.get_status_mut().send_counter += 1;
         }
         result
     }
     fn compute_packet_tag(&self, plain_pkt: &[u8]) -> Vec<u8> {
         let mut digest = hmac_sha256::Hash::new();
-        digest.update(self.status.send_counter.to_be_bytes());
+        digest.update(self.get_status().send_counter.to_be_bytes());
         digest.update(plain_pkt);
-        digest.update(self.status.ss_key.unwrap());
+        digest.update(self.get_status().ss_key.unwrap());
         let result = digest.finalize();
         result[0..8].to_vec()
     }

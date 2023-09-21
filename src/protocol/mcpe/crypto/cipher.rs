@@ -18,13 +18,8 @@ pub trait Aes256CtrCipherManager {
 
 impl Aes256CtrCipherManager for Player {
     fn setup_cipher(&mut self, key: &[u8; 32], iv: &[u8; 16]) -> Result<()> {
-        match (&self.status.cipher, &self.status.decipher) {
-            (None, None) => {
-                self.status.cipher = Some(Aes256Ctr64BE::new(key.into(), iv.into()));
-                self.status.decipher = Some(Aes256Ctr64BE::new(key.into(), iv.into()));
-                Ok(())
-            }
-            _ => Err(CryptoErrors::AlreadyCipherExists().into()),
-        }
+        self.get_status_mut().cipher = Some(Aes256Ctr64BE::new(key.into(), iv.into()));
+        self.get_status_mut().decipher = Some(Aes256Ctr64BE::new(key.into(), iv.into()));
+        Ok(())
     }
 }
