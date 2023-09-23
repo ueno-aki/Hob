@@ -1,6 +1,6 @@
 use crate::components::{DeviceOS, PlayerName};
 use crate::protocol::mcpe::{
-    crypto::cipher::{Aes256CtrCipherManager, Cipher},
+    crypto::cipher::{Aes256CtrManager, Cipher},
     packet::{
         key_exchange,
         login_verify::{verify_login, verify_skin_data},
@@ -11,7 +11,6 @@ use crate::protocol::mcpe::{
 };
 use crate::utils::get_option;
 
-use aes::cipher::StreamCipher;
 use anyhow::{anyhow, Result};
 use atomic_refcell::{AtomicRef, AtomicRefCell, AtomicRefMut};
 use rust_raknet::RaknetSocket;
@@ -52,7 +51,7 @@ impl Player {
             socket: Arc::new(socket),
             world,
             entity,
-            status: Arc::new(AtomicRefCell::new(PlayerStatus::default())),
+            status: Arc::new(AtomicRefCell::new(Default::default())),
         }
     }
     #[inline]
@@ -159,39 +158,5 @@ impl Player {
             ),
         );
         Ok(())
-    }
-    fn decrypt_or<'a>(&mut self, buffer: &'a mut [u8]) -> &'a [u8] {
-        let bool = self.get_status().encryption_enabled;
-        if bool {
-            self.get_status_mut()
-                .decipher
-                .as_mut()
-                .unwrap()
-                .apply_keystream(buffer);
-        }
-        buffer
-    }
-    fn encrypt_or(&mut self, buffer: &[u8]) -> Vec<u8> {
-        let mut result = buffer.to_vec();
-        let bool = self.get_status().encryption_enabled;
-        if bool {
-            let tag = self.compute_packet_tag(&result);
-            result = [result, tag].concat();
-            self.get_status_mut()
-                .cipher
-                .as_mut()
-                .unwrap()
-                .apply_keystream(&mut result);
-            self.get_status_mut().send_counter += 1;
-        }
-        result
-    }
-    fn compute_packet_tag(&self, plain_pkt: &[u8]) -> Vec<u8> {
-        let mut digest = hmac_sha256::Hash::new();
-        digest.update(self.get_status().send_counter.to_be_bytes());
-        digest.update(plain_pkt);
-        digest.update(self.get_status().ss_key.unwrap());
-        let result = digest.finalize();
-        result[0..8].to_vec()
     }
 }

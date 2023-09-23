@@ -1,9 +1,7 @@
 use crate::protocol::mcpe::{
-    crypto::cipher::Aes256Ctr64BE,
     packet::{PlayStatus, RequestNetworkSetting},
     transforms::framer::encode,
 };
-use aes::cipher::{KeyIvInit, StreamCipher};
 use anyhow::{Ok, Result};
 
 #[test]
@@ -20,35 +18,6 @@ fn write_play_status() -> Result<()> {
     play_status.read_to_buffer(&mut buf)?;
     println!("{:?}", buf);
     println!("{:?}", encode(play_status.into(), false));
-    Ok(())
-}
-#[test]
-fn write_play_status_encrypted() -> Result<()> {
-    let ss: [u8; 32] = [
-        97, 160, 94, 73, 44, 96, 222, 15, 164, 99, 156, 254, 55, 25, 124, 119, 215, 168, 192, 40,
-        163, 56, 0, 101, 223, 190, 165, 130, 206, 171, 178, 160,
-    ];
-    let iv: [u8; 16] = [ss.clone()[0..12].to_vec(), vec![0, 0, 0, 2]]
-        .concat()
-        .try_into()
-        .unwrap();
-    let mut cipher = Aes256Ctr64BE::new(&ss.into(), &iv.into());
-    let packet = [99, 101, 98, 0, 2, 0, 82, 84, 252, 137, 166, 12, 166, 205];
-
-    let mut pkt = packet.clone();
-    cipher.apply_keystream(&mut pkt);
-    println!("{:?}", pkt);
-
-    let mut cipher2 = cipher.clone();
-
-    pkt = packet.clone();
-    cipher.apply_keystream(&mut pkt);
-    println!("{:?}", pkt);
-
-    pkt = packet.clone();
-    cipher2.apply_keystream(&mut pkt);
-    println!("{:?}", pkt);
-
     Ok(())
 }
 #[test]

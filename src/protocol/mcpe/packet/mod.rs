@@ -5,6 +5,7 @@ mod login;
 mod network_settings;
 mod play_status;
 mod request_network_setting;
+mod resource_packs_info;
 
 pub use client_cache_status::ClientCacheStatus;
 pub use disconnect::Disconnect;

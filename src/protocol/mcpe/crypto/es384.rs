@@ -90,7 +90,7 @@ impl ES384PrivateKey {
         Self(SigningKey::random(&mut rand::thread_rng()))
     }
     pub fn public_key(&self) -> ES384PublicKey {
-        ES384PublicKey(*self.0.verifying_key())
+        ES384PublicKey(*self.as_ref().verifying_key())
     }
 
     pub fn sign<Claim>(&self, header: &ES384Header, claim: &Claim) -> Result<String>
