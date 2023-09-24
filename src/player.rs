@@ -1,4 +1,5 @@
 use crate::components::{DeviceOS, PlayerName};
+use crate::protocol::mcpe::packet::ResourcePacksInfoPacket;
 use crate::protocol::mcpe::{
     crypto::cipher::{Aes256CtrManager, Cipher},
     packet::{
@@ -97,6 +98,14 @@ impl Player {
             PacketKind::LoginPacket(pkt) => self.login_handshake(pkt).await?,
             PacketKind::ClientToServerHandshakePacket(_) => {
                 self.send_packet(PlayStatusPacket::LoginSuccess).await?;
+                let resource_info = ResourcePacksInfoPacket {
+                    must_accept: false,
+                    scripting: false,
+                    force_server_packs: false,
+                    behaviour_pack_infos: vec![],
+                    resource_pack_infos: vec![],
+                };
+                self.send_packet(resource_info).await?;
             }
             PacketKind::ClientCacheStatusPacket(pkt) => {
                 println!("{:?}", pkt);
@@ -140,7 +149,8 @@ impl Player {
             .try_into()
             .unwrap();
 
-        self.send_packet(ServerToClientHandshakePacket { token }).await?;
+        self.send_packet(ServerToClientHandshakePacket { token })
+            .await?;
 
         self.get_status_mut().encryption_enabled = true;
         self.get_status_mut().ss_key = Some(secret.clone());

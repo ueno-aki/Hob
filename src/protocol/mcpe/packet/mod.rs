@@ -14,7 +14,7 @@ pub use login::{login_verify, LoginPacket};
 pub use network_settings::{CompressionAlgorithmType, NetworkSettingsPacket};
 pub use play_status::PlayStatusPacket;
 pub use request_network_setting::RequestNetworkSettingPacket;
-pub use resource_packs_info::{ResourcePacksInfoPacket,BehaviourPackInfo,ResourcePackInfo};
+pub use resource_packs_info::{BehaviourPackInfo, ResourcePackInfo, ResourcePacksInfoPacket};
 
 #[macro_export]
 macro_rules! packet_feature {
