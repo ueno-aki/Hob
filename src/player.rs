@@ -104,12 +104,11 @@ impl Player {
                     force_server_packs: false,
                     behaviour_pack_infos: vec![],
                     resource_pack_infos: vec![],
+                    resource_pack_links:vec![]
                 };
                 self.send_packet(resource_info).await?;
             }
-            PacketKind::ClientCacheStatusPacket(pkt) => {
-                println!("{:?}", pkt);
-            }
+            PacketKind::ClientCacheStatusPacket(_) => {}
             _ => todo!(),
         }
         Ok(())

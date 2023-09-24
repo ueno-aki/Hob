@@ -10,6 +10,7 @@ pub struct ResourcePacksInfoPacket {
     pub force_server_packs: bool,
     pub behaviour_pack_infos: Vec<BehaviourPackInfo>,
     pub resource_pack_infos: Vec<ResourcePackInfo>,
+    pub resource_pack_links:Vec<ResourcePackLinks>
 }
 impl ResourcePacksInfoPacket {
     pub fn read_to_buffer(&self, vec: &mut Vec<u8>) -> Result<()> {
@@ -18,9 +19,11 @@ impl ResourcePacksInfoPacket {
         vec.write_bool(self.force_server_packs)?;
         self.encode_behavior(vec)?;
         self.encode_resouce(vec)?;
+        self.encode_resouce_links(vec)?;
         Ok(())
     }
     fn encode_behavior(&self, vec: &mut Vec<u8>) -> Result<()> {
+        vec.write_li16(self.behaviour_pack_infos.len() as i16)?;
         for behavior in self.behaviour_pack_infos.iter() {
             vec.write_string(&behavior.uuid)?;
             vec.write_string(&behavior.version)?;
@@ -33,6 +36,7 @@ impl ResourcePacksInfoPacket {
         Ok(())
     }
     fn encode_resouce(&self, vec: &mut Vec<u8>) -> Result<()> {
+        vec.write_li16(self.resource_pack_infos.len() as i16)?;
         for resource in self.resource_pack_infos.iter() {
             vec.write_string(&resource.uuid)?;
             vec.write_string(&resource.version)?;
@@ -42,6 +46,14 @@ impl ResourcePacksInfoPacket {
             vec.write_string(&resource.content_identity)?;
             vec.write_bool(resource.scripting)?;
             vec.write_bool(resource.rtx_enabled)?;
+        }
+        Ok(())
+    }
+    fn encode_resouce_links(&self, vec: &mut Vec<u8>) -> Result<()> {
+        vec.write_var_int(self.resource_pack_links.len() as u64)?;
+        for link in self.resource_pack_links.iter() {
+            vec.write_string(&link.id)?;
+            vec.write_string(&link.url)?;
         }
         Ok(())
     }
@@ -69,4 +81,9 @@ pub struct ResourcePackInfo {
     pub content_identity: String,
     pub scripting: bool,
     pub rtx_enabled: bool,
+}
+#[derive(Debug)]
+pub struct ResourcePackLinks {
+    pub id: String,
+    pub url: String,
 }

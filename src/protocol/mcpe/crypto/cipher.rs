@@ -40,18 +40,21 @@ impl Aes256CtrManager for Player {
         if encryption_enabled {
             let tag = self.compute_packet_tag(&result);
             result = [result, tag].concat();
+            self.get_status_mut().send_counter += 1;
             self.get_status_mut()
                 .cipher
                 .as_mut()
                 .unwrap()
                 .apply_keystream(&mut result);
-            self.get_status_mut().send_counter += 1;
         }
         result
     }
     fn compute_packet_tag(&self, plain_pkt: &[u8]) -> Vec<u8> {
         let mut digest = hmac_sha256::Hash::new();
-        digest.update(self.get_status().send_counter.to_be_bytes());
+        use protodef::prelude::*;
+        let mut counter = Vec::<u8>::new();
+        counter.write_lu64(self.get_status().send_counter);
+        digest.update(&counter);
         digest.update(plain_pkt);
         digest.update(self.get_status().ss_key.unwrap());
         let result = digest.finalize();
