@@ -1,5 +1,5 @@
 use aes::{
-    cipher::{KeyIvInit, StreamCipherCoreWrapper, StreamCipher},
+    cipher::{KeyIvInit, StreamCipher, StreamCipherCoreWrapper},
     Aes256,
 };
 use anyhow::Result;

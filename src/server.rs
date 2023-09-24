@@ -45,7 +45,7 @@ impl Server {
             .set_full_motd(Self::load_motd()?)
             .map_err(|_| anyhow!("Failed to set full motd"))?;
         listener.listen().await;
-        
+
         let world = self.world.clone();
         tokio::spawn(async move {
             let world = world.clone();
@@ -57,7 +57,9 @@ impl Server {
                     player.listen().await.unwrap();
                 });
             }
-        }).await.unwrap();
+        })
+        .await
+        .unwrap();
         Ok(())
     }
 
