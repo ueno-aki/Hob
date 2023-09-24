@@ -10,7 +10,7 @@ pub struct ResourcePacksInfoPacket {
     pub force_server_packs: bool,
     pub behaviour_pack_infos: Vec<BehaviourPackInfo>,
     pub resource_pack_infos: Vec<ResourcePackInfo>,
-    pub resource_pack_links:Vec<ResourcePackLinks>
+    pub resource_pack_links: Vec<ResourcePackLinks>,
 }
 impl ResourcePacksInfoPacket {
     pub fn read_to_buffer(&self, vec: &mut Vec<u8>) -> Result<()> {

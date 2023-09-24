@@ -104,7 +104,7 @@ impl Player {
                     force_server_packs: false,
                     behaviour_pack_infos: vec![],
                     resource_pack_infos: vec![],
-                    resource_pack_links:vec![]
+                    resource_pack_links: vec![],
                 };
                 self.send_packet(resource_info).await?;
             }
