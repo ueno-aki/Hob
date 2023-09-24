@@ -7,13 +7,14 @@ mod play_status;
 mod request_network_setting;
 mod resource_packs_info;
 
-pub use client_cache_status::ClientCacheStatus;
-pub use disconnect::Disconnect;
-pub use handshake::{key_exchange, ClientToServerHandshake, ServerToClientHandshake};
-pub use login::{login_verify, Login};
-pub use network_settings::{CompressionAlgorithmType, NetworkSettings};
-pub use play_status::PlayStatus;
-pub use request_network_setting::RequestNetworkSetting;
+pub use client_cache_status::ClientCacheStatusPacket;
+pub use disconnect::DisconnectPacket;
+pub use handshake::{key_exchange, ClientToServerHandshakePacket, ServerToClientHandshakePacket};
+pub use login::{login_verify, LoginPacket};
+pub use network_settings::{CompressionAlgorithmType, NetworkSettingsPacket};
+pub use play_status::PlayStatusPacket;
+pub use request_network_setting::RequestNetworkSettingPacket;
+pub use resource_packs_info::{ResourcePacksInfoPacket,BehaviourPackInfo,ResourcePackInfo};
 
 #[macro_export]
 macro_rules! packet_feature {
@@ -34,14 +35,15 @@ macro_rules! packet_feature {
 
 #[derive(Debug)]
 pub enum PacketKind {
-    Login(Login),
-    PlayStatus(PlayStatus),
-    ServerToClientHandshake(ServerToClientHandshake),
-    ClientToServerHandshake(ClientToServerHandshake),
-    Disconnect(Disconnect),
-    ClientCacheStatus(ClientCacheStatus),
-    NetworkSettings(NetworkSettings),
-    RequestNetworkSetting(RequestNetworkSetting),
+    LoginPacket(LoginPacket),
+    PlayStatusPacket(PlayStatusPacket),
+    ServerToClientHandshakePacket(ServerToClientHandshakePacket),
+    ClientToServerHandshakePacket(ClientToServerHandshakePacket),
+    DisconnectPacket(DisconnectPacket),
+    ClientCacheStatusPacket(ClientCacheStatusPacket),
+    NetworkSettingsPacket(NetworkSettingsPacket),
+    RequestNetworkSettingPacket(RequestNetworkSettingPacket),
+    ResourcePacksInfoPacket(ResourcePacksInfoPacket),
 }
 
 impl std::fmt::Display for PacketKind {
@@ -81,13 +83,14 @@ macro_rules! packet_impls {
         }
     };
 }
-packet_impls!(
-    Login,
-    PlayStatus,
-    ServerToClientHandshake,
-    ClientToServerHandshake,
-    Disconnect,
-    ClientCacheStatus,
-    NetworkSettings,
-    RequestNetworkSetting
-);
+packet_impls![
+    LoginPacket,
+    PlayStatusPacket,
+    ServerToClientHandshakePacket,
+    ClientToServerHandshakePacket,
+    DisconnectPacket,
+    ClientCacheStatusPacket,
+    NetworkSettingsPacket,
+    RequestNetworkSettingPacket,
+    ResourcePacksInfoPacket
+];

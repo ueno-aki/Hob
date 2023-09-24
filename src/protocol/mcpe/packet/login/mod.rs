@@ -7,13 +7,13 @@ pub mod errors;
 pub mod login_verify;
 
 #[derive(Debug)]
-pub struct Login {
+pub struct LoginPacket {
     pub protocol_version: i32,
     pub identity: String,
     pub client: String,
 }
 
-impl Login {
+impl LoginPacket {
     pub fn from_buf(buffer: Vec<u8>, offset: u64) -> Result<Self> {
         let mut cursor = offset;
         let protocol_version = buffer.read_i32(cursor);
@@ -23,11 +23,11 @@ impl Login {
         let (identity, identity_size) = buffer.read_little_string(cursor)?;
         cursor += identity_size;
         let (client, _client_size) = buffer.read_little_string(cursor)?;
-        Ok(Login {
+        Ok(LoginPacket {
             protocol_version,
             identity,
             client,
         })
     }
 }
-packet_feature!(Login, 1, "login_packet");
+packet_feature!(LoginPacket, 1, "login_packet");

@@ -4,7 +4,7 @@ use protodef::prelude::*;
 use crate::packet_feature;
 
 #[derive(Debug, Clone)]
-pub enum PlayStatus {
+pub enum PlayStatusPacket {
     LoginSuccess,
     FailedClient,
     FailedSpawn,
@@ -17,10 +17,10 @@ pub enum PlayStatus {
     FailedVanillaEditorMismatch,
 }
 
-impl PlayStatus {
+impl PlayStatusPacket {
     pub fn read_to_buffer(&self, vec: &mut Vec<u8>) -> Result<()> {
         vec.write_i32(self.clone() as i32)?;
         Ok(())
     }
 }
-packet_feature!(PlayStatus, 2, "play_status_packet");
+packet_feature!(PlayStatusPacket, 2, "play_status_packet");

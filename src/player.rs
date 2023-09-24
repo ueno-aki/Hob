@@ -4,8 +4,8 @@ use crate::protocol::mcpe::{
     packet::{
         key_exchange,
         login_verify::{verify_login, verify_skin_data},
-        CompressionAlgorithmType, Login, NetworkSettings, PacketKind, PlayStatus,
-        ServerToClientHandshake,
+        CompressionAlgorithmType, LoginPacket, NetworkSettingsPacket, PacketKind, PlayStatusPacket,
+        ServerToClientHandshakePacket,
     },
     transforms::framer,
 };
@@ -39,7 +39,7 @@ pub struct PlayerStatus {
 impl Display for Player {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self.get_world().borrow::<PlayerName>().get(self.entity) {
-            Some(v) => write!(f, "{}", v.display_name),
+            Some(v) => write!(f, "{}", v.user_name),
             None => write!(f, "{:?}", self.socket.peer_addr()),
         }
     }
@@ -86,19 +86,19 @@ impl Player {
     }
     async fn handle(&mut self, packet: &PacketKind) -> Result<()> {
         match packet {
-            PacketKind::RequestNetworkSetting(pkt) => {
+            PacketKind::RequestNetworkSettingPacket(pkt) => {
                 let current_p = get_option("protocol")?.parse::<i32>()?;
                 match pkt.client_protocol {
-                    x if x > current_p => self.send_packet(PlayStatus::FailedSpawn).await?,
-                    x if x < current_p => self.send_packet(PlayStatus::FailedClient).await?,
+                    x if x > current_p => self.send_packet(PlayStatusPacket::FailedSpawn).await?,
+                    x if x < current_p => self.send_packet(PlayStatusPacket::FailedClient).await?,
                     _ => self.send_network_setting().await?,
                 };
             }
-            PacketKind::Login(pkt) => self.login_handshake(pkt).await?,
-            PacketKind::ClientToServerHandshake(_) => {
-                self.send_packet(PlayStatus::LoginSuccess).await?;
+            PacketKind::LoginPacket(pkt) => self.login_handshake(pkt).await?,
+            PacketKind::ClientToServerHandshakePacket(_) => {
+                self.send_packet(PlayStatusPacket::LoginSuccess).await?;
             }
-            PacketKind::ClientCacheStatus(pkt) => {
+            PacketKind::ClientCacheStatusPacket(pkt) => {
                 println!("{:?}", pkt);
             }
             _ => todo!(),
@@ -120,7 +120,7 @@ impl Player {
         Ok(())
     }
     async fn send_network_setting(&mut self) -> Result<()> {
-        let network_setting = NetworkSettings {
+        let network_setting = NetworkSettingsPacket {
             compression_threshold: 512,
             compression_algorithm: CompressionAlgorithmType::Deflate,
             client_throttle: false,
@@ -130,7 +130,7 @@ impl Player {
         self.send_packet(network_setting).await?;
         Ok(())
     }
-    async fn login_handshake(&mut self, login: &Login) -> Result<()> {
+    async fn login_handshake(&mut self, login: &LoginPacket) -> Result<()> {
         let (key, data) = verify_login(&login.identity)?;
         let skin_data = verify_skin_data(&key, &login.client)?;
 
@@ -140,7 +140,7 @@ impl Player {
             .try_into()
             .unwrap();
 
-        self.send_packet(ServerToClientHandshake { token }).await?;
+        self.send_packet(ServerToClientHandshakePacket { token }).await?;
 
         self.get_status_mut().encryption_enabled = true;
         self.get_status_mut().ss_key = Some(secret.clone());
@@ -152,8 +152,8 @@ impl Player {
                 DeviceOS::from(skin_data.DeviceOS),
                 PlayerName {
                     xuid: data.XUID,
-                    identity: data.identity,
-                    display_name: data.displayName,
+                    client_uuid: data.identity,
+                    user_name: data.displayName,
                 },
             ),
         );

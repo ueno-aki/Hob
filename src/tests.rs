@@ -1,12 +1,12 @@
 use crate::protocol::mcpe::{
-    packet::{PlayStatus, RequestNetworkSetting},
+    packet::{PlayStatusPacket, RequestNetworkSettingPacket},
     transforms::framer::encode,
 };
 use anyhow::{Ok, Result};
 
 #[test]
 fn packet_id_macro() {
-    let pkt = RequestNetworkSetting {
+    let pkt = RequestNetworkSettingPacket {
         client_protocol: 594,
     };
     assert_eq!(pkt.get_id(), 193);
@@ -14,7 +14,7 @@ fn packet_id_macro() {
 #[test]
 fn write_play_status() -> Result<()> {
     let mut buf: Vec<u8> = Vec::new();
-    let play_status = PlayStatus::FailedClient;
+    let play_status = PlayStatusPacket::FailedClient;
     play_status.read_to_buffer(&mut buf)?;
     println!("{:?}", buf);
     println!("{:?}", encode(play_status.into(), false));

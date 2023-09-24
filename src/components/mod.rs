@@ -8,8 +8,8 @@ pub struct Position {
 #[derive(Debug)]
 pub struct PlayerName {
     pub xuid: String,
-    pub identity: String,
-    pub display_name: String,
+    pub client_uuid: String,
+    pub user_name: String,
 }
 
 macro_rules! os {

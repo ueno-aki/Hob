@@ -4,7 +4,7 @@ use protodef::prelude::*;
 use crate::packet_feature;
 
 #[derive(Debug)]
-pub struct NetworkSettings {
+pub struct NetworkSettingsPacket {
     pub compression_threshold: u16,
     pub compression_algorithm: CompressionAlgorithmType,
     pub client_throttle: bool,
@@ -12,7 +12,7 @@ pub struct NetworkSettings {
     pub client_throttle_scalar: f32,
 }
 
-impl NetworkSettings {
+impl NetworkSettingsPacket {
     pub fn read_to_buffer(&self, vec: &mut Vec<u8>) -> Result<()> {
         vec.write_u16(self.compression_threshold)?;
         vec.write_u16(self.compression_algorithm.clone() as u16)?;
@@ -22,7 +22,7 @@ impl NetworkSettings {
         Ok(())
     }
 }
-packet_feature!(NetworkSettings, 143, "network_settings_packet");
+packet_feature!(NetworkSettingsPacket, 143, "network_settings_packet");
 
 #[derive(Debug, Clone)]
 pub enum CompressionAlgorithmType {

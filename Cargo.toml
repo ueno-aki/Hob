@@ -21,6 +21,6 @@ hmac-sha256 = { version = "1.1.6", features = [ "traits010" ] }
 aes = "*"
 ctr = "0.9.2"
 rand = "*"
-protodef = { git = "https://github.com/ueno-aki/protodef/", branch = "master" }
+protodef = { git = "https://github.com/ueno-aki/protodef/", branch = "develop" }
 anyhow = "1.0.69"
 thiserror = "1.0"
