@@ -1,4 +1,7 @@
-use crate::protocol::mcpe::crypto::errors::CryptoErrors;
+use crate::{
+    protocol::mcpe::crypto::errors::CryptoErrors,
+    utils::{decode_nopad_base64, encode_nopad_base64},
+};
 use anyhow::{anyhow, Result};
 use hmac_sha512::sha384;
 use p384::{
@@ -14,15 +17,6 @@ use serde::{de::DeserializeOwned, Deserialize, Serialize};
 pub struct ES384Header {
     pub alg: String,
     pub x5u: String,
-}
-#[inline]
-fn decode_nopad_base64<T: AsRef<[u8]>>(input: T) -> Result<Vec<u8>> {
-    let decoded = base64::decode_config(input, base64::URL_SAFE_NO_PAD)?;
-    Ok(decoded)
-}
-#[inline]
-fn encode_b64_nopad<T: AsRef<[u8]>>(input: T) -> String {
-    base64::encode_config(input, base64::URL_SAFE_NO_PAD)
 }
 
 pub struct ES384PublicKey(VerifyingKey);
@@ -97,8 +91,8 @@ impl ES384PrivateKey {
     where
         Claim: Serialize + DeserializeOwned,
     {
-        let header_json = encode_b64_nopad(serde_json::to_string(&header)?);
-        let claim_json = encode_b64_nopad(serde_json::to_string(&claim)?);
+        let header_json = encode_nopad_base64(serde_json::to_string(&header)?);
+        let claim_json = encode_nopad_base64(serde_json::to_string(&claim)?);
         let payload = format!("{}.{}", header_json, claim_json);
 
         let mut rng = rand::thread_rng();
@@ -106,7 +100,7 @@ impl ES384PrivateKey {
         digest.update(payload.as_bytes());
         let signature: Signature = self.as_ref().sign_digest_with_rng(&mut rng, digest);
 
-        let token = format!("{}.{}", payload, encode_b64_nopad(signature.to_vec()));
+        let token = format!("{}.{}", payload, encode_nopad_base64(signature.to_vec()));
         Ok(token)
     }
 }

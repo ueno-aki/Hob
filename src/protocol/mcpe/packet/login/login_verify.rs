@@ -2,9 +2,12 @@
 use anyhow::Result;
 use serde::{Deserialize, Serialize};
 
-use crate::protocol::mcpe::{
-    crypto::es384::ES384PublicKey,
-    packet::login::{constants::MOJANG_PUBKEY, errors::LoginErrors},
+use crate::{
+    protocol::mcpe::{
+        crypto::es384::ES384PublicKey,
+        packet::login::{constants::MOJANG_PUBKEY, errors::LoginErrors},
+    },
+    utils::decode_base64,
 };
 
 #[derive(Serialize, Deserialize)]
@@ -36,7 +39,7 @@ pub fn verify_login(chains: &str) -> Result<(String, ExtraUserdata)> {
     let mut verified = false;
     let mut user_data = None;
     for chain in chains {
-        let key = ES384PublicKey::from_der(&base64::decode(&public_key)?)?;
+        let key = ES384PublicKey::from_der(&decode_base64(&public_key)?)?;
         let (header, claim) = key.verify_token::<LoginIdentityClaim>(&chain)?;
         if header.x5u == MOJANG_PUBKEY {
             verified = true;
@@ -56,7 +59,7 @@ pub fn verify_login(chains: &str) -> Result<(String, ExtraUserdata)> {
 }
 
 pub fn verify_skin_data(public_key: &str, client: &str) -> Result<SkinData> {
-    let key = ES384PublicKey::from_der(&base64::decode(public_key)?)?;
+    let key = ES384PublicKey::from_der(&decode_base64(public_key)?)?;
     match key.verify_token::<SkinData>(client) {
         Ok((_, claim)) => Ok(claim),
         Err(_) => Err(LoginErrors::WrongSkinData(client.to_owned()).into()),
