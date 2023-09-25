@@ -16,40 +16,40 @@ pub use play_status::PlayStatusPacket;
 pub use request_network_setting::RequestNetworkSettingPacket;
 pub use resource_packs_info::{BehaviourPackInfo, ResourcePackInfo, ResourcePacksInfoPacket};
 
-macro_rules! packet_kind_impls {
-    ($($t:ident),*) => {
+macro_rules! packet_kind_enum {
+    ($($kind:ident),*) => {
         #[derive(Debug)]
         pub enum PacketKind {
-            $($t($t),)*
+            $($kind($kind),)*
         }
         impl PacketKind {
             pub fn get_id(&self) -> u64{
                 match self {
-                    $(PacketKind::$t(kind) => kind.get_id(),)*
+                    $(PacketKind::$kind(v) => v.get_id(),)*
                 }
             }
             pub fn get_name(&self) -> String{
                 match self {
-                    $(PacketKind::$t(kind) => kind.name(),)*
+                    $(PacketKind::$kind(v) => v.name(),)*
                 }
             }
         }
+        impl std::fmt::Display for PacketKind {
+            fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+                write!(f, "{{name:{},id:{}}}", self.get_name(), self.get_id())
+            }
+        }
         $(
-            impl From<$t> for PacketKind {
-                fn from(value: $t) -> Self {
-                    PacketKind::$t(value)
+            impl From<$kind> for PacketKind {
+                fn from(value: $kind) -> Self {
+                    PacketKind::$kind(value)
                 }
             }
         )*
     };
 }
-impl std::fmt::Display for PacketKind {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{{name:{},id:{}}}", self.get_name(), self.get_id())
-    }
-}
 
-packet_kind_impls![
+packet_kind_enum![
     LoginPacket,
     PlayStatusPacket,
     ServerToClientHandshakePacket,
