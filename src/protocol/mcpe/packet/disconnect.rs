@@ -1,7 +1,7 @@
 use anyhow::Result;
 use protodef::prelude::*;
 
-use crate::packet_feature;
+use crate::packet_ids;
 
 #[derive(Debug)]
 pub struct DisconnectPacket {
@@ -16,4 +16,4 @@ impl DisconnectPacket {
         Ok(())
     }
 }
-packet_feature!(DisconnectPacket, 5, "disconnect_packet");
+packet_ids!(DisconnectPacket, 5, "disconnect_packet");

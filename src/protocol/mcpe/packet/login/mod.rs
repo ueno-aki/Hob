@@ -1,4 +1,4 @@
-use crate::packet_feature;
+use crate::packet_ids;
 use anyhow::Result;
 use protodef::prelude::*;
 
@@ -30,4 +30,4 @@ impl LoginPacket {
         })
     }
 }
-packet_feature!(LoginPacket, 1, "login_packet");
+packet_ids!(LoginPacket, 1, "login_packet");

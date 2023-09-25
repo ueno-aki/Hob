@@ -1,4 +1,4 @@
-use crate::packet_feature;
+use crate::packet_ids;
 use anyhow::Result;
 use protodef::prelude::*;
 
@@ -13,4 +13,4 @@ impl ClientCacheStatusPacket {
         Ok(ClientCacheStatusPacket { enabled })
     }
 }
-packet_feature!(ClientCacheStatusPacket, 129, "client_cache_status_packet");
+packet_ids!(ClientCacheStatusPacket, 129, "client_cache_status_packet");

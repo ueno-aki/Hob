@@ -1,7 +1,7 @@
 pub mod constants;
 pub mod key_exchange;
 
-use crate::packet_feature;
+use crate::packet_ids;
 use anyhow::Result;
 use protodef::prelude::*;
 
@@ -16,7 +16,7 @@ impl ServerToClientHandshakePacket {
         Ok(())
     }
 }
-packet_feature!(
+packet_ids!(
     ServerToClientHandshakePacket,
     3,
     "server_to_client_handshake_packet"
@@ -25,7 +25,7 @@ packet_feature!(
 #[derive(Debug)]
 pub struct ClientToServerHandshakePacket();
 
-packet_feature!(
+packet_ids!(
     ClientToServerHandshakePacket,
     4,
     "client_to_server_handshake_packet"

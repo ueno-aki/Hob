@@ -1,7 +1,7 @@
 use anyhow::Result;
 use protodef::prelude::*;
 
-use crate::packet_feature;
+use crate::packet_ids;
 
 #[derive(Debug)]
 pub struct ResourcePacksInfoPacket {
@@ -59,7 +59,7 @@ impl ResourcePacksInfoPacket {
     }
 }
 
-packet_feature!(ResourcePacksInfoPacket, 6, "resource_pack_info_packet");
+packet_ids!(ResourcePacksInfoPacket, 6, "resource_pack_info_packet");
 
 #[derive(Debug)]
 pub struct BehaviourPackInfo {

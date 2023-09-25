@@ -16,8 +16,53 @@ pub use play_status::PlayStatusPacket;
 pub use request_network_setting::RequestNetworkSettingPacket;
 pub use resource_packs_info::{BehaviourPackInfo, ResourcePackInfo, ResourcePacksInfoPacket};
 
+macro_rules! packet_kind_impls {
+    ($($t:ident),*) => {
+        #[derive(Debug)]
+        pub enum PacketKind {
+            $($t($t),)*
+        }
+        impl PacketKind {
+            pub fn get_id(&self) -> u64{
+                match self {
+                    $(PacketKind::$t(kind) => kind.get_id(),)*
+                }
+            }
+            pub fn get_name(&self) -> String{
+                match self {
+                    $(PacketKind::$t(kind) => kind.name(),)*
+                }
+            }
+        }
+        $(
+            impl From<$t> for PacketKind {
+                fn from(value: $t) -> Self {
+                    PacketKind::$t(value)
+                }
+            }
+        )*
+    };
+}
+impl std::fmt::Display for PacketKind {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{{name:{},id:{}}}", self.get_name(), self.get_id())
+    }
+}
+
+packet_kind_impls![
+    LoginPacket,
+    PlayStatusPacket,
+    ServerToClientHandshakePacket,
+    ClientToServerHandshakePacket,
+    DisconnectPacket,
+    ClientCacheStatusPacket,
+    NetworkSettingsPacket,
+    RequestNetworkSettingPacket,
+    ResourcePacksInfoPacket
+];
+
 #[macro_export]
-macro_rules! packet_feature {
+macro_rules! packet_ids {
     ($t:ty,$id:expr,$name:expr) => {
         impl $t {
             pub fn get_id(&self) -> u64 {
@@ -32,65 +77,3 @@ macro_rules! packet_feature {
         }
     };
 }
-
-#[derive(Debug)]
-pub enum PacketKind {
-    LoginPacket(LoginPacket),
-    PlayStatusPacket(PlayStatusPacket),
-    ServerToClientHandshakePacket(ServerToClientHandshakePacket),
-    ClientToServerHandshakePacket(ClientToServerHandshakePacket),
-    DisconnectPacket(DisconnectPacket),
-    ClientCacheStatusPacket(ClientCacheStatusPacket),
-    NetworkSettingsPacket(NetworkSettingsPacket),
-    RequestNetworkSettingPacket(RequestNetworkSettingPacket),
-    ResourcePacksInfoPacket(ResourcePacksInfoPacket),
-}
-
-impl std::fmt::Display for PacketKind {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{{name:{},id:{}}}", self.get_name(), self.get_id())
-    }
-}
-
-macro_rules! packet_impls {
-    ($($t:ident),*) => {
-        $(
-            impl From<$t> for PacketKind {
-                fn from(value: $t) -> Self {
-                    PacketKind::$t(value)
-                }
-            }
-            impl From<PacketKind> for $t {
-                fn from(value: PacketKind) -> Self {
-                    match value {
-                        PacketKind::$t(kind) => kind,
-                        _ => panic!("Invalid PacketKind")
-                    }
-                }
-            }
-        )*
-        impl PacketKind {
-            pub fn get_id(&self) -> u64{
-                match self {
-                    $(PacketKind::$t(kind) => kind.get_id(),)*
-                }
-            }
-            pub fn get_name(&self) -> String{
-                match self {
-                    $(PacketKind::$t(kind) => kind.name(),)*
-                }
-            }
-        }
-    };
-}
-packet_impls![
-    LoginPacket,
-    PlayStatusPacket,
-    ServerToClientHandshakePacket,
-    ClientToServerHandshakePacket,
-    DisconnectPacket,
-    ClientCacheStatusPacket,
-    NetworkSettingsPacket,
-    RequestNetworkSettingPacket,
-    ResourcePacksInfoPacket
-];
