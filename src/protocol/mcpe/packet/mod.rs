@@ -28,7 +28,7 @@ macro_rules! packet_kind_enum {
                     $(PacketKind::$kind(v) => v.get_id(),)*
                 }
             }
-            pub fn get_name(&self) -> String{
+            pub fn get_name(&self) -> &str{
                 match self {
                     $(PacketKind::$kind(v) => v.name(),)*
                 }
@@ -71,8 +71,8 @@ macro_rules! packet_ids {
             pub fn id() -> u64 {
                 $id
             }
-            pub fn name(&self) -> String {
-                $name.to_owned()
+            pub fn name(&self) -> &str {
+                $name
             }
         }
     };
