@@ -13,11 +13,8 @@ fn packet_id_macro() {
 }
 #[test]
 fn write_play_status() -> Result<()> {
-    let mut buf: Vec<u8> = Vec::new();
     let play_status = PlayStatusPacket::FailedClient;
-    play_status.read_to_buffer(&mut buf)?;
-    println!("{:?}", buf);
-    println!("{:?}", encode(play_status.into(), false));
+    assert_eq!(encode(play_status.into(), false)?,vec![5, 2, 0, 0, 0, 1]);
     Ok(())
 }
 #[test]
@@ -34,6 +31,5 @@ fn compute_checksum() {
     digest.update(plain);
     digest.update(ss);
     let result = digest.finalize();
-    println!("{result:?}");
     assert_eq!(n, result[0..8]);
 }
