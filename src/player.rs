@@ -1,12 +1,11 @@
 use crate::components::{DeviceOS, PlayerName};
-use crate::protocol::mcpe::packet::ResourcePacksInfoPacket;
 use crate::protocol::mcpe::{
     crypto::cipher::{Aes256CtrManager, Cipher},
     packet::{
         key_exchange,
         login_verify::{verify_login, verify_skin_data},
         CompressionAlgorithmType, LoginPacket, NetworkSettingsPacket, PacketKind, PlayStatusPacket,
-        ServerToClientHandshakePacket,
+        ResourcePacksInfoPacket, ServerToClientHandshakePacket,
     },
     transforms::framer,
 };
@@ -141,6 +140,7 @@ impl Player {
     async fn login_handshake(&mut self, login: &LoginPacket) -> Result<()> {
         let (key, data) = verify_login(&login.identity)?;
         let skin_data = verify_skin_data(&key, &login.client)?;
+        println!("{:?}",skin_data);
 
         let (secret, token) = key_exchange::shared_secret(&key)?;
         let iv: [u8; 16] = [secret[0..12].to_vec(), vec![0, 0, 0, 2]]
