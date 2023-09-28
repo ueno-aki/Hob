@@ -1,4 +1,5 @@
 use crate::components::{DeviceOS, PlayerName};
+use crate::protocol::mcpe::packet::ResourcePackInfo;
 use crate::protocol::mcpe::{
     crypto::cipher::{Aes256CtrManager, Cipher},
     packet::{
@@ -97,17 +98,30 @@ impl Player {
             PacketKind::LoginPacket(pkt) => self.login_handshake(pkt).await?,
             PacketKind::ClientToServerHandshakePacket(_) => {
                 self.send_packet(PlayStatusPacket::LoginSuccess).await?;
+                let re = ResourcePackInfo {
+                    uuid:"2b02525d-d224-4872-a2a6-0c85ab138761".to_owned(),
+                    version:"1.0.0".to_owned(),
+                    size:3140000,
+                    encryption_key:"".to_owned(),
+                    sub_pack_name:"".to_owned(),
+                    content_identity:"my_resource".to_owned(),
+                    scripting:false,
+                    rtx_enabled:false
+                };
                 let resource_info = ResourcePacksInfoPacket {
-                    must_accept: false,
+                    must_accept: true,
                     scripting: false,
                     force_server_packs: false,
                     behaviour_pack_infos: vec![],
-                    resource_pack_infos: vec![],
+                    resource_pack_infos: vec![re],
                     resource_pack_links: vec![],
                 };
                 self.send_packet(resource_info).await?;
             }
             PacketKind::ClientCacheStatusPacket(_) => {}
+            PacketKind::ResourcePackClientResponsePacket(v) => {
+                println!("{:?}",v);
+            }
             _ => todo!(),
         }
         Ok(())
@@ -140,7 +154,6 @@ impl Player {
     async fn login_handshake(&mut self, login: &LoginPacket) -> Result<()> {
         let (key, data) = verify_login(&login.identity)?;
         let skin_data = verify_skin_data(&key, &login.client)?;
-        println!("{:?}",skin_data);
 
         let (secret, token) = key_exchange::shared_secret(&key)?;
         let iv: [u8; 16] = [secret[0..12].to_vec(), vec![0, 0, 0, 2]]

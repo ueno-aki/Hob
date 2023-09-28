@@ -8,7 +8,7 @@ use std::io::Read as _;
 
 use crate::protocol::mcpe::packet::{
     ClientCacheStatusPacket, ClientToServerHandshakePacket, LoginPacket, PacketKind,
-    RequestNetworkSettingPacket,
+    RequestNetworkSettingPacket, ResourcePackClientResponsePacket,
 };
 
 pub fn decode(buffer: &[u8]) -> Result<Vec<Vec<u8>>> {
@@ -45,6 +45,9 @@ pub fn parse_packet(buffer: Vec<u8>) -> Result<PacketKind> {
         }
         x if x == ClientCacheStatusPacket::id() => {
             ClientCacheStatusPacket::from_buf(buffer, n_size)?.into()
+        }
+        x if x == ResourcePackClientResponsePacket::id() => {
+            ResourcePackClientResponsePacket::from_buf(buffer, n_size)?.into()
         }
         _ => todo!("packet_id:{}", name),
     };
