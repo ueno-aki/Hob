@@ -17,7 +17,7 @@ pub fn decode(buffer: &[u8]) -> Result<Vec<Vec<u8>>> {
     let mut offset: usize = 0;
 
     while offset < flate.len() {
-        let (value, size) = flate.read_varint(offset as u64)?;
+        let (value, size) = flate.read_varint(offset)?;
         let mut dec: Vec<u8> = vec![0; value as usize];
         offset += size as usize;
         let edge = offset + value as usize;

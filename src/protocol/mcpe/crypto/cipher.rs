@@ -4,6 +4,7 @@ use aes::{
 };
 use anyhow::Result;
 use ctr::{flavors::Ctr64BE, CtrCore};
+use protodef::prelude::*;
 
 use crate::player::Player;
 
@@ -55,7 +56,6 @@ impl Aes256CtrManager for Player {
     }
     fn compute_packet_tag(counter: u64, plain_pkt: &[u8], ss_key: [u8; 32]) -> Result<Vec<u8>> {
         let mut digest = hmac_sha256::Hash::new();
-        use protodef::prelude::Write;
         let mut counter_vec = Vec::<u8>::new();
         counter_vec.write_lu64(counter)?;
         digest.update(&counter_vec);
