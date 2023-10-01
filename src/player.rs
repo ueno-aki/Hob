@@ -1,12 +1,12 @@
 use crate::components::{DeviceOS, PlayerName};
-use crate::protocol::mcpe::packet::{ResourcePackInfo, ResourcePacksStackPacket, ResponseStatus};
 use crate::protocol::mcpe::{
     crypto::cipher::{Aes256CtrManager, Cipher},
     packet::{
         key_exchange,
         login_verify::{verify_login, verify_skin_data},
         CompressionAlgorithmType, LoginPacket, NetworkSettingsPacket, PacketKind, PlayStatusPacket,
-        ResourcePacksInfoPacket, ServerToClientHandshakePacket,
+        ResourcePacksInfoPacket, ResourcePacksStackPacket, ResponseStatus,
+        ServerToClientHandshakePacket,
     },
     transforms::framer,
 };
@@ -109,22 +109,20 @@ impl Player {
                 self.send_packet(resource_info).await?;
             }
             PacketKind::ClientCacheStatusPacket(_) => {}
-            PacketKind::ResourcePackClientResponsePacket(v) => {
-                match v.response_status {
-                    ResponseStatus::HaveAllPacks => {
-                        let res_stack = ResourcePacksStackPacket {
-                            must_accept:false,
-                            behavior_packs:vec![],
-                            resource_packs:vec![],
-                            game_version:"1.20.30".to_owned(),
-                            experiments:vec![],
-                            is_experimental:false
-                        };
-                        self.send_packet(res_stack).await?;
-                    },
-                    _ => println!("{:?},{:?}",v.response_status,v.resourcepack_ids)
+            PacketKind::ResourcePackClientResponsePacket(v) => match v.response_status {
+                ResponseStatus::HaveAllPacks => {
+                    let res_stack = ResourcePacksStackPacket {
+                        must_accept: false,
+                        behavior_packs: vec![],
+                        resource_packs: vec![],
+                        game_version: "1.20.30".to_owned(),
+                        experiments: vec![],
+                        is_experimental: false,
+                    };
+                    self.send_packet(res_stack).await?;
                 }
-            }
+                _ => println!("{:?},{:?}", v.response_status, v.resourcepack_ids),
+            },
             _ => todo!(),
         }
         Ok(())

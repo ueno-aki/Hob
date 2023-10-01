@@ -15,7 +15,7 @@ pub trait Aes256CtrManager {
     fn setup_cipher(&mut self, key: &[u8; 32], iv: &[u8; 16]) -> Result<()>;
     fn decrypt_or<'a>(&mut self, buffer: &'a mut [u8]) -> &'a [u8];
     fn encrypt_or(&mut self, buffer: &[u8]) -> Result<Vec<u8>>;
-    fn compute_packet_tag(counter: u64, plain_pkt: &[u8], ss_key: [u8; 32]) -> Result<Vec<u8>>;
+    fn compute_packet_tag(counter: &u64, plain_pkt: &[u8], ss_key: &[u8; 32]) -> Result<Vec<u8>>;
 }
 
 impl Aes256CtrManager for Player {
@@ -40,9 +40,9 @@ impl Aes256CtrManager for Player {
         let encryption_enabled = self.get_status().encryption_enabled;
         if encryption_enabled {
             let tag = Self::compute_packet_tag(
-                self.get_status().send_counter,
+                &self.get_status().send_counter,
                 &result,
-                self.get_status().ss_key.unwrap(),
+                &self.get_status().ss_key.unwrap(),
             )?;
             result = [result, tag].concat();
             self.get_status_mut()
@@ -54,10 +54,10 @@ impl Aes256CtrManager for Player {
         }
         Ok(result)
     }
-    fn compute_packet_tag(counter: u64, plain_pkt: &[u8], ss_key: [u8; 32]) -> Result<Vec<u8>> {
+    fn compute_packet_tag(counter: &u64, plain_pkt: &[u8], ss_key: &[u8; 32]) -> Result<Vec<u8>> {
         let mut digest = hmac_sha256::Hash::new();
-        let mut counter_vec = Vec::<u8>::new();
-        counter_vec.write_lu64(counter)?;
+        let mut counter_vec:Vec<u8> = Vec::new();
+        counter_vec.write_lu64(*counter)?;
         digest.update(&counter_vec);
         digest.update(plain_pkt);
         digest.update(ss_key);

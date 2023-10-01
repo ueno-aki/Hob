@@ -20,14 +20,14 @@ fn write_play_status() -> Result<()> {
 #[test]
 fn write_res_stack() -> Result<()> {
     let res_stack = ResourcePacksStackPacket {
-        must_accept:true,
-        behavior_packs:vec![],
-        resource_packs:vec![],
-        game_version:"1.20.30".to_owned(),
-        experiments:vec![],
-        is_experimental:false
+        must_accept: true,
+        behavior_packs: vec![],
+        resource_packs: vec![],
+        game_version: "1.20.30".to_owned(),
+        experiments: vec![],
+        is_experimental: false,
     };
-    println!("{:?}",encode(res_stack.into(), false)?);
+    println!("{:?}", encode(res_stack.into(), false)?);
     Ok(())
 }
 #[test]

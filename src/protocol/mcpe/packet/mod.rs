@@ -16,7 +16,7 @@ pub use login::{login_verify, LoginPacket};
 pub use network_settings::{CompressionAlgorithmType, NetworkSettingsPacket};
 pub use play_status::PlayStatusPacket;
 pub use request_network_setting::RequestNetworkSettingPacket;
-pub use resource_pack_client_response::{ResourcePackClientResponsePacket,ResponseStatus};
+pub use resource_pack_client_response::{ResourcePackClientResponsePacket, ResponseStatus};
 pub use resource_pack_stack::{Experiment, PackIdVersion, ResourcePacksStackPacket};
 pub use resource_packs_info::{BehaviourPackInfo, ResourcePackInfo, ResourcePacksInfoPacket};
 

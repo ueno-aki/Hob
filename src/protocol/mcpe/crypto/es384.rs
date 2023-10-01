@@ -91,8 +91,8 @@ impl ES384PrivateKey {
     where
         Claim: Serialize + DeserializeOwned,
     {
-        let header_json = encode_nopad_base64(serde_json::to_string(&header)?);
-        let claim_json = encode_nopad_base64(serde_json::to_string(&claim)?);
+        let header_json = encode_nopad_base64(&serde_json::to_string(&header)?);
+        let claim_json = encode_nopad_base64(&serde_json::to_string(&claim)?);
         let payload = format!("{}.{}", header_json, claim_json);
 
         let mut rng = rand::thread_rng();
@@ -100,7 +100,7 @@ impl ES384PrivateKey {
         digest.update(payload.as_bytes());
         let signature: Signature = self.as_ref().sign_digest_with_rng(&mut rng, digest);
 
-        let token = format!("{}.{}", payload, encode_nopad_base64(signature.to_vec()));
+        let token = format!("{}.{}", payload, encode_nopad_base64(&signature.to_vec()));
         Ok(token)
     }
 }
