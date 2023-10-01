@@ -1,5 +1,5 @@
 use crate::protocol::mcpe::{
-    packet::{PlayStatusPacket, RequestNetworkSettingPacket},
+    packet::{PlayStatusPacket, RequestNetworkSettingPacket, ResourcePacksStackPacket},
     transforms::framer::encode,
 };
 use anyhow::{Ok, Result};
@@ -15,6 +15,19 @@ fn packet_id_macro() {
 fn write_play_status() -> Result<()> {
     let play_status = PlayStatusPacket::FailedClient;
     assert_eq!(encode(play_status.into(), false)?, vec![5, 2, 0, 0, 0, 1]);
+    Ok(())
+}
+#[test]
+fn write_res_stack() -> Result<()> {
+    let res_stack = ResourcePacksStackPacket {
+        must_accept:true,
+        behavior_packs:vec![],
+        resource_packs:vec![],
+        game_version:"1.20.30".to_owned(),
+        experiments:vec![],
+        is_experimental:false
+    };
+    println!("{:?}",encode(res_stack.into(), false)?);
     Ok(())
 }
 #[test]

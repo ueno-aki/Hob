@@ -1,5 +1,5 @@
 use crate::components::{DeviceOS, PlayerName};
-use crate::protocol::mcpe::packet::ResourcePackInfo;
+use crate::protocol::mcpe::packet::{ResourcePackInfo, ResourcePacksStackPacket, ResponseStatus};
 use crate::protocol::mcpe::{
     crypto::cipher::{Aes256CtrManager, Cipher},
     packet::{
@@ -98,29 +98,32 @@ impl Player {
             PacketKind::LoginPacket(pkt) => self.login_handshake(pkt).await?,
             PacketKind::ClientToServerHandshakePacket(_) => {
                 self.send_packet(PlayStatusPacket::LoginSuccess).await?;
-                let re = ResourcePackInfo {
-                    uuid:"2b02525d-d224-4872-a2a6-0c85ab138761".to_owned(),
-                    version:"1.0.0".to_owned(),
-                    size:3140000,
-                    encryption_key:"".to_owned(),
-                    sub_pack_name:"".to_owned(),
-                    content_identity:"my_resource".to_owned(),
-                    scripting:false,
-                    rtx_enabled:false
-                };
                 let resource_info = ResourcePacksInfoPacket {
-                    must_accept: true,
+                    must_accept: false,
                     scripting: false,
                     force_server_packs: false,
                     behaviour_pack_infos: vec![],
-                    resource_pack_infos: vec![re],
+                    resource_pack_infos: vec![],
                     resource_pack_links: vec![],
                 };
                 self.send_packet(resource_info).await?;
             }
             PacketKind::ClientCacheStatusPacket(_) => {}
             PacketKind::ResourcePackClientResponsePacket(v) => {
-                println!("{:?}",v);
+                match v.response_status {
+                    ResponseStatus::HaveAllPacks => {
+                        let res_stack = ResourcePacksStackPacket {
+                            must_accept:false,
+                            behavior_packs:vec![],
+                            resource_packs:vec![],
+                            game_version:"1.20.30".to_owned(),
+                            experiments:vec![],
+                            is_experimental:false
+                        };
+                        self.send_packet(res_stack).await?;
+                    },
+                    _ => println!("{:?},{:?}",v.response_status,v.resourcepack_ids)
+                }
             }
             _ => todo!(),
         }

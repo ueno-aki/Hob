@@ -63,6 +63,7 @@ pub fn encode(packet: PacketKind, force_compress: bool) -> Result<Vec<u8>> {
         PacketKind::DisconnectPacket(v) => v.read_to_buffer(&mut content)?,
         PacketKind::NetworkSettingsPacket(v) => v.read_to_buffer(&mut content)?,
         PacketKind::ResourcePacksInfoPacket(v) => v.read_to_buffer(&mut content)?,
+        PacketKind::ResourcePacksStackPacket(v) => v.read_to_buffer(&mut content)?,
         _ => todo!("packet_id:{}", packet.get_id()),
     };
     let mut result = Vec::new();

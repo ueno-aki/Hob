@@ -6,6 +6,7 @@ mod network_settings;
 mod play_status;
 mod request_network_setting;
 mod resource_pack_client_response;
+mod resource_pack_stack;
 mod resource_packs_info;
 
 pub use client_cache_status::ClientCacheStatusPacket;
@@ -15,8 +16,9 @@ pub use login::{login_verify, LoginPacket};
 pub use network_settings::{CompressionAlgorithmType, NetworkSettingsPacket};
 pub use play_status::PlayStatusPacket;
 pub use request_network_setting::RequestNetworkSettingPacket;
+pub use resource_pack_client_response::{ResourcePackClientResponsePacket,ResponseStatus};
+pub use resource_pack_stack::{Experiment, PackIdVersion, ResourcePacksStackPacket};
 pub use resource_packs_info::{BehaviourPackInfo, ResourcePackInfo, ResourcePacksInfoPacket};
-pub use resource_pack_client_response::ResourcePackClientResponsePacket;
 
 macro_rules! packet_kind_enum {
     ($($kind:ident),*) => {
@@ -61,7 +63,8 @@ packet_kind_enum![
     NetworkSettingsPacket,
     RequestNetworkSettingPacket,
     ResourcePacksInfoPacket,
-    ResourcePackClientResponsePacket
+    ResourcePackClientResponsePacket,
+    ResourcePacksStackPacket
 ];
 
 #[macro_export]
