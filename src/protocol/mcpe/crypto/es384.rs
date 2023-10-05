@@ -58,7 +58,7 @@ impl ES384PublicKey {
         };
         let signature = Signature::try_from(decode_nopad_base64(sig)?.as_ref())?;
         let mut digest = sha384::Hash::new();
-        digest.update(payload.as_bytes());
+        digest.update(&payload);
         self.as_ref()
             .verify_digest(digest, &signature)
             .map_err(|_| CryptoErrors::FailedVerification)?;
@@ -91,13 +91,13 @@ impl ES384PrivateKey {
     where
         Claim: Serialize + DeserializeOwned,
     {
-        let header_json = encode_nopad_base64(&serde_json::to_string(&header)?);
-        let claim_json = encode_nopad_base64(&serde_json::to_string(&claim)?);
+        let header_json = encode_nopad_base64(serde_json::to_string(&header)?);
+        let claim_json = encode_nopad_base64(serde_json::to_string(&claim)?);
         let payload = format!("{}.{}", header_json, claim_json);
 
         let mut rng = rand::thread_rng();
         let mut digest = sha384::Hash::new();
-        digest.update(payload.as_bytes());
+        digest.update(&payload);
         let signature: Signature = self.as_ref().sign_digest_with_rng(&mut rng, digest);
 
         let token = format!("{}.{}", payload, encode_nopad_base64(&signature.to_vec()));

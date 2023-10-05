@@ -66,18 +66,18 @@ pub fn encode(packet: PacketKind, force_compress: bool) -> Result<Vec<u8>> {
         PacketKind::ResourcePacksStackPacket(v) => v.read_to_buffer(&mut content)?,
         _ => todo!("packet_id:{}", packet.get_id()),
     };
-    let mut result = Vec::new();
-    result.write_var_int(content.len() as u64)?;
-    result = compress([result, content].concat(), force_compress)?;
-    Ok(result)
+    let mut encoded = Vec::new();
+    encoded.write_var_int(content.len() as u64)?;
+    encoded = [encoded, content].concat();
+    Ok(compress(&encoded, force_compress)?)
 }
-fn compress(buffer: Vec<u8>, force: bool) -> Result<Vec<u8>> {
+fn compress(buffer: &[u8], force: bool) -> Result<Vec<u8>> {
     if buffer.len() > 512 || force {
-        let mut encoder = DeflateEncoder::new(buffer.as_ref(), Compression::new(7));
+        let mut encoder = DeflateEncoder::new(buffer, Compression::new(7));
         let mut flate = Vec::new();
         encoder.read_to_end(&mut flate)?;
         Ok(flate)
     } else {
-        Ok(buffer)
+        Ok(buffer.to_vec())
     }
 }

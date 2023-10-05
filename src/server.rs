@@ -5,7 +5,7 @@ use crate::{
     player::Player,
     utils::get_option,
 };
-use anyhow::{anyhow, Result};
+use anyhow::Result;
 use atomic_refcell::{AtomicRef, AtomicRefCell, AtomicRefMut};
 use rust_raknet::RaknetListener;
 use sparsey::prelude::*;
@@ -37,13 +37,9 @@ impl Server {
     pub async fn launch(&mut self) -> Result<()> {
         println!("Server Started");
         let addr = format!("0.0.0.0:{}", get_option("port")?);
-        let mut listener = RaknetListener::bind(&addr.parse()?)
-            .await
-            .map_err(|_| anyhow!("Failed to bind RaknetListener"))?;
+        let mut listener = RaknetListener::bind(&addr.parse()?).await.unwrap();
 
-        listener
-            .set_full_motd(Self::load_motd()?)
-            .map_err(|_| anyhow!("Failed to set full motd"))?;
+        listener.set_full_motd(Self::load_motd()?).unwrap();
         listener.listen().await;
 
         let world = self.world.clone();
