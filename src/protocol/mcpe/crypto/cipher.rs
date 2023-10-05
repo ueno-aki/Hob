@@ -56,7 +56,7 @@ impl Aes256CtrManager for Player {
     }
     fn compute_packet_tag(counter: &u64, plain_pkt: &[u8], ss_key: &[u8; 32]) -> Result<Vec<u8>> {
         let mut digest = hmac_sha256::Hash::new();
-        let mut counter_vec:Vec<u8> = Vec::new();
+        let mut counter_vec: Vec<u8> = Vec::new();
         counter_vec.write_lu64(*counter)?;
         digest.update(&counter_vec);
         digest.update(plain_pkt);

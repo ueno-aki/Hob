@@ -7,7 +7,9 @@ use std::fs;
 use yaml_rust::YamlLoader;
 
 pub fn get_option(option_name: &str) -> Result<String> {
-    let file = fs::read_to_string("./server.properties").context("Not Found 'server.properties'").unwrap();
+    let file = fs::read_to_string("./server.properties")
+        .context("Not Found 'server.properties'")
+        .unwrap();
     let options = &YamlLoader::load_from_str(&file)?[0];
     Ok(options[option_name]
         .as_str()
