@@ -1,8 +1,13 @@
+use specs::{Component, VecStorage};
+
 #[derive(Debug, Default)]
 pub struct Position {
     pub x: f64,
     pub y: f64,
     pub z: f64,
+}
+impl Component for Position {
+    type Storage = VecStorage<Self>;
 }
 
 #[derive(Debug)]
@@ -10,6 +15,17 @@ pub struct PlayerName {
     pub xuid: String,
     pub client_uuid: String,
     pub user_name: String,
+}
+impl Component for PlayerName {
+    type Storage = VecStorage<Self>;
+}
+
+#[derive(Debug)]
+pub struct RunTimeID {
+    pub id: u64,
+}
+impl Component for RunTimeID {
+    type Storage = VecStorage<Self>;
 }
 
 macro_rules! os {
@@ -26,6 +42,10 @@ macro_rules! os {
                     _ => panic!("Unspecified DevicsOS")
                 }
             }
+        }
+
+        impl Component for DeviceOS {
+            type Storage = VecStorage<Self>;
         }
     }
 }

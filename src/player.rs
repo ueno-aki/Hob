@@ -1,4 +1,4 @@
-use crate::components::{DeviceOS, PlayerName};
+use crate::ecs::components::{DeviceOS, PlayerName};
 use crate::protocol::mcpe::{
     crypto::cipher::{Aes256CtrManager, Cipher},
     packet::{
@@ -15,8 +15,7 @@ use crate::utils::get_option;
 use anyhow::{anyhow, Result};
 use atomic_refcell::{AtomicRef, AtomicRefCell, AtomicRefMut};
 use rust_raknet::RaknetSocket;
-use sparsey::storage::Entity;
-use sparsey::world::World;
+use specs::{Entity, World, WorldExt};
 use std::fmt::Display;
 use std::sync::Arc;
 
@@ -39,9 +38,11 @@ pub struct PlayerStatus {
 
 impl Display for Player {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self.get_world().borrow::<PlayerName>().get(self.entity) {
+        let world = self.world.borrow();
+        let name_storage = world.read_component::<PlayerName>();
+        match name_storage.get(self.entity) {
             Some(v) => write!(f, "{}", v.user_name),
-            None => write!(f, "{:?}", self.socket.peer_addr()),
+            None => write!(f, "{:?}", self.socket.peer_addr().unwrap()),
         }
     }
 }
@@ -54,14 +55,6 @@ impl Player {
             entity,
             status: Arc::new(AtomicRefCell::new(Default::default())),
         }
-    }
-    #[inline]
-    fn get_world(&self) -> AtomicRef<World> {
-        self.world.borrow()
-    }
-    #[inline]
-    fn get_world_mut(&self) -> AtomicRefMut<World> {
-        self.world.borrow_mut()
     }
     #[inline]
     pub fn get_status(&self) -> AtomicRef<PlayerStatus> {
@@ -82,7 +75,7 @@ impl Player {
             }
         }
         println!("disconnected,{}", self);
-        self.get_world_mut().destroy(self.entity);
+        self.world.borrow_mut().delete_entity(self.entity)?;
         Ok(())
     }
     async fn handle(&mut self, packet: &PacketKind) -> Result<()> {
@@ -169,17 +162,12 @@ impl Player {
         self.get_status_mut().ss_key = Some(secret.clone());
         self.setup_cipher(&secret, &iv)?;
 
-        self.get_world_mut().insert(
-            self.entity,
-            (
-                DeviceOS::from(skin_data.DeviceOS),
-                PlayerName {
-                    xuid: data.XUID,
-                    client_uuid: data.identity,
-                    user_name: data.displayName,
-                },
-            ),
-        );
+        let world = self.world.borrow();
+        let mut os_storage = world.write_component::<DeviceOS>();
+        os_storage.insert(self.entity, DeviceOS::from(skin_data.DeviceOS)).unwrap();
+
+        let mut name_storage = world.write_component::<PlayerName>();
+        name_storage.insert(self.entity, PlayerName { xuid: data.XUID, client_uuid: data.identity, user_name: data.displayName }).unwrap();
         Ok(())
     }
 }

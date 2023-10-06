@@ -1,36 +1,29 @@
 use std::sync::Arc;
 
 use crate::{
-    components::{DeviceOS, PlayerName, Position},
+    ecs::{components::{DeviceOS, PlayerName, Position, RunTimeID}, resources::EntityCount},
     player::Player,
     utils::get_option,
 };
 use anyhow::Result;
-use atomic_refcell::{AtomicRef, AtomicRefCell, AtomicRefMut};
+use atomic_refcell::AtomicRefCell;
 use rust_raknet::RaknetListener;
-use sparsey::prelude::*;
+use specs::{World, WorldExt, Builder};
 
-pub struct Server {
-    world: Arc<AtomicRefCell<World>>,
+pub struct Server{
+    world: Arc<AtomicRefCell<World>>
 }
 
 impl Server {
-    #[inline]
-    fn get_world(&self) -> AtomicRef<World> {
-        self.world.borrow()
-    }
-    #[inline]
-    fn get_world_mut(&self) -> AtomicRefMut<World> {
-        self.world.borrow_mut()
-    }
-
     pub fn new() -> Self {
-        let mut world = World::default();
+        let mut world = World::new();
         world.register::<Position>();
         world.register::<DeviceOS>();
         world.register::<PlayerName>();
+        world.register::<RunTimeID>();
+        world.insert(EntityCount::default());
         Server {
-            world: Arc::new(AtomicRefCell::new(world)),
+            world: Arc::new(AtomicRefCell::new(world))
         }
     }
 
@@ -41,15 +34,18 @@ impl Server {
 
         listener.set_full_motd(Self::load_motd()?).unwrap();
         listener.listen().await;
-
         let world = self.world.clone();
         tokio::spawn(async move {
             let world = world.clone();
             while let Ok(socket) = listener.accept().await {
-                let world = world.clone();
+                let world_c = world.clone();
+                let binding = world.borrow();
+                let mut entity_count_res = binding.write_resource::<EntityCount>();
+                entity_count_res.count += 1;
+                let count = entity_count_res.count;
                 tokio::spawn(async move {
-                    let entity = world.borrow_mut().create(());
-                    let mut player = Player::new(socket, entity, world);
+                    let entity = world_c.borrow_mut().create_entity().with(RunTimeID{id:count}).build();
+                    let mut player = Player::new(socket, entity, world_c);
                     player.listen().await.unwrap();
                 });
             }
