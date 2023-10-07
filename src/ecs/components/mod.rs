@@ -1,6 +1,7 @@
+use from_num::from_num;
 use specs::{Component, VecStorage};
 
-#[derive(Debug, Default)]
+#[derive(Debug)]
 pub struct Position {
     pub x: f64,
     pub y: f64,
@@ -28,28 +29,9 @@ impl Component for RunTimeID {
     type Storage = VecStorage<Self>;
 }
 
-macro_rules! os {
-    ($($name:tt),*) => {
-        #[derive(Debug)]
-        pub enum DeviceOS {
-            $($name,)*
-        }
-
-        impl From<u8> for DeviceOS{
-            fn from(value: u8) -> Self {
-                match value {
-                    $(n if n == DeviceOS::$name as u8 => DeviceOS::$name,)*
-                    _ => panic!("Unspecified DevicsOS")
-                }
-            }
-        }
-
-        impl Component for DeviceOS {
-            type Storage = VecStorage<Self>;
-        }
-    }
-}
-os![
+#[derive(Debug)]
+#[from_num(u8)]
+pub enum DeviceOS {
     Undefined,
     Android,
     IOS,
@@ -65,5 +47,8 @@ os![
     NintendoSwitch,
     Xbox,
     WindowsPhone,
-    Linux
-];
+    Linux,
+}
+impl Component for DeviceOS {
+    type Storage = VecStorage<Self>;
+}
