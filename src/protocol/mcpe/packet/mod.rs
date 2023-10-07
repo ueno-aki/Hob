@@ -8,6 +8,7 @@ mod request_network_setting;
 mod resource_pack_client_response;
 mod resource_pack_stack;
 mod resource_packs_info;
+mod start_game_packet;
 
 pub use client_cache_status::ClientCacheStatusPacket;
 pub use disconnect::DisconnectPacket;

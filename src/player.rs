@@ -114,6 +114,9 @@ impl Player {
                     };
                     self.send_packet(res_stack).await?;
                 }
+                ResponseStatus::Completed => {
+                    
+                }
                 _ => println!("{:?},{:?}", v.response_status, v.resourcepack_ids),
             },
             _ => todo!(),
