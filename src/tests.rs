@@ -1,5 +1,8 @@
 use crate::protocol::mcpe::{
-    packet::{PlayStatusPacket, RequestNetworkSettingPacket, ResourcePacksStackPacket},
+    packet::{
+        play_status::PlayStatusPacket, request_network_setting::RequestNetworkSettingPacket,
+        resource_pack_stack::ResourcePacksStackPacket,
+    },
     transforms::framer::encode,
 };
 use anyhow::{Ok, Result};

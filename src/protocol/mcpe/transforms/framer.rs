@@ -7,8 +7,9 @@ use protodef::prelude::*;
 use std::io::Read as _;
 
 use crate::protocol::mcpe::packet::{
-    ClientCacheStatusPacket, ClientToServerHandshakePacket, LoginPacket, PacketKind,
-    RequestNetworkSettingPacket, ResourcePackClientResponsePacket,
+    client_cache_status::ClientCacheStatusPacket, handshake::ClientToServerHandshakePacket,
+    login::LoginPacket, request_network_setting::RequestNetworkSettingPacket,
+    resource_pack_client_response::ResourcePackClientResponsePacket, PacketKind,
 };
 
 pub fn decode(buffer: &[u8]) -> Result<Vec<Vec<u8>>> {

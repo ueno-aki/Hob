@@ -1,7 +1,7 @@
+mod ecs;
 mod player;
 mod protocol;
 mod server;
-mod  ecs;
 #[cfg(test)]
 mod tests;
 mod utils;

@@ -1,17 +1,20 @@
 use std::sync::Arc;
 
 use crate::{
-    ecs::{components::{DeviceOS, PlayerName, Position, RunTimeID}, resources::EntityCount},
+    ecs::{
+        components::{DeviceOS, PlayerName, Position, RunTimeID},
+        resources::EntityCount,
+    },
     player::Player,
     utils::get_option,
 };
 use anyhow::Result;
 use atomic_refcell::AtomicRefCell;
 use rust_raknet::RaknetListener;
-use specs::{World, WorldExt, Builder};
+use specs::{Builder, World, WorldExt};
 
-pub struct Server{
-    world: Arc<AtomicRefCell<World>>
+pub struct Server {
+    world: Arc<AtomicRefCell<World>>,
 }
 
 impl Server {
@@ -23,7 +26,7 @@ impl Server {
         world.register::<RunTimeID>();
         world.insert(EntityCount::default());
         Server {
-            world: Arc::new(AtomicRefCell::new(world))
+            world: Arc::new(AtomicRefCell::new(world)),
         }
     }
 
@@ -44,7 +47,11 @@ impl Server {
                 entity_count_res.count += 1;
                 let count = entity_count_res.count;
                 tokio::spawn(async move {
-                    let entity = world_c.borrow_mut().create_entity().with(RunTimeID{id:count}).build();
+                    let entity = world_c
+                        .borrow_mut()
+                        .create_entity()
+                        .with(RunTimeID { id: count })
+                        .build();
                     let mut player = Player::new(socket, entity, world_c);
                     player.listen().await.unwrap();
                 });

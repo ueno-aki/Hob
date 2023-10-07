@@ -1,15 +1,17 @@
 use crate::ecs::components::{DeviceOS, PlayerName};
-use crate::protocol::mcpe::{
-    crypto::cipher::{Aes256CtrManager, Cipher},
-    packet::{
-        key_exchange,
-        login_verify::{verify_login, verify_skin_data},
-        CompressionAlgorithmType, LoginPacket, NetworkSettingsPacket, PacketKind, PlayStatusPacket,
-        ResourcePacksInfoPacket, ResourcePacksStackPacket, ResponseStatus,
-        ServerToClientHandshakePacket,
-    },
-    transforms::framer,
+use crate::protocol::mcpe::crypto::cipher::{Aes256CtrManager, Cipher};
+use crate::protocol::mcpe::packet::{
+    handshake::{key_exchange, ServerToClientHandshakePacket},
+    login::login_verify::{verify_login, verify_skin_data},
+    login::LoginPacket,
+    network_settings::{CompressionAlgorithmType, NetworkSettingsPacket},
+    play_status::PlayStatusPacket,
+    resource_pack_client_response::ResponseStatus,
+    resource_pack_stack::ResourcePacksStackPacket,
+    resource_packs_info::ResourcePacksInfoPacket,
+    PacketKind,
 };
+use crate::protocol::mcpe::transforms::framer;
 use crate::utils::get_option;
 
 use anyhow::{anyhow, Result};
@@ -114,9 +116,7 @@ impl Player {
                     };
                     self.send_packet(res_stack).await?;
                 }
-                ResponseStatus::Completed => {
-                    
-                }
+                ResponseStatus::Completed => {}
                 _ => println!("{:?},{:?}", v.response_status, v.resourcepack_ids),
             },
             _ => todo!(),
@@ -167,10 +167,21 @@ impl Player {
 
         let world = self.world.borrow();
         let mut os_storage = world.write_component::<DeviceOS>();
-        os_storage.insert(self.entity, DeviceOS::from(skin_data.DeviceOS)).unwrap();
+        os_storage
+            .insert(self.entity, DeviceOS::from(skin_data.DeviceOS))
+            .unwrap();
 
         let mut name_storage = world.write_component::<PlayerName>();
-        name_storage.insert(self.entity, PlayerName { xuid: data.XUID, client_uuid: data.identity, user_name: data.displayName }).unwrap();
+        name_storage
+            .insert(
+                self.entity,
+                PlayerName {
+                    xuid: data.XUID,
+                    client_uuid: data.identity,
+                    user_name: data.displayName,
+                },
+            )
+            .unwrap();
         Ok(())
     }
 }
