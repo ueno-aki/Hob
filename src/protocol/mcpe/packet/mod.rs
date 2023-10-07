@@ -39,11 +39,6 @@ macro_rules! packet_kind_enum {
                 }
             }
         }
-        impl std::fmt::Display for PacketKind {
-            fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-                write!(f, "{{name:{},id:{}}}", self.get_name(), self.get_id())
-            }
-        }
         $(
             impl From<$kind> for PacketKind {
                 fn from(value: $kind) -> Self {
@@ -67,6 +62,11 @@ packet_kind_enum![
     ResourcePackClientResponsePacket,
     ResourcePacksStackPacket
 ];
+impl std::fmt::Display for PacketKind {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{{name:{},id:{}}}", self.get_name(), self.get_id())
+    }
+}
 
 #[macro_export]
 macro_rules! packet_ids {

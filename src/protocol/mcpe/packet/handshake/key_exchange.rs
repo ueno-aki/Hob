@@ -6,7 +6,7 @@ use crate::{
     },
     utils::{decode_base64, encode_base64},
 };
-use anyhow::{Ok, Result};
+use anyhow::Result;
 use serde::{Deserialize, Serialize};
 
 pub fn shared_secret(peer_pubkey: &str) -> Result<([u8; 32], String)> {
