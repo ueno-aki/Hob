@@ -1,15 +1,17 @@
+use std::sync::Arc;
+
 use crate::{
-    components::{ClientId, Position},
+    ecs::{
+        components::{DeviceOS, PlayerName, Position, RunTimeID},
+        resources::EntityCount,
+    },
     player::Player,
-    protocol::internal::packet::InternalPacketKind,
     utils::get_option,
 };
-use anyhow::{anyhow, Context, Result};
+use anyhow::Result;
 use atomic_refcell::AtomicRefCell;
 use rust_raknet::RaknetListener;
-use sparsey::prelude::*;
-use std::sync::Arc;
-use tokio::sync::mpsc;
+use specs::{Builder, World, WorldExt};
 
 pub struct Server {
     world: Arc<AtomicRefCell<World>>,
@@ -17,9 +19,12 @@ pub struct Server {
 
 impl Server {
     pub fn new() -> Self {
-        let mut world = World::default();
-        world.register::<ClientId>();
+        let mut world = World::new();
         world.register::<Position>();
+        world.register::<DeviceOS>();
+        world.register::<PlayerName>();
+        world.register::<RunTimeID>();
+        world.insert(EntityCount::default());
         Server {
             world: Arc::new(AtomicRefCell::new(world)),
         }
@@ -28,49 +33,32 @@ impl Server {
     pub async fn launch(&mut self) -> Result<()> {
         println!("Server Started");
         let addr = format!("0.0.0.0:{}", get_option("port")?);
-        let mut listener = RaknetListener::bind(&addr.parse()?)
-            .await
-            .map_err(|_| anyhow!("Failed to bind RaknetListener"))?;
+        let mut listener = RaknetListener::bind(&addr.parse()?).await.unwrap();
 
-        listener
-            .set_full_motd(Self::load_motd()?)
-            .map_err(|_| anyhow!("Failed to set full motd"))?;
+        listener.set_full_motd(Self::load_motd()?).unwrap();
         listener.listen().await;
-
-        let (tx, mut rx) = mpsc::channel::<InternalPacketKind>(200);
         let world = self.world.clone();
         tokio::spawn(async move {
-            while let Some(v) = rx.recv().await {
-                Self::handle(v, world.clone()).await.unwrap();
-            }
-        });
-        while let Ok(socket) = listener.accept().await {
-            let tx_c = tx.clone();
-            tokio::spawn(async move {
-                let mut player = Player::new(socket);
-                player.listen(tx_c).await.unwrap();
-            });
-        }
-        Ok(())
-    }
-    async fn handle(kind: InternalPacketKind, world: Arc<AtomicRefCell<World>>) -> Result<()> {
-        match kind {
-            InternalPacketKind::CreateClient(v) => {
-                world.borrow_mut().create((ClientId { id: v.client_id },));
-            }
-            InternalPacketKind::DestoryClient(v) => {
-                let mut me: Option<Entity> = None;
-                world.borrow().run(|clients: Comp<ClientId>| {
-                    (&clients).for_each_with_entity(|(e, cl)| {
-                        if cl.id == v.client_id {
-                            me = Some(e);
-                        }
-                    });
+            let world = world.clone();
+            while let Ok(socket) = listener.accept().await {
+                let world_c = world.clone();
+                let binding = world.borrow();
+                let mut entity_count_res = binding.write_resource::<EntityCount>();
+                entity_count_res.count += 1;
+                let count = entity_count_res.count;
+                tokio::spawn(async move {
+                    let entity = world_c
+                        .borrow_mut()
+                        .create_entity()
+                        .with(RunTimeID { id: count })
+                        .build();
+                    let mut player = Player::new(socket, entity, world_c);
+                    player.listen().await.unwrap();
                 });
-                let me = me.context(format!("Failed to get {}'s entity", v.client_id))?;
-                world.borrow_mut().destroy(me);
             }
-        }
+        })
+        .await
+        .unwrap();
         Ok(())
     }
 

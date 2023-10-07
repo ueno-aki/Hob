@@ -1,4 +1,4 @@
-mod components;
+mod ecs;
 mod player;
 mod protocol;
 mod server;

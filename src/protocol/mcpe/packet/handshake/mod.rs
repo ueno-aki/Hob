@@ -1,32 +1,32 @@
 pub mod constants;
 pub mod key_exchange;
 
-use crate::packet_feature;
+use crate::packet_ids;
 use anyhow::Result;
 use protodef::prelude::*;
 
 #[derive(Debug)]
-pub struct ServerToClientHandshake {
+pub struct ServerToClientHandshakePacket {
     pub token: String,
 }
 
-impl ServerToClientHandshake {
+impl ServerToClientHandshakePacket {
     pub fn read_to_buffer(&self, vec: &mut Vec<u8>) -> Result<()> {
-        vec.write_string(self.token.clone())?;
+        vec.write_string(&self.token)?;
         Ok(())
     }
 }
-packet_feature!(
-    ServerToClientHandshake,
+packet_ids!(
+    ServerToClientHandshakePacket,
     3,
     "server_to_client_handshake_packet"
 );
 
 #[derive(Debug)]
-pub struct ClientToServerHandshake();
+pub struct ClientToServerHandshakePacket();
 
-packet_feature!(
-    ClientToServerHandshake,
+packet_ids!(
+    ClientToServerHandshakePacket,
     4,
     "client_to_server_handshake_packet"
 );

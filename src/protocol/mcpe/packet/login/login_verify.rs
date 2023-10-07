@@ -1,9 +1,13 @@
+#![allow(non_snake_case)]
 use anyhow::Result;
 use serde::{Deserialize, Serialize};
 
-use crate::protocol::mcpe::{
-    crypto::es384::ES384PublicKey,
-    packet::login::{constants::MOJANG_PUBKEY, errors::LoginErrors},
+use crate::{
+    protocol::mcpe::{
+        crypto::es384::ES384PublicKey,
+        packet::login::{constants::MOJANG_PUBKEY, errors::LoginErrors},
+    },
+    utils::decode_base64,
 };
 
 #[derive(Serialize, Deserialize)]
@@ -12,14 +16,12 @@ struct AuthChain {
 }
 
 #[derive(Serialize, Deserialize)]
-#[allow(non_snake_case)]
 pub struct LoginIdentityClaim {
     extraData: Option<ExtraUserdata>,
     identityPublicKey: String,
 }
 
 #[derive(Deserialize, Serialize)]
-#[allow(non_snake_case)]
 pub struct ExtraUserdata {
     pub XUID: String,
     pub identity: String,
@@ -37,7 +39,7 @@ pub fn verify_login(chains: &str) -> Result<(String, ExtraUserdata)> {
     let mut verified = false;
     let mut user_data = None;
     for chain in chains {
-        let key = ES384PublicKey::from_der(&base64::decode(&public_key)?)?;
+        let key = ES384PublicKey::from_der(&decode_base64(&public_key)?)?;
         let (header, claim) = key.verify_token::<LoginIdentityClaim>(&chain)?;
         if header.x5u == MOJANG_PUBKEY {
             verified = true;
@@ -57,7 +59,7 @@ pub fn verify_login(chains: &str) -> Result<(String, ExtraUserdata)> {
 }
 
 pub fn verify_skin_data(public_key: &str, client: &str) -> Result<SkinData> {
-    let key = ES384PublicKey::from_der(&base64::decode(public_key)?)?;
+    let key = ES384PublicKey::from_der(&decode_base64(public_key)?)?;
     match key.verify_token::<SkinData>(client) {
         Ok((_, claim)) => Ok(claim),
         Err(_) => Err(LoginErrors::WrongSkinData(client.to_owned()).into()),
@@ -65,7 +67,6 @@ pub fn verify_skin_data(public_key: &str, client: &str) -> Result<SkinData> {
 }
 
 #[derive(Serialize, Deserialize, Debug)]
-#[allow(non_snake_case)]
 pub struct SkinData {
     pub AnimatedImageData: Vec<AnimatedImageDataType>,
     pub ArmSize: String,
@@ -111,7 +112,6 @@ pub struct SkinData {
 }
 
 #[derive(Serialize, Deserialize, Debug)]
-#[allow(non_snake_case)]
 pub struct AnimatedImageDataType {
     pub AnimationExpression: u64,
     pub Frames: f64,
@@ -122,7 +122,6 @@ pub struct AnimatedImageDataType {
 }
 
 #[derive(Serialize, Deserialize, Debug)]
-#[allow(non_snake_case)]
 pub struct PersonaPiecesType {
     pub IsDefault: bool,
     pub PackId: String,
@@ -132,7 +131,6 @@ pub struct PersonaPiecesType {
 }
 
 #[derive(Serialize, Deserialize, Debug)]
-#[allow(non_snake_case)]
 pub struct PieceTintColorsType {
     pub Colors: Vec<String>,
     pub PieceType: String,

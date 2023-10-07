@@ -1,19 +1,19 @@
 use anyhow::Result;
 use protodef::prelude::*;
 
-use crate::packet_feature;
+use crate::packet_ids;
 
 #[derive(Debug)]
-pub struct Disconnect {
+pub struct DisconnectPacket {
     pub hide_disconnect_reason: bool,
     pub message: String,
 }
 
-impl Disconnect {
+impl DisconnectPacket {
     pub fn read_to_buffer(&self, vec: &mut Vec<u8>) -> Result<()> {
         vec.write_bool(self.hide_disconnect_reason)?;
-        vec.write_string(self.message.clone())?;
+        vec.write_string(&self.message)?;
         Ok(())
     }
 }
-packet_feature!(Disconnect, 5, "disconnect_packet");
+packet_ids!(DisconnectPacket, 5, "disconnect_packet");

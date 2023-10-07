@@ -1,20 +1,20 @@
-use crate::packet_feature;
+use crate::packet_ids;
 use anyhow::Result;
 use protodef::prelude::*;
 
 #[derive(Debug)]
-pub struct RequestNetworkSetting {
+pub struct RequestNetworkSettingPacket {
     pub client_protocol: i32,
 }
 
-impl RequestNetworkSetting {
-    pub fn from_buf(buffer: Vec<u8>, offset: u64) -> Result<Self> {
+impl RequestNetworkSettingPacket {
+    pub fn from_buf(buffer: Vec<u8>, offset: usize) -> Result<Self> {
         let client_protocol = buffer.read_i32(offset);
-        Ok(RequestNetworkSetting { client_protocol })
+        Ok(RequestNetworkSettingPacket { client_protocol })
     }
 }
-packet_feature!(
-    RequestNetworkSetting,
+packet_ids!(
+    RequestNetworkSettingPacket,
     193,
     "request_network_settings_packet"
 );
