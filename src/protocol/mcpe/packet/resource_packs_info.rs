@@ -50,7 +50,7 @@ impl ResourcePacksInfoPacket {
         Ok(())
     }
     fn encode_resouce_links(&self, vec: &mut Vec<u8>) -> Result<()> {
-        vec.write_var_int(self.resource_pack_links.len() as u64)?;
+        vec.write_varint(self.resource_pack_links.len() as u64)?;
         for link in self.resource_pack_links.iter() {
             vec.write_string(&link.id)?;
             vec.write_string(&link.url)?;

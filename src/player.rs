@@ -149,7 +149,7 @@ impl Player {
         Ok(())
     }
     async fn login_handshake(&mut self, login: &LoginPacket) -> Result<()> {
-        let (key, data) = verify_login(&login.identity)?;
+        let (key, user_data) = verify_login(&login.identity)?;
         let skin_data = verify_skin_data(&key, &login.client)?;
 
         let (secret, token) = key_exchange::shared_secret(&key)?;
@@ -171,17 +171,13 @@ impl Player {
             .insert(self.entity, DeviceOS::from(skin_data.DeviceOS))
             .unwrap();
 
+        let player_name = PlayerName {
+            xuid: user_data.XUID,
+            client_uuid: user_data.identity,
+            user_name: user_data.displayName,
+        };
         let mut name_storage = world.write_component::<PlayerName>();
-        name_storage
-            .insert(
-                self.entity,
-                PlayerName {
-                    xuid: data.XUID,
-                    client_uuid: data.identity,
-                    user_name: data.displayName,
-                },
-            )
-            .unwrap();
+        name_storage.insert(self.entity, player_name).unwrap();
         Ok(())
     }
 }

@@ -20,7 +20,7 @@ hmac-sha256 = { version = "1.1.6", features = [ "traits010" ] }
 aes = "0.8.3"
 ctr = "0.9.2"
 rand = "0.8.5"
-protodef = { git = "https://github.com/ueno-aki/protodef/", rev = "8ad6dffd15eb8e94d0c4ecb5f1f040dd16190912" }
+protodef = { git = "https://github.com/ueno-aki/protodef/", rev = "6191d8dc6f5312fe1456fad6e5d64904fd830de7" }
 from-num = { git = "https://github.com/ueno-aki/from-num/", rev = "3b40c10c8ead6fa36a061081d986b119f708c10c" }
 anyhow = "1.0.69"
 thiserror = "1.0"

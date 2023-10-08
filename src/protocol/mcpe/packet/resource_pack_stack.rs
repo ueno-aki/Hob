@@ -15,13 +15,13 @@ pub struct ResourcePacksStackPacket {
 impl ResourcePacksStackPacket {
     pub fn read_to_buffer(&self, vec: &mut Vec<u8>) -> Result<()> {
         vec.write_bool(self.must_accept)?;
-        vec.write_var_int(self.behavior_packs.len() as u64)?;
+        vec.write_varint(self.behavior_packs.len() as u64)?;
         for behavior in self.behavior_packs.iter() {
             vec.write_string(&behavior.uuid)?;
             vec.write_string(&behavior.version)?;
             vec.write_string(&behavior.name)?;
         }
-        vec.write_var_int(self.resource_packs.len() as u64)?;
+        vec.write_varint(self.resource_packs.len() as u64)?;
         for resource in self.resource_packs.iter() {
             vec.write_string(&resource.uuid)?;
             vec.write_string(&resource.version)?;

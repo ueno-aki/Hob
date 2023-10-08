@@ -37,27 +37,27 @@ fn decompress(buffer: &[u8]) -> Vec<u8> {
     }
 }
 pub fn parse_packet(buffer: Vec<u8>) -> Result<PacketKind> {
-    let (name, n_size) = buffer.read_varint(0)?;
-    let packet: PacketKind = match name {
-        x if x == LoginPacket::id() => LoginPacket::from_buf(buffer, n_size)?.into(),
-        x if x == ClientToServerHandshakePacket::id() => ClientToServerHandshakePacket().into(),
-        x if x == RequestNetworkSettingPacket::id() => {
-            RequestNetworkSettingPacket::from_buf(buffer, n_size)?.into()
+    let (id, id_size) = buffer.read_varint(0)?;
+    let packet: PacketKind = match id {
+        n if n == LoginPacket::id() => LoginPacket::from_buf(buffer, id_size)?.into(),
+        n if n == ClientToServerHandshakePacket::id() => ClientToServerHandshakePacket().into(),
+        n if n == RequestNetworkSettingPacket::id() => {
+            RequestNetworkSettingPacket::from_buf(buffer, id_size)?.into()
         }
-        x if x == ClientCacheStatusPacket::id() => {
-            ClientCacheStatusPacket::from_buf(buffer, n_size)?.into()
+        n if n == ClientCacheStatusPacket::id() => {
+            ClientCacheStatusPacket::from_buf(buffer, id_size)?.into()
         }
-        x if x == ResourcePackClientResponsePacket::id() => {
-            ResourcePackClientResponsePacket::from_buf(buffer, n_size)?.into()
+        n if n == ResourcePackClientResponsePacket::id() => {
+            ResourcePackClientResponsePacket::from_buf(buffer, id_size)?.into()
         }
-        _ => todo!("packet_id:{}", name),
+        _ => todo!("packet_id:{}", id),
     };
     Ok(packet)
 }
 
 pub fn encode(packet: PacketKind, force_compress: bool) -> Result<Vec<u8>> {
     let mut content: Vec<u8> = Vec::new();
-    content.write_var_int(packet.get_id())?;
+    content.write_varint(packet.get_id())?;
     match packet {
         PacketKind::PlayStatusPacket(v) => v.read_to_buffer(&mut content)?,
         PacketKind::ServerToClientHandshakePacket(v) => v.read_to_buffer(&mut content)?,
@@ -68,7 +68,7 @@ pub fn encode(packet: PacketKind, force_compress: bool) -> Result<Vec<u8>> {
         _ => todo!("packet_id:{}", packet.get_id()),
     };
     let mut encoded = Vec::new();
-    encoded.write_var_int(content.len() as u64)?;
+    encoded.write_varint(content.len() as u64)?;
     encoded = [encoded, content].concat();
     Ok(compress(&encoded, force_compress)?)
 }
