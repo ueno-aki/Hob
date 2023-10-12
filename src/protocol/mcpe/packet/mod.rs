@@ -35,7 +35,7 @@ macro_rules! packet_kind_enum {
             }
             pub fn get_name(&self) -> &str{
                 match self {
-                    $(PacketKind::$kind(v) => v.name(),)*
+                    $(PacketKind::$kind(v) => v.get_name(),)*
                 }
             }
         }
@@ -78,7 +78,7 @@ macro_rules! packet_ids {
             pub fn id() -> u64 {
                 $id
             }
-            pub fn name(&self) -> &str {
+            pub fn get_name(&self) -> &str {
                 $name
             }
         }

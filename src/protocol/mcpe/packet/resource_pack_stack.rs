@@ -16,16 +16,16 @@ impl ResourcePacksStackPacket {
     pub fn read_to_buffer(&self, vec: &mut Vec<u8>) -> Result<()> {
         vec.write_bool(self.must_accept)?;
         vec.write_varint(self.behavior_packs.len() as u64)?;
-        for behavior in self.behavior_packs.iter() {
-            vec.write_string(&behavior.uuid)?;
-            vec.write_string(&behavior.version)?;
-            vec.write_string(&behavior.name)?;
+        for PackIdVersion { uuid, version, name } in self.behavior_packs.iter() {
+            vec.write_string(uuid)?;
+            vec.write_string(version)?;
+            vec.write_string(name)?;
         }
         vec.write_varint(self.resource_packs.len() as u64)?;
-        for resource in self.resource_packs.iter() {
-            vec.write_string(&resource.uuid)?;
-            vec.write_string(&resource.version)?;
-            vec.write_string(&resource.name)?;
+        for PackIdVersion { uuid, version, name } in self.resource_packs.iter() {
+            vec.write_string(uuid)?;
+            vec.write_string(version)?;
+            vec.write_string(name)?;
         }
         vec.write_string(&self.game_version)?;
         vec.write_li32(self.experiments.len() as i32)?;

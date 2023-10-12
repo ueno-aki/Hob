@@ -17,7 +17,7 @@ fn packet_id_macro() {
 #[test]
 fn write_play_status() -> Result<()> {
     let play_status = PlayStatusPacket::FailedClient;
-    assert_eq!(encode(play_status.into(), false)?, vec![5, 2, 0, 0, 0, 1]);
+    assert_eq!(encode(&play_status.into(), false)?, vec![5, 2, 0, 0, 0, 1]);
     Ok(())
 }
 #[test]
@@ -30,7 +30,7 @@ fn write_res_stack() -> Result<()> {
         experiments: vec![],
         is_experimental: false,
     };
-    println!("{:?}", encode(res_stack.into(), false)?);
+    println!("{:?}", encode(&res_stack.into(), false)?);
     Ok(())
 }
 #[test]
