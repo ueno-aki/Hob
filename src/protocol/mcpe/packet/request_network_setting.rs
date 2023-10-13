@@ -8,7 +8,7 @@ pub struct RequestNetworkSettingPacket {
 }
 
 impl RequestNetworkSettingPacket {
-    pub fn from_buf(buffer: Vec<u8>, offset: usize) -> Result<Self> {
+    pub fn from_buf(buffer: &[u8], offset: usize) -> Result<Self> {
         let client_protocol = buffer.read_i32(offset);
         Ok(RequestNetworkSettingPacket { client_protocol })
     }

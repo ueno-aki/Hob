@@ -10,7 +10,7 @@ pub struct ResourcePackClientResponsePacket {
 }
 
 impl ResourcePackClientResponsePacket {
-    pub fn from_buf(buffer: Vec<u8>, offset: usize) -> Result<Self> {
+    pub fn from_buf(buffer: &[u8], offset: usize) -> Result<Self> {
         let mut cursor = offset;
         let response_status = ResponseStatus::from(buffer.read_u8(cursor));
         cursor += 1;

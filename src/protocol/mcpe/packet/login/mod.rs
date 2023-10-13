@@ -14,7 +14,7 @@ pub struct LoginPacket {
 }
 
 impl LoginPacket {
-    pub fn from_buf(buffer: Vec<u8>, offset: usize) -> Result<Self> {
+    pub fn from_buf(buffer: &[u8], offset: usize) -> Result<Self> {
         let mut cursor = offset;
         let protocol_version = buffer.read_i32(cursor);
         cursor += 4;

@@ -68,10 +68,11 @@ impl Player {
     }
     pub async fn listen(&mut self) -> Result<()> {
         let socket = self.socket.clone();
-        while let Ok(buffer) = socket.recv().await {
-            let mut buffer = buffer[1..].to_vec();
-            for pkt in framer::decode(self.decrypt_or(&mut buffer))? {
-                let packet = framer::parse_packet(pkt)?;
+        while let Ok(mut buffer) = socket.recv().await {
+            let buffer: &mut [u8] = buffer[1..].as_mut();
+            self.decrypt_or(buffer);
+            for pkt in framer::decode(buffer)? {
+                let packet: PacketKind = framer::parse_packet(&pkt)?;
                 println!("[C=>S]{}", packet);
                 self.handle(&packet).await.unwrap();
             }

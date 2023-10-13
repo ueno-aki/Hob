@@ -8,7 +8,7 @@ pub struct ClientCacheStatusPacket {
 }
 
 impl ClientCacheStatusPacket {
-    pub fn from_buf(buffer: Vec<u8>, offset: usize) -> Result<Self> {
+    pub fn from_buf(buffer: &[u8], offset: usize) -> Result<Self> {
         let (enabled, _) = buffer.read_bool(offset)?;
         Ok(ClientCacheStatusPacket { enabled })
     }

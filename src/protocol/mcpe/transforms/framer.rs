@@ -36,7 +36,7 @@ fn decompress(buffer: &[u8]) -> Vec<u8> {
         Err(_) => buffer.to_vec(),
     }
 }
-pub fn parse_packet(buffer: Vec<u8>) -> Result<PacketKind> {
+pub fn parse_packet(buffer:&[u8]) -> Result<PacketKind> {
     let (id, id_size) = buffer.read_varint(0)?;
     let packet: PacketKind = match id {
         n if n == LoginPacket::id() => LoginPacket::from_buf(buffer, id_size)?.into(),

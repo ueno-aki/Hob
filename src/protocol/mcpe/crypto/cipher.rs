@@ -13,7 +13,7 @@ pub type Aes256Ctr64BE = ctr::Ctr64BE<Aes256>;
 
 pub trait Aes256CtrManager {
     fn setup_cipher(&mut self, key: &[u8; 32], iv: &[u8; 16]) -> Result<()>;
-    fn decrypt_or<'a>(&mut self, buffer: &'a mut [u8]) -> &'a [u8];
+    fn decrypt_or<'a>(&mut self, buffer: &'a mut [u8]);
     fn encrypt_or(&mut self, buffer: &[u8]) -> Result<Vec<u8>>;
     fn compute_packet_tag(counter: &u64, plain_pkt: &[u8], ss_key: &[u8; 32]) -> Result<Vec<u8>>;
 }
@@ -24,7 +24,7 @@ impl Aes256CtrManager for Player {
         self.get_status_mut().decipher = Some(Aes256Ctr64BE::new(key.into(), iv.into()));
         Ok(())
     }
-    fn decrypt_or<'a>(&mut self, buffer: &'a mut [u8]) -> &'a [u8] {
+    fn decrypt_or(&mut self, buffer: &mut [u8]) {
         let encryption_enabled = self.get_status().encryption_enabled;
         if encryption_enabled {
             self.get_status_mut()
@@ -33,7 +33,6 @@ impl Aes256CtrManager for Player {
                 .unwrap()
                 .apply_keystream(buffer);
         }
-        buffer
     }
     fn encrypt_or(&mut self, buffer: &[u8]) -> Result<Vec<u8>> {
         let mut result = buffer.to_vec();
