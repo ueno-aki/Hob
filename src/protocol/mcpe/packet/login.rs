@@ -15,10 +15,7 @@ pub struct LoginPacket {
 }
 
 impl Packet for LoginPacket {
-    fn from_buf(buffer: &[u8], offset: usize) -> Result<PacketKind>
-    where
-        Self: Sized,
-    {
+    fn from_buf(buffer: &[u8], offset: usize) -> Result<PacketKind> {
         let mut cursor = offset;
         let protocol_version = buffer.read_i32(cursor);
         cursor += 4;

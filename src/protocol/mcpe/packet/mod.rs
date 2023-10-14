@@ -24,9 +24,7 @@ use resource_pack_stack::ResourcePacksStackPacket;
 use resource_packs_info::ResourcePacksInfoPacket;
 
 pub trait Packet {
-    fn from_buf(buffer: &[u8], offset: usize) -> Result<PacketKind>
-    where
-        Self: Sized;
+    fn from_buf(buffer: &[u8], offset: usize) -> Result<PacketKind>;
     fn read_to_buffer(&self, vec: &mut Vec<u8>) -> Result<()>;
 }
 

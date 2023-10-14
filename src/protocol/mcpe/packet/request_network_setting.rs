@@ -9,10 +9,7 @@ pub struct RequestNetworkSettingPacket {
 }
 
 impl Packet for RequestNetworkSettingPacket {
-    fn from_buf(buffer: &[u8], offset: usize) -> Result<PacketKind>
-    where
-        Self: Sized,
-    {
+    fn from_buf(buffer: &[u8], offset: usize) -> Result<PacketKind> {
         let client_protocol = buffer.read_i32(offset);
         Ok(PacketKind::RequestNetworkSettingPacket(
             RequestNetworkSettingPacket { client_protocol },

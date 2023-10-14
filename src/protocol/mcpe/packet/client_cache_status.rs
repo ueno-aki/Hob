@@ -9,10 +9,7 @@ pub struct ClientCacheStatusPacket {
 }
 
 impl Packet for ClientCacheStatusPacket {
-    fn from_buf(buffer: &[u8], offset: usize) -> Result<PacketKind>
-    where
-        Self: Sized,
-    {
+    fn from_buf(buffer: &[u8], offset: usize) -> Result<PacketKind> {
         let (enabled, _) = buffer.read_bool(offset)?;
         Ok(PacketKind::ClientCacheStatusPacket(
             ClientCacheStatusPacket { enabled },

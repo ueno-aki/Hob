@@ -22,10 +22,7 @@ impl Packet for ResourcePacksInfoPacket {
         self.encode_resouce_links(vec)?;
         Ok(())
     }
-    fn from_buf(_buffer: &[u8], _offset: usize) -> Result<PacketKind>
-    where
-        Self: Sized,
-    {
+    fn from_buf(_buffer: &[u8], _offset: usize) -> Result<PacketKind> {
         unimplemented!()
     }
 }

@@ -28,10 +28,7 @@ impl Packet for ServerToClientHandshakePacket {
 pub struct ClientToServerHandshakePacket();
 
 impl Packet for ClientToServerHandshakePacket {
-    fn from_buf(_buffer: &[u8], _offset: usize) -> Result<PacketKind>
-    where
-        Self: Sized,
-    {
+    fn from_buf(_buffer: &[u8], _offset: usize) -> Result<PacketKind> {
         Ok(PacketKind::ClientToServerHandshakePacket(
             ClientToServerHandshakePacket(),
         ))

@@ -21,10 +21,7 @@ impl Packet for NetworkSettingsPacket {
         vec.write_lf32(self.client_throttle_scalar)?;
         Ok(())
     }
-    fn from_buf(_buffer: &[u8], _offset: usize) -> Result<PacketKind>
-    where
-        Self: Sized,
-    {
+    fn from_buf(_buffer: &[u8], _offset: usize) -> Result<PacketKind> {
         unimplemented!()
     }
 }

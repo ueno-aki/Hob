@@ -10,10 +10,7 @@ pub struct DisconnectPacket {
 }
 
 impl Packet for DisconnectPacket {
-    fn from_buf(_buffer: &[u8], _offset: usize) -> Result<PacketKind>
-    where
-        Self: Sized,
-    {
+    fn from_buf(_buffer: &[u8], _offset: usize) -> Result<PacketKind> {
         unimplemented!()
     }
     fn read_to_buffer(&self, vec: &mut Vec<u8>) -> Result<()> {

@@ -11,10 +11,7 @@ pub struct ResourcePackClientResponsePacket {
 }
 
 impl Packet for ResourcePackClientResponsePacket {
-    fn from_buf(buffer: &[u8], offset: usize) -> Result<PacketKind>
-    where
-        Self: Sized,
-    {
+    fn from_buf(buffer: &[u8], offset: usize) -> Result<PacketKind> {
         let mut cursor = offset;
         let response_status = ResponseStatus::from(buffer.read_u8(cursor));
         cursor += 1;
