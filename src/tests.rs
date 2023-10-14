@@ -1,7 +1,7 @@
 use crate::protocol::mcpe::{
     packet::{
         play_status::PlayStatusPacket, request_network_setting::RequestNetworkSettingPacket,
-        resource_pack_stack::ResourcePacksStackPacket,
+        resource_pack_stack::ResourcePacksStackPacket, PacketKind,
     },
     transforms::framer::encode,
 };
@@ -12,7 +12,7 @@ fn packet_id_macro() {
     let pkt = RequestNetworkSettingPacket {
         client_protocol: 594,
     };
-    assert_eq!(pkt.get_id(), 193);
+    assert_eq!(Into::<PacketKind>::into(pkt).id(), 193);
 }
 #[test]
 fn write_play_status() -> Result<()> {

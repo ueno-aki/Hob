@@ -1,7 +1,6 @@
+use super::{Packet, PacketKind};
 use anyhow::Result;
 use protodef::prelude::*;
-
-use crate::packet_ids;
 
 #[derive(Debug)]
 pub struct ResourcePacksInfoPacket {
@@ -12,8 +11,9 @@ pub struct ResourcePacksInfoPacket {
     pub resource_pack_infos: Vec<ResourcePackInfo>,
     pub resource_pack_links: Vec<ResourcePackLinks>,
 }
-impl ResourcePacksInfoPacket {
-    pub fn read_to_buffer(&self, vec: &mut Vec<u8>) -> Result<()> {
+
+impl Packet for ResourcePacksInfoPacket {
+    fn read_to_buffer(&self, vec: &mut Vec<u8>) -> Result<()> {
         vec.write_bool(self.must_accept)?;
         vec.write_bool(self.scripting)?;
         vec.write_bool(self.force_server_packs)?;
@@ -22,6 +22,15 @@ impl ResourcePacksInfoPacket {
         self.encode_resouce_links(vec)?;
         Ok(())
     }
+    fn from_buf(_buffer: &[u8], _offset: usize) -> Result<PacketKind>
+    where
+        Self: Sized,
+    {
+        unimplemented!()
+    }
+}
+
+impl ResourcePacksInfoPacket {
     fn encode_behavior(&self, vec: &mut Vec<u8>) -> Result<()> {
         vec.write_li16(self.behaviour_pack_infos.len() as i16)?;
         for behavior in self.behaviour_pack_infos.iter() {
@@ -58,8 +67,6 @@ impl ResourcePacksInfoPacket {
         Ok(())
     }
 }
-
-packet_ids!(ResourcePacksInfoPacket, 6, "resource_pack_info_packet");
 
 #[derive(Debug)]
 pub struct BehaviourPackInfo {

@@ -1,7 +1,8 @@
-use crate::packet_ids;
 use anyhow::Result;
 use from_num::from_num;
 use protodef::prelude::*;
+
+use super::{Packet, PacketKind};
 
 #[derive(Debug)]
 pub struct ResourcePackClientResponsePacket {
@@ -9,8 +10,11 @@ pub struct ResourcePackClientResponsePacket {
     pub resourcepack_ids: Vec<String>,
 }
 
-impl ResourcePackClientResponsePacket {
-    pub fn from_buf(buffer: &[u8], offset: usize) -> Result<Self> {
+impl Packet for ResourcePackClientResponsePacket {
+    fn from_buf(buffer: &[u8], offset: usize) -> Result<PacketKind>
+    where
+        Self: Sized,
+    {
         let mut cursor = offset;
         let response_status = ResponseStatus::from(buffer.read_u8(cursor));
         cursor += 1;
@@ -23,10 +27,13 @@ impl ResourcePackClientResponsePacket {
             cursor += id_size;
             ids_length -= 1;
         }
-        Ok(Self {
+        Ok(PacketKind::ResourcePackClientResponsePacket(Self {
             response_status,
             resourcepack_ids,
-        })
+        }))
+    }
+    fn read_to_buffer(&self, _vec: &mut Vec<u8>) -> Result<()> {
+        unimplemented!()
     }
 }
 
@@ -39,9 +46,3 @@ pub enum ResponseStatus {
     HaveAllPacks,
     Completed,
 }
-
-packet_ids!(
-    ResourcePackClientResponsePacket,
-    8,
-    "resource_pack_client_response_packet"
-);

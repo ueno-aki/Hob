@@ -72,7 +72,7 @@ impl Player {
             let buffer: &mut [u8] = buffer[1..].as_mut();
             self.decrypt_or(buffer);
             for pkt in framer::decode(buffer)? {
-                let packet: PacketKind = framer::parse_packet(&pkt)?;
+                let packet = PacketKind::from_buf(&pkt, 0).unwrap();
                 println!("[C=>S]{}", packet);
                 self.handle(&packet).await.unwrap();
             }

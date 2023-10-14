@@ -1,7 +1,7 @@
 use anyhow::Result;
 use protodef::prelude::*;
 
-use crate::packet_ids;
+use super::{Packet, PacketKind};
 
 #[derive(Debug)]
 pub struct NetworkSettingsPacket {
@@ -12,8 +12,8 @@ pub struct NetworkSettingsPacket {
     pub client_throttle_scalar: f32,
 }
 
-impl NetworkSettingsPacket {
-    pub fn read_to_buffer(&self, vec: &mut Vec<u8>) -> Result<()> {
+impl Packet for NetworkSettingsPacket {
+    fn read_to_buffer(&self, vec: &mut Vec<u8>) -> Result<()> {
         vec.write_u16(self.compression_threshold)?;
         vec.write_u16(self.compression_algorithm.clone() as u16)?;
         vec.write_bool(self.client_throttle)?;
@@ -21,8 +21,13 @@ impl NetworkSettingsPacket {
         vec.write_lf32(self.client_throttle_scalar)?;
         Ok(())
     }
+    fn from_buf(_buffer: &[u8], _offset: usize) -> Result<PacketKind>
+    where
+        Self: Sized,
+    {
+        unimplemented!()
+    }
 }
-packet_ids!(NetworkSettingsPacket, 143, "network_settings_packet");
 
 #[derive(Debug, Clone)]
 pub enum CompressionAlgorithmType {

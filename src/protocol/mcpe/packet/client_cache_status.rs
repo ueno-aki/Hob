@@ -1,16 +1,24 @@
-use crate::packet_ids;
 use anyhow::Result;
 use protodef::prelude::*;
+
+use super::{Packet, PacketKind};
 
 #[derive(Debug)]
 pub struct ClientCacheStatusPacket {
     pub enabled: bool,
 }
 
-impl ClientCacheStatusPacket {
-    pub fn from_buf(buffer: &[u8], offset: usize) -> Result<Self> {
+impl Packet for ClientCacheStatusPacket {
+    fn from_buf(buffer: &[u8], offset: usize) -> Result<PacketKind>
+    where
+        Self: Sized,
+    {
         let (enabled, _) = buffer.read_bool(offset)?;
-        Ok(ClientCacheStatusPacket { enabled })
+        Ok(PacketKind::ClientCacheStatusPacket(
+            ClientCacheStatusPacket { enabled },
+        ))
+    }
+    fn read_to_buffer(&self, _vec: &mut Vec<u8>) -> Result<()> {
+        unimplemented!()
     }
 }
-packet_ids!(ClientCacheStatusPacket, 129, "client_cache_status_packet");
