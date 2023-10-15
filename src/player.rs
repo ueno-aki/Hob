@@ -127,8 +127,8 @@ impl Player {
     pub async fn send_packet<T: Into<PacketKind>>(&mut self, packet: T) -> Result<()> {
         let packet: PacketKind = packet.into();
         println!("[S=>C]{}", packet);
-        let bind = framer::encode(&packet, self.get_status().encryption_enabled)?;
-        let buffer = self.encrypt_or(&bind)?;
+        let mut buffer = framer::encode(&packet, self.get_status().encryption_enabled)?;
+        self.encrypt_or(&mut buffer)?;
         self.socket
             .send(
                 &[vec![0xfe], buffer].concat(),
