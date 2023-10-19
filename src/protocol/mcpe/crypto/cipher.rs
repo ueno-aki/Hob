@@ -5,6 +5,7 @@ use aes::{
 use anyhow::Result;
 use ctr::{flavors::Ctr64BE, CtrCore};
 use protodef::prelude::*;
+use std::io::Write;
 
 use crate::player::Player;
 
@@ -13,8 +14,8 @@ pub type Aes256Ctr64BE = ctr::Ctr64BE<Aes256>;
 
 pub trait Aes256CtrManager {
     fn setup_cipher(&mut self, key: &[u8; 32], iv: &[u8; 16]) -> Result<()>;
-    fn decrypt_or<'a>(&mut self, buffer: &'a mut [u8]) -> &'a [u8];
-    fn encrypt_or(&mut self, buffer: &[u8]) -> Result<Vec<u8>>;
+    fn decrypt_or<'a>(&mut self, buffer: &'a mut [u8]);
+    fn encrypt_or(&mut self, buffer: &mut Vec<u8>) -> Result<()>;
     fn compute_packet_tag(counter: &u64, plain_pkt: &[u8], ss_key: &[u8; 32]) -> Result<Vec<u8>>;
 }
 
@@ -24,7 +25,7 @@ impl Aes256CtrManager for Player {
         self.get_status_mut().decipher = Some(Aes256Ctr64BE::new(key.into(), iv.into()));
         Ok(())
     }
-    fn decrypt_or<'a>(&mut self, buffer: &'a mut [u8]) -> &'a [u8] {
+    fn decrypt_or(&mut self, buffer: &mut [u8]) {
         let encryption_enabled = self.get_status().encryption_enabled;
         if encryption_enabled {
             self.get_status_mut()
@@ -33,26 +34,24 @@ impl Aes256CtrManager for Player {
                 .unwrap()
                 .apply_keystream(buffer);
         }
-        buffer
     }
-    fn encrypt_or(&mut self, buffer: &[u8]) -> Result<Vec<u8>> {
-        let mut result = buffer.to_vec();
+    fn encrypt_or(&mut self, buffer: &mut Vec<u8>) -> Result<()> {
         let encryption_enabled = self.get_status().encryption_enabled;
         if encryption_enabled {
             let tag = Self::compute_packet_tag(
                 &self.get_status().send_counter,
-                &result,
+                buffer,
                 &self.get_status().ss_key.unwrap(),
             )?;
-            result = [result, tag].concat();
+            buffer.write(&tag)?;
             self.get_status_mut()
                 .cipher
                 .as_mut()
                 .unwrap()
-                .apply_keystream(&mut result);
+                .apply_keystream(buffer);
             self.get_status_mut().send_counter += 1;
         }
-        Ok(result)
+        Ok(())
     }
     fn compute_packet_tag(counter: &u64, plain_pkt: &[u8], ss_key: &[u8; 32]) -> Result<Vec<u8>> {
         let mut digest = hmac_sha256::Hash::new();

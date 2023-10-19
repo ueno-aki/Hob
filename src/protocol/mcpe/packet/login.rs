@@ -1,6 +1,7 @@
-use crate::packet_ids;
 use anyhow::Result;
 use protodef::prelude::*;
+
+use super::{Packet, PacketKind};
 
 pub mod constants;
 pub mod errors;
@@ -13,8 +14,8 @@ pub struct LoginPacket {
     pub client: String,
 }
 
-impl LoginPacket {
-    pub fn from_buf(buffer: Vec<u8>, offset: usize) -> Result<Self> {
+impl Packet for LoginPacket {
+    fn from_buf(buffer: &[u8], offset: usize) -> Result<PacketKind> {
         let mut cursor = offset;
         let protocol_version = buffer.read_i32(cursor);
         cursor += 4;
@@ -23,11 +24,14 @@ impl LoginPacket {
         let (identity, identity_size) = buffer.read_little_string(cursor)?;
         cursor += identity_size;
         let (client, _client_size) = buffer.read_little_string(cursor)?;
-        Ok(LoginPacket {
+        let packet = LoginPacket {
             protocol_version,
             identity,
             client,
-        })
+        };
+        Ok(PacketKind::LoginPacket(packet))
+    }
+    fn read_to_buffer(&self, _vec: &mut Vec<u8>) -> Result<()> {
+        unimplemented!()
     }
 }
-packet_ids!(LoginPacket, 1, "login_packet");

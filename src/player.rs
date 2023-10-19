@@ -1,9 +1,12 @@
 use crate::ecs::components::{DeviceOS, PlayerName};
 use crate::protocol::mcpe::crypto::cipher::{Aes256CtrManager, Cipher};
 use crate::protocol::mcpe::packet::{
+    disconnect::DisconnectPacket,
     handshake::{key_exchange, ServerToClientHandshakePacket},
-    login::login_verify::{verify_login, verify_skin_data},
-    login::LoginPacket,
+    login::{
+        login_verify::{verify_login, verify_skin_data},
+        LoginPacket,
+    },
     network_settings::{CompressionAlgorithmType, NetworkSettingsPacket},
     play_status::PlayStatusPacket,
     resource_pack_client_response::ResponseStatus,
@@ -44,7 +47,7 @@ impl Display for Player {
         let name_storage = world.read_component::<PlayerName>();
         match name_storage.get(self.entity) {
             Some(v) => write!(f, "{}", v.user_name),
-            None => write!(f, "{:?}", self.socket.peer_addr().unwrap()),
+            None => write!(f, "{:?}", self.socket.peer_addr()),
         }
     }
 }
@@ -60,30 +63,42 @@ impl Player {
     }
     #[inline]
     pub fn get_status(&self) -> AtomicRef<PlayerStatus> {
-        self.status.borrow()
+        self.status.try_borrow().unwrap()
     }
     #[inline]
     pub fn get_status_mut(&self) -> AtomicRefMut<PlayerStatus> {
-        self.status.borrow_mut()
+        self.status.try_borrow_mut().unwrap()
     }
     pub async fn listen(&mut self) -> Result<()> {
-        let socket = self.socket.clone();
-        while let Ok(buffer) = socket.recv().await {
-            let mut buffer = buffer[1..].to_vec();
-            for pkt in framer::decode(self.decrypt_or(&mut buffer))? {
-                let packet = framer::parse_packet(pkt)?;
-                println!("[C=>S]{}", packet);
-                self.handle(&packet).await.unwrap();
-            }
+        if let Err(v) = self.listen_exec().await {
+            self.disconnect(format!("ServerError:{:?}", v))
+                .await
+                .unwrap();
         }
         println!("disconnected,{}", self);
-        self.world.borrow_mut().delete_entity(self.entity)?;
+        self.world
+            .try_borrow_mut()
+            .unwrap()
+            .delete_entity(self.entity)
+            .unwrap();
         Ok(())
     }
-    async fn handle(&mut self, packet: &PacketKind) -> Result<()> {
+    async fn listen_exec(&mut self) -> Result<()> {
+        while let Ok(mut buffer) = self.socket.recv().await {
+            let buffer: &mut [u8] = buffer[1..].as_mut();
+            self.decrypt_or(buffer);
+            for pkt in framer::decode(buffer)? {
+                let packet = PacketKind::from_buf(&pkt, 0)?;
+                println!("[C=>S]{}", packet);
+                self.handle_packet(&packet).await?
+            }
+        }
+        Ok(())
+    }
+    async fn handle_packet(&mut self, packet: &PacketKind) -> Result<()> {
         match packet {
             PacketKind::RequestNetworkSettingPacket(pkt) => {
-                let current_p = get_option("protocol")?.parse::<i32>()?;
+                let current_p: i32 = get_option("protocol").unwrap().parse().unwrap();
                 match pkt.client_protocol {
                     x if x > current_p => self.send_packet(PlayStatusPacket::FailedSpawn).await?,
                     x if x < current_p => self.send_packet(PlayStatusPacket::FailedClient).await?,
@@ -116,8 +131,7 @@ impl Player {
                     };
                     self.send_packet(res_stack).await?;
                 }
-                ResponseStatus::Completed => {}
-                _ => println!("{:?},{:?}", v.response_status, v.resourcepack_ids),
+                _ => {}
             },
             _ => todo!(),
         }
@@ -125,9 +139,8 @@ impl Player {
     }
     pub async fn send_packet<T: Into<PacketKind>>(&mut self, packet: T) -> Result<()> {
         let packet: PacketKind = packet.into();
-        println!("[S=>C]{}", packet);
-        let bind = framer::encode(packet, self.get_status().encryption_enabled)?;
-        let buffer = self.encrypt_or(&bind)?;
+        let mut buffer = framer::encode(&packet, self.get_status().encryption_enabled)?;
+        self.encrypt_or(&mut buffer)?;
         self.socket
             .send(
                 &[vec![0xfe], buffer].concat(),
@@ -135,6 +148,7 @@ impl Player {
             )
             .await
             .map_err(|e| anyhow!("FailedToSendPacket:{:?}", e))?;
+        println!("[S=>C]{}", packet);
         Ok(())
     }
     async fn send_network_setting(&mut self) -> Result<()> {
@@ -148,8 +162,16 @@ impl Player {
         self.send_packet(network_setting).await?;
         Ok(())
     }
+    async fn disconnect(&mut self, message: String) -> Result<()> {
+        let disconnect = DisconnectPacket {
+            message,
+            hide_disconnect_reason: false,
+        };
+        self.send_packet(disconnect).await?;
+        Ok(())
+    }
     async fn login_handshake(&mut self, login: &LoginPacket) -> Result<()> {
-        let (key, data) = verify_login(&login.identity)?;
+        let (key, user_data) = verify_login(&login.identity)?;
         let skin_data = verify_skin_data(&key, &login.client)?;
 
         let (secret, token) = key_exchange::shared_secret(&key)?;
@@ -165,23 +187,17 @@ impl Player {
         self.get_status_mut().ss_key = Some(secret.clone());
         self.setup_cipher(&secret, &iv)?;
 
-        let world = self.world.borrow();
+        let world = self.world.try_borrow().unwrap();
         let mut os_storage = world.write_component::<DeviceOS>();
-        os_storage
-            .insert(self.entity, DeviceOS::from(skin_data.DeviceOS))
-            .unwrap();
+        os_storage.insert(self.entity, DeviceOS::from(skin_data.DeviceOS))?;
 
+        let player_name = PlayerName {
+            xuid: user_data.XUID,
+            client_uuid: user_data.identity,
+            user_name: user_data.displayName,
+        };
         let mut name_storage = world.write_component::<PlayerName>();
-        name_storage
-            .insert(
-                self.entity,
-                PlayerName {
-                    xuid: data.XUID,
-                    client_uuid: data.identity,
-                    user_name: data.displayName,
-                },
-            )
-            .unwrap();
+        name_storage.insert(self.entity, player_name)?;
         Ok(())
     }
 }

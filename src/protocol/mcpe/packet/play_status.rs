@@ -1,7 +1,7 @@
 use anyhow::Result;
 use protodef::prelude::*;
 
-use crate::packet_ids;
+use super::{Packet, PacketKind};
 
 #[derive(Debug, Clone)]
 pub enum PlayStatusPacket {
@@ -16,11 +16,12 @@ pub enum PlayStatusPacket {
     FailedEditorVanillaMismatch,
     FailedVanillaEditorMismatch,
 }
-
-impl PlayStatusPacket {
-    pub fn read_to_buffer(&self, vec: &mut Vec<u8>) -> Result<()> {
+impl Packet for PlayStatusPacket {
+    fn from_buf(_buffer: &[u8], _offset: usize) -> Result<PacketKind> {
+        unimplemented!()
+    }
+    fn read_to_buffer(&self, vec: &mut Vec<u8>) -> Result<()> {
         vec.write_i32(self.clone() as i32)?;
         Ok(())
     }
 }
-packet_ids!(PlayStatusPacket, 2, "play_status_packet");

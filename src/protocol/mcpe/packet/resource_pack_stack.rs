@@ -1,7 +1,6 @@
+use super::{Packet, PacketKind};
 use anyhow::Result;
 use protodef::prelude::*;
-
-use crate::packet_ids;
 
 #[derive(Debug)]
 pub struct ResourcePacksStackPacket {
@@ -12,20 +11,34 @@ pub struct ResourcePacksStackPacket {
     pub experiments: Vec<Experiment>,
     pub is_experimental: bool,
 }
-impl ResourcePacksStackPacket {
-    pub fn read_to_buffer(&self, vec: &mut Vec<u8>) -> Result<()> {
+
+impl Packet for ResourcePacksStackPacket {
+    fn from_buf(_buffer: &[u8], _offset: usize) -> Result<PacketKind> {
+        unimplemented!()
+    }
+    fn read_to_buffer(&self, vec: &mut Vec<u8>) -> Result<()> {
         vec.write_bool(self.must_accept)?;
-        vec.write_var_int(self.behavior_packs.len() as u64)?;
-        for behavior in self.behavior_packs.iter() {
-            vec.write_string(&behavior.uuid)?;
-            vec.write_string(&behavior.version)?;
-            vec.write_string(&behavior.name)?;
+        vec.write_varint(self.behavior_packs.len() as u64)?;
+        for PackIdVersion {
+            uuid,
+            version,
+            name,
+        } in self.behavior_packs.iter()
+        {
+            vec.write_string(uuid)?;
+            vec.write_string(version)?;
+            vec.write_string(name)?;
         }
-        vec.write_var_int(self.resource_packs.len() as u64)?;
-        for resource in self.resource_packs.iter() {
-            vec.write_string(&resource.uuid)?;
-            vec.write_string(&resource.version)?;
-            vec.write_string(&resource.name)?;
+        vec.write_varint(self.resource_packs.len() as u64)?;
+        for PackIdVersion {
+            uuid,
+            version,
+            name,
+        } in self.resource_packs.iter()
+        {
+            vec.write_string(uuid)?;
+            vec.write_string(version)?;
+            vec.write_string(name)?;
         }
         vec.write_string(&self.game_version)?;
         vec.write_li32(self.experiments.len() as i32)?;
@@ -37,7 +50,6 @@ impl ResourcePacksStackPacket {
         Ok(())
     }
 }
-packet_ids!(ResourcePacksStackPacket, 7, "resource_pack_stack_packet");
 
 #[derive(Debug)]
 pub struct PackIdVersion {

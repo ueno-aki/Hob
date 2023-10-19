@@ -39,20 +39,17 @@ impl Server {
         listener.listen().await;
         let world = self.world.clone();
         tokio::spawn(async move {
-            let world = world.clone();
             while let Ok(socket) = listener.accept().await {
-                let world_c = world.clone();
-                let binding = world.borrow();
-                let mut entity_count_res = binding.write_resource::<EntityCount>();
-                entity_count_res.count += 1;
-                let count = entity_count_res.count;
+                let world = world.clone();
                 tokio::spawn(async move {
-                    let entity = world_c
-                        .borrow_mut()
+                    let count = Self::increment_entity_count(world.clone());
+                    let entity = world
+                        .try_borrow_mut()
+                        .unwrap()
                         .create_entity()
                         .with(RunTimeID { id: count })
                         .build();
-                    let mut player = Player::new(socket, entity, world_c);
+                    let mut player = Player::new(socket, entity, world);
                     player.listen().await.unwrap();
                 });
             }
@@ -60,6 +57,13 @@ impl Server {
         .await
         .unwrap();
         Ok(())
+    }
+
+    fn increment_entity_count(world: Arc<AtomicRefCell<World>>) -> u64 {
+        let binding = world.try_borrow().unwrap();
+        let mut entity_count_res = binding.write_resource::<EntityCount>();
+        entity_count_res.count += 1;
+        entity_count_res.count
     }
 
     fn load_motd() -> Result<String> {
