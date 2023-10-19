@@ -8,7 +8,7 @@ pub mod request_network_setting;
 pub mod resource_pack_client_response;
 pub mod resource_pack_stack;
 pub mod resource_packs_info;
-pub mod start_game_packet;
+pub mod start_game;
 
 use anyhow::Result;
 use client_cache_status::ClientCacheStatusPacket;
