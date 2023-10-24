@@ -13,17 +13,19 @@ pub type Cipher = StreamCipherCoreWrapper<CtrCore<Aes256, Ctr64BE>>;
 pub type Aes256Ctr64BE = ctr::Ctr64BE<Aes256>;
 
 pub trait Aes256CtrManager {
-    fn setup_cipher(&mut self, key: &[u8; 32], iv: &[u8; 16]) -> Result<()>;
+    fn setup_cipher(&mut self, key: &[u8; 32], iv: &[u8; 16]);
     fn decrypt_or(&mut self, buffer: &mut [u8]);
     fn encrypt_or(&mut self, buffer: &mut Vec<u8>) -> Result<()>;
     fn compute_packet_tag(counter: u64, plain_pkt: &[u8], ss_key: &[u8; 32]) -> Result<Vec<u8>>;
 }
 
 impl Aes256CtrManager for Player {
-    fn setup_cipher(&mut self, key: &[u8; 32], iv: &[u8; 16]) -> Result<()> {
-        self.get_status_mut().cipher = Some(Aes256Ctr64BE::new(key.into(), iv.into()));
-        self.get_status_mut().decipher = Some(Aes256Ctr64BE::new(key.into(), iv.into()));
-        Ok(())
+    fn setup_cipher(&mut self, key: &[u8; 32], iv: &[u8; 16]) {
+        let mut status = self.get_status_mut();
+        status.cipher = Some(Aes256Ctr64BE::new(key.into(), iv.into()));
+        status.decipher = Some(Aes256Ctr64BE::new(key.into(), iv.into()));
+        status.ss_key = Some(*key);
+        status.encryption_enabled = true;
     }
     fn decrypt_or(&mut self, buffer: &mut [u8]) {
         let encryption_enabled = self.get_status().encryption_enabled;

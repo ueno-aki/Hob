@@ -35,6 +35,7 @@ pub struct Player {
 #[derive(Default)]
 pub struct PlayerStatus {
     pub encryption_enabled: bool,
+    pub login_successed: bool,
     pub send_counter: u64,
     pub ss_key: Option<[u8; 32]>,
     pub cipher: Option<Cipher>,
@@ -71,9 +72,13 @@ impl Player {
     }
     pub async fn listen(&mut self) -> Result<()> {
         if let Err(v) = self.listen_exec().await {
-            self.disconnect(format!("ServerError:{:?}", v))
+            if self.get_status().login_successed == true {
+                self.disconnect(format!("ServerError:{:?}", v))
                 .await
                 .unwrap();
+            }
+            self.socket.flush().await.unwrap();
+            self.socket.close().await.unwrap();
         }
         println!("disconnected,{}", self);
         self.world
@@ -183,13 +188,12 @@ impl Player {
         self.send_packet(ServerToClientHandshakePacket { token })
             .await?;
 
-        self.get_status_mut().encryption_enabled = true;
-        self.get_status_mut().ss_key = Some(secret.clone());
-        self.setup_cipher(&secret, &iv)?;
+        self.setup_cipher(&secret, &iv);
+        self.get_status_mut().login_successed = true;
 
         let world = self.world.try_borrow().unwrap();
         let mut os_storage = world.write_component::<DeviceOS>();
-        os_storage.insert(self.entity, DeviceOS::from(skin_data.DeviceOS))?;
+        os_storage.insert(self.entity, DeviceOS::from_u8(skin_data.DeviceOS)?)?;
 
         let player_name = PlayerName {
             xuid: user_data.XUID,

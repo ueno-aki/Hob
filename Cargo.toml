@@ -21,7 +21,7 @@ aes = "0.8.3"
 ctr = "0.9.2"
 rand = "0.8.5"
 protodef = { git = "https://github.com/ueno-aki/protodef/", rev = "c5dd78821aaff349fe53f03933e00151c16c5e1b" }
-from-num = "0.1.0"
+from-num = "1.1.1"
 anyhow = "1.0.69"
 thiserror = "1.0"
 specs = "*"
