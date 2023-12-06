@@ -1,0 +1,5 @@
+[workspace]
+members = [
+    "serde_compound",
+    "proto_bytes"
+]
