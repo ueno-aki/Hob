@@ -65,7 +65,8 @@ fn lets_go() {
 
     vec.put_i8(NBTTypes::Void as i8);
 
-    let user = User::deserialize(&mut StructDeserializer { input: vec }).unwrap();
+    let vec: Vec<u8> = vec.to_vec();
+    let user = User::deserialize(&mut StructDeserializer::new(&vec)).unwrap();
 
     assert_eq!(
         user,
