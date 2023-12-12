@@ -20,7 +20,7 @@ struct Position {
 }
 
 #[test]
-fn lets_go() {
+fn deserialize_works() {
     let mut vec = BytesMut::new();
 
     vec.put_i8(NBTTypes::Compound as i8);

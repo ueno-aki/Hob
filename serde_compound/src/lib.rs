@@ -5,7 +5,7 @@ use types::NBTTypes;
 
 #[cfg(test)]
 mod test;
-mod types;
+pub mod types;
 
 pub struct StructDeserializer {
     pub input: BytesMut,
