@@ -2,7 +2,7 @@ use bytes::{Buf, BytesMut};
 
 use crate::types::NBTTypes;
 
-pub fn skip_value<'a>(types: NBTTypes, byte: &'a mut BytesMut) {
+pub fn skip_value(types: NBTTypes, byte: &mut BytesMut) {
     use NBTTypes::*;
     match types {
         Byte => byte.advance(1),
