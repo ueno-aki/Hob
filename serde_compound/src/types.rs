@@ -1,6 +1,6 @@
 use from_num::from_num;
 
-#[derive(Debug,Clone)]
+#[derive(Debug, Clone)]
 #[from_num(i8)]
 pub enum NBTTypes {
     Void,

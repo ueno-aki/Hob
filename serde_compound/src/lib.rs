@@ -4,14 +4,14 @@ use serde::{de, forward_to_deserialize_any};
 use skip::skip_value;
 use types::NBTTypes;
 
+mod skip;
 #[cfg(test)]
 mod test;
 pub mod types;
-mod skip;
 
-pub fn from_buffer<'a, D>(buf:&'a [u8]) -> Result<D, DeserializeError>
+pub fn from_buffer<'a, D>(buf: &'a [u8]) -> Result<D, DeserializeError>
 where
-    D:de::Deserialize<'a>
+    D: de::Deserialize<'a>,
 {
     D::deserialize(&mut CompoundDeserializer::new(buf))
 }
@@ -47,7 +47,7 @@ impl<'de> de::Deserializer<'de> for &mut CompoundDeserializer {
     {
         let id = self.input.get_i8();
         assert_eq!(id, NBTTypes::Compound as i8);
-        let _tag = self.input.get_cstring();
+        let _tag = self.input.get_short_string();
         visitor.visit_map(MapX {
             de: &mut *self,
             next_id: 0,
@@ -77,8 +77,9 @@ impl<'de, 'a> de::Deserializer<'de> for &mut ValueDeserializer<'a> {
     }
 
     fn deserialize_ignored_any<V>(self, visitor: V) -> Result<V::Value, Self::Error>
-        where
-            V: de::Visitor<'de> {
+    where
+        V: de::Visitor<'de>,
+    {
         visitor.visit_unit()
     }
 
@@ -141,7 +142,7 @@ impl<'de, 'a> de::Deserializer<'de> for &mut ValueDeserializer<'a> {
         V: de::Visitor<'de>,
     {
         assert_eq!(self.id, NBTTypes::String as i8);
-        let v = self.de.input.get_cstring();
+        let v = self.de.input.get_short_string();
         visitor.visit_string(v)
     }
 
@@ -216,7 +217,7 @@ impl<'de, 'a> de::Deserializer<'de> for &mut ValueDeserializer<'a> {
 struct IdentifierDeserializer<'a> {
     de: &'a mut CompoundDeserializer,
     fields: &'static [&'static str],
-    id:i8
+    id: i8,
 }
 impl<'de, 'a> de::Deserializer<'de> for &mut IdentifierDeserializer<'a> {
     type Error = DeserializeError;
@@ -232,7 +233,7 @@ impl<'de, 'a> de::Deserializer<'de> for &mut IdentifierDeserializer<'a> {
     where
         V: de::Visitor<'de>,
     {
-        let str = self.de.input.get_cstring();
+        let str = self.de.input.get_short_string();
         for v in self.fields {
             if *v == str {
                 return visitor.visit_str(&str);
@@ -268,7 +269,7 @@ impl<'de, 'a> de::MapAccess<'de> for MapX<'a> {
         seed.deserialize(&mut IdentifierDeserializer {
             de: &mut *self.de,
             fields: self.fields,
-            id:self.next_id
+            id: self.next_id,
         })
         .map(Some)
     }
