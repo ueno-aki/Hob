@@ -1,23 +1,32 @@
 use bytes::{Buf, BytesMut};
 use proto_bytes::*;
 use serde::{de, forward_to_deserialize_any};
+use skip::skip_value;
 use types::NBTTypes;
 
 #[cfg(test)]
 mod test;
 pub mod types;
+mod skip;
 
-pub struct StructDeserializer {
+pub fn from_buffer<'a, D>(buf:&'a [u8]) -> Result<D, DeserializeError>
+where
+    D:de::Deserialize<'a>
+{
+    D::deserialize(&mut CompoundDeserializer::new(buf))
+}
+
+pub struct CompoundDeserializer {
     pub input: BytesMut,
 }
-impl StructDeserializer {
+impl CompoundDeserializer {
     pub fn new(buf: &[u8]) -> Self {
-        StructDeserializer {
+        CompoundDeserializer {
             input: BytesMut::from(buf),
         }
     }
 }
-impl<'de> de::Deserializer<'de> for &mut StructDeserializer {
+impl<'de> de::Deserializer<'de> for &mut CompoundDeserializer {
     type Error = DeserializeError;
 
     fn deserialize_any<V>(self, _visitor: V) -> Result<V::Value, Self::Error>
@@ -54,7 +63,7 @@ impl<'de> de::Deserializer<'de> for &mut StructDeserializer {
 }
 
 struct ValueDeserializer<'a> {
-    de: &'a mut StructDeserializer,
+    de: &'a mut CompoundDeserializer,
     id: i8,
 }
 impl<'de, 'a> de::Deserializer<'de> for &mut ValueDeserializer<'a> {
@@ -65,6 +74,12 @@ impl<'de, 'a> de::Deserializer<'de> for &mut ValueDeserializer<'a> {
         V: de::Visitor<'de>,
     {
         Err(DeserializeError::Unsupported("Unsupported Type".to_owned()))
+    }
+
+    fn deserialize_ignored_any<V>(self, visitor: V) -> Result<V::Value, Self::Error>
+        where
+            V: de::Visitor<'de> {
+        visitor.visit_unit()
     }
 
     fn deserialize_i8<V>(self, visitor: V) -> Result<V::Value, Self::Error>
@@ -194,13 +209,14 @@ impl<'de, 'a> de::Deserializer<'de> for &mut ValueDeserializer<'a> {
     forward_to_deserialize_any! {
         i128 u8 u16 u32 u64 u128 char str bool
         bytes byte_buf option unit unit_struct newtype_struct tuple identifier
-        tuple_struct map enum ignored_any
+        tuple_struct map enum
     }
 }
 
 struct IdentifierDeserializer<'a> {
-    de: &'a mut StructDeserializer,
+    de: &'a mut CompoundDeserializer,
     fields: &'static [&'static str],
+    id:i8
 }
 impl<'de, 'a> de::Deserializer<'de> for &mut IdentifierDeserializer<'a> {
     type Error = DeserializeError;
@@ -217,15 +233,13 @@ impl<'de, 'a> de::Deserializer<'de> for &mut IdentifierDeserializer<'a> {
         V: de::Visitor<'de>,
     {
         let str = self.de.input.get_cstring();
-        for v in self.fields.iter() {
+        for v in self.fields {
             if *v == str {
                 return visitor.visit_str(&str);
             }
         }
-        Err(DeserializeError::Parse(format!(
-            "Compound PropTag = {}",
-            str
-        )))
+        skip_value(NBTTypes::from_i8(self.id).unwrap(), &mut self.de.input);
+        visitor.visit_str(&str)
     }
 
     forward_to_deserialize_any! {
@@ -236,7 +250,7 @@ impl<'de, 'a> de::Deserializer<'de> for &mut IdentifierDeserializer<'a> {
 }
 
 struct MapX<'a> {
-    de: &'a mut StructDeserializer,
+    de: &'a mut CompoundDeserializer,
     next_id: i8,
     fields: &'static [&'static str],
 }
@@ -254,6 +268,7 @@ impl<'de, 'a> de::MapAccess<'de> for MapX<'a> {
         seed.deserialize(&mut IdentifierDeserializer {
             de: &mut *self.de,
             fields: self.fields,
+            id:self.next_id
         })
         .map(Some)
     }
@@ -270,7 +285,7 @@ impl<'de, 'a> de::MapAccess<'de> for MapX<'a> {
 }
 
 struct SeqX<'a> {
-    de: &'a mut StructDeserializer,
+    de: &'a mut CompoundDeserializer,
     id: i8,
     len: isize,
 }

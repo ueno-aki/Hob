@@ -2,7 +2,7 @@ use bytes::{BufMut, BytesMut};
 use proto_bytes::*;
 use serde::{Deserialize, Serialize};
 
-use crate::{types::NBTTypes, StructDeserializer};
+use crate::{types::NBTTypes, from_buffer};
 
 #[derive(Debug, Serialize, Deserialize, PartialEq)]
 struct User {
@@ -21,8 +21,26 @@ struct Position {
 
 #[test]
 fn deserialize_works() {
-    let mut vec = BytesMut::new();
+    let user: User = from_buffer(&create_buf()).unwrap();
+    assert_eq!(
+        user,
+        User {
+            id: 45,
+            name: "Mark2".to_string(),
+            pos: Position { x: 23.1, z: 5.6 },
+            bytes: vec![12345679, 2345679, 345679, -345679, -45679, -5679],
+            package: vec![
+                "Shut".to_string(),
+                "your".to_string(),
+                "fuckin'".to_string(),
+                "mouth".to_string()
+            ]
+        }
+    )
+}
 
+fn create_buf() -> Vec<u8> {
+    let mut vec = BytesMut::new();
     vec.put_i8(NBTTypes::Compound as i8);
     vec.put_cstring("user");
 
@@ -49,6 +67,29 @@ fn deserialize_works() {
     vec.put_cstring("fuckin'");
     vec.put_cstring("mouth");
 
+    //dummy
+    vec.put_i8(NBTTypes::List as i8);
+    vec.put_cstring("dummy");
+    vec.put_i8(NBTTypes::String as i8);
+    vec.put_i32_le(4);
+    vec.put_cstring("Shut");
+    vec.put_cstring("your");
+    vec.put_cstring("fuckin'");
+    vec.put_cstring("mouth");
+    vec.put_i8(NBTTypes::Compound as i8);
+    vec.put_cstring("dummmy");
+    vec.put_i8(NBTTypes::Double as i8);
+    vec.put_cstring("x");
+    vec.put_f64_le(23.1);
+    vec.put_i8(NBTTypes::Double as i8);
+    vec.put_cstring("z");
+    vec.put_f64_le(5.6);
+    vec.put_i8(NBTTypes::Void as i8);
+    vec.put_i8(NBTTypes::String as i8);
+    vec.put_cstring("dummmydummmy");
+    vec.put_cstring("Mark2");
+    //
+
     vec.put_i8(NBTTypes::Compound as i8);
     vec.put_cstring("pos");
     vec.put_i8(NBTTypes::Double as i8);
@@ -64,23 +105,5 @@ fn deserialize_works() {
     vec.put_cstring("Mark2");
 
     vec.put_i8(NBTTypes::Void as i8);
-
-    let vec: Vec<u8> = vec.to_vec();
-    let user = User::deserialize(&mut StructDeserializer::new(&vec)).unwrap();
-
-    assert_eq!(
-        user,
-        User {
-            id: 45,
-            name: "Mark2".to_string(),
-            pos: Position { x: 23.1, z: 5.6 },
-            bytes: vec![12345679, 2345679, 345679, -345679, -45679, -5679],
-            package: vec![
-                "Shut".to_string(),
-                "your".to_string(),
-                "fuckin'".to_string(),
-                "mouth".to_string()
-            ]
-        }
-    )
+    vec.to_vec()
 }
