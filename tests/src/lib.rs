@@ -1,6 +1,6 @@
-#![allow(non_snake_case, dead_code)]
 #[cfg(test)]
 mod tests {
+    #![allow(non_snake_case, dead_code)]
     use serde::Deserialize;
     #[test]
     fn get_leveldb_works() {

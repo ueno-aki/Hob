@@ -1,5 +1,5 @@
 [package]
-name = "serde-compound"
+name = "serde-nbt"
 version = "0.1.0"
 edition = "2021"
 
@@ -7,7 +7,7 @@ edition = "2021"
 
 [dependencies]
 proto-bytes = { path = "../proto_bytes" }
-bytes = "1.5.0"
+bytes = "1.0.0"
 from-num = "*"
 serde = { version = "1.0", features = ["derive"] }
 thiserror = "1.0"
