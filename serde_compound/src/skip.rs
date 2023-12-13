@@ -1,5 +1,4 @@
-use bytes::{Buf, BufMut, BytesMut};
-use proto_bytes::ConditionalReader;
+use bytes::{Buf, BytesMut};
 
 use crate::types::NBTTypes;
 
