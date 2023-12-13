@@ -86,7 +86,7 @@ fn create_buf() -> Vec<u8> {
     vec.put_short_string("z");
     vec.put_f64_le(5.6);
     vec.put_i8(NBTTypes::Void as i8);
-    
+
     vec.put_i8(NBTTypes::String as i8);
     vec.put_short_string("dummmydummmy");
     vec.put_short_string("Mark2");

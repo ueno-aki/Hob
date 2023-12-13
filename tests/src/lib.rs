@@ -6,11 +6,11 @@ mod tests {
     fn get_leveldb_works() {
         let vec = Vec::from_iter(include_bytes!("../level.dat").to_vec().into_iter().skip(8));
         let level: LevelDB = serde_compound::from_buffer(&vec).unwrap();
-    
+
         assert_eq!(
             level,
             LevelDB {
-                LevelName:String::from("マイ ワールド"),
+                LevelName: String::from("マイ ワールド"),
                 FlatWorldLayers: String::from("{\"biome_id\":1,\"block_layers\":[{\"block_name\":\"minecraft:bedrock\",\"count\":1},{\"block_name\":\"minecraft:dirt\",\"count\":2},{\"block_name\":\"minecraft:grass\",\"count\":1}],\"encoding_version\":6,\"structure_options\":null,\"world_version\":\"version.post_1_18\"}\n"),
                 abilities: Abilities {
                     mayfly: 0,
@@ -29,10 +29,10 @@ mod tests {
             }
         )
     }
-    
+
     #[derive(Debug, Deserialize, PartialEq)]
     struct LevelDB {
-        LevelName:String,
+        LevelName: String,
         FlatWorldLayers: String,
         abilities: Abilities,
         SpawnX: i32,
@@ -56,5 +56,4 @@ mod tests {
         experiments_ever_used: i8,
         saved_with_toggled_experiments: i8,
     }
-    
 }
