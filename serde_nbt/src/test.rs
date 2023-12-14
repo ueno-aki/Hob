@@ -2,7 +2,7 @@ use bytes::{BufMut, BytesMut};
 use proto_bytes::*;
 use serde::{Deserialize, Serialize};
 
-use crate::{nbt_types::NBTTypes, compound::CompoundDeserializer, binary_format::{LittleEndian, VarInt}};
+use crate::{nbt_types::NBTTypes, binary_format::{LittleEndian, VarInt}};
 
 #[derive(Debug, Serialize, Deserialize, PartialEq)]
 struct User {
@@ -21,8 +21,7 @@ struct Position {
 
 #[test]
 fn deserialize_works() {
-    let mut de = CompoundDeserializer::<LittleEndian>::new(&create_buf_le());
-    let user = User::deserialize(&mut de).unwrap();
+    let user: User = LittleEndian::from_buffer(&create_buf_le()).unwrap();
     assert_eq!(
         user,
         User {
@@ -39,8 +38,7 @@ fn deserialize_works() {
         }
     );
 
-    let mut de = CompoundDeserializer::<VarInt>::new(&create_buf_varint());
-    let user = User::deserialize(&mut de).unwrap();
+    let user: User = VarInt::from_buffer(&create_buf_varint()).unwrap();
     assert_eq!(
         user,
         User {
