@@ -1,7 +1,6 @@
 # serde-compound
 
-* LittleEndian形式NBT
+* LittleEndian形式
+* VarInt形式(NetworkLittleEndian)
 
-## todo
-
-* NetworkLittleEndian形式NBT
+[wiki](https://wiki.vg/NBT#Bedrock_edition)

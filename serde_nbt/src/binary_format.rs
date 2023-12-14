@@ -9,7 +9,7 @@ pub trait BinaryFormat {
     fn float(buf: &mut BytesMut) -> f32;
     fn double(buf: &mut BytesMut) -> f64;
     fn string(buf: &mut BytesMut) -> String;
-    
+
     fn eat_byte(buf: &mut BytesMut);
     fn eat_short(buf: &mut BytesMut);
     fn eat_int(buf: &mut BytesMut);

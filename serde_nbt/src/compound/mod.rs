@@ -2,8 +2,37 @@ use std::marker::PhantomData;
 
 use bytes::{Buf, BytesMut};
 use serde::{de, forward_to_deserialize_any};
+use thiserror::Error;
 
-use crate::{binary_format::BinaryFormat, types::NBTTypes};
+use crate::{binary_format::BinaryFormat, nbt_types::NBTTypes};
+
+#[derive(Debug, Error)]
+pub enum DeserializeError {
+    #[error("MissMatch Type: {0} , {1}")]
+    MissMatch(NBTTypes, NBTTypes),
+    #[error("Unsupported: {0}")]
+    Unsupported(String),
+    #[error("DeserializeError:{0}")]
+    Message(String),
+}
+impl de::Error for DeserializeError {
+    fn custom<T>(msg: T) -> Self
+    where
+        T: std::fmt::Display,
+    {
+        DeserializeError::Message(msg.to_string())
+    }
+}
+
+macro_rules! cmp_type {
+    ($x:expr , $y:expr) => {
+        if $x == $y {
+            Ok(())
+        } else {
+            Err(DeserializeError::MissMatch($x, $y))
+        }
+    };
+}
 
 pub struct CompoundDeserializer<T>
 where
@@ -47,7 +76,7 @@ where
     fn eat_value(&mut self, types: NBTTypes) {
         use NBTTypes::*;
         match types {
-            Void => {},
+            Void => {}
             Byte => T::eat_byte(&mut self.input),
             Short => T::eat_short(&mut self.input),
             Int => T::eat_int(&mut self.input),
@@ -57,7 +86,7 @@ where
             ByteArray => {
                 let len = self.get_int() as usize;
                 self.input.advance(len);
-            },
+            }
             String => T::eat_string(&mut self.input),
             List => {
                 let elem_types = NBTTypes::from_i8(self.get_byte()).unwrap();
@@ -84,12 +113,11 @@ where
             }
         }
     }
-    
 }
 
-impl<'de,T> de::Deserializer<'de> for &mut CompoundDeserializer<T> 
+impl<'de, T> de::Deserializer<'de> for &mut CompoundDeserializer<T>
 where
-    T: BinaryFormat
+    T: BinaryFormat,
 {
     type Error = DeserializeError;
 
@@ -109,14 +137,13 @@ where
     where
         V: de::Visitor<'de>,
     {
-        let id = self.get_byte();
+        let id = NBTTypes::from_i8(self.get_byte()).unwrap();
         let _tag = self.get_string();
-        assert_eq!(id, NBTTypes::Compound as i8);
-        visitor.visit_map(MapX {
+        cmp_type!(id, NBTTypes::Compound).and(visitor.visit_map(MapX {
             de: &mut *self,
-            next_id: NBTTypes::Void,
+            next_types: NBTTypes::Void,
             fields,
-        })
+        }))
     }
 
     forward_to_deserialize_any! {
@@ -126,16 +153,16 @@ where
     }
 }
 
-struct ValueDeserializer<'a,T> 
+struct ValueDeserializer<'a, T>
 where
-    T: BinaryFormat
+    T: BinaryFormat,
 {
     de: &'a mut CompoundDeserializer<T>,
-    id: NBTTypes,
+    types: NBTTypes,
 }
-impl<'de, 'a, T> de::Deserializer<'de> for &mut ValueDeserializer<'a,T> 
+impl<'de, 'a, T> de::Deserializer<'de> for &mut ValueDeserializer<'a, T>
 where
-    T: BinaryFormat
+    T: BinaryFormat,
 {
     type Error = DeserializeError;
 
@@ -157,94 +184,73 @@ where
     where
         V: de::Visitor<'de>,
     {
-        assert_eq!(self.id, NBTTypes::Byte);
         let v = self.de.get_byte();
-        visitor.visit_i8(v)
+        cmp_type!(self.types, NBTTypes::Byte).and(visitor.visit_i8(v))
     }
 
     fn deserialize_i16<V>(self, visitor: V) -> Result<V::Value, Self::Error>
     where
         V: de::Visitor<'de>,
     {
-        assert_eq!(self.id, NBTTypes::Short);
         let v = self.de.get_short();
-        visitor.visit_i16(v)
+        cmp_type!(self.types, NBTTypes::Short).and(visitor.visit_i16(v))
     }
 
     fn deserialize_i32<V>(self, visitor: V) -> Result<V::Value, Self::Error>
     where
         V: de::Visitor<'de>,
     {
-        assert_eq!(self.id, NBTTypes::Int);
         let v = self.de.get_int();
-        visitor.visit_i32(v)
+        cmp_type!(self.types, NBTTypes::Int).and(visitor.visit_i32(v))
     }
 
     fn deserialize_i64<V>(self, visitor: V) -> Result<V::Value, Self::Error>
     where
         V: de::Visitor<'de>,
     {
-        assert_eq!(self.id, NBTTypes::Long);
         let v = self.de.get_long();
-        visitor.visit_i64(v)
+        cmp_type!(self.types, NBTTypes::Long).and(visitor.visit_i64(v))
     }
 
     fn deserialize_f32<V>(self, visitor: V) -> Result<V::Value, Self::Error>
     where
         V: de::Visitor<'de>,
     {
-        assert_eq!(self.id, NBTTypes::Float);
         let v = self.de.get_float();
-        visitor.visit_f32(v)
+        cmp_type!(self.types, NBTTypes::Float).and(visitor.visit_f32(v))
     }
 
     fn deserialize_f64<V>(self, visitor: V) -> Result<V::Value, Self::Error>
     where
         V: de::Visitor<'de>,
     {
-        assert_eq!(self.id, NBTTypes::Double);
         let v = self.de.get_double();
-        visitor.visit_f64(v)
+        cmp_type!(self.types, NBTTypes::Double).and(visitor.visit_f64(v))
     }
 
     fn deserialize_string<V>(self, visitor: V) -> Result<V::Value, Self::Error>
     where
         V: de::Visitor<'de>,
     {
-        assert_eq!(self.id, NBTTypes::String);
         let v = self.de.get_string();
-        visitor.visit_string(v)
+        cmp_type!(self.types, NBTTypes::String).and(visitor.visit_string(v))
     }
 
     fn deserialize_seq<V>(self, visitor: V) -> Result<V::Value, Self::Error>
     where
         V: de::Visitor<'de>,
     {
-        match self.id {
+        match self.types {
             NBTTypes::List => {
                 let id = NBTTypes::from_i8(self.de.get_byte()).unwrap();
                 let len = self.de.get_int() as usize;
                 visitor.visit_seq(SeqX {
                     de: &mut *self.de,
-                    id,
+                    types: id,
                     len,
                 })
             }
-            NBTTypes::ByteArray => {
-                let len = self.de.get_int() as usize;
-                visitor.visit_seq(NumSeqX {
-                    input: &mut self.de.input,
-                    len,
-                })
-            }
-            NBTTypes::IntArray => {
-                let len = self.de.get_int() as usize;
-                visitor.visit_seq(NumSeqX {
-                    input: &mut self.de.input,
-                    len,
-                })
-            }
-            NBTTypes::LongArray => {
+            NBTTypes::ByteArray | NBTTypes::IntArray | NBTTypes::LongArray => {
                 let len = self.de.get_int() as usize;
                 visitor.visit_seq(NumSeqX {
                     input: &mut self.de.input,
@@ -266,12 +272,11 @@ where
     where
         V: de::Visitor<'de>,
     {
-        assert_eq!(self.id, NBTTypes::Compound);
-        visitor.visit_map(MapX {
+        cmp_type!(self.types, NBTTypes::Compound).and(visitor.visit_map(MapX {
             de: &mut *self.de,
-            next_id: NBTTypes::Void,
+            next_types: NBTTypes::Void,
             fields,
-        })
+        }))
     }
 
     forward_to_deserialize_any! {
@@ -281,17 +286,17 @@ where
     }
 }
 
-struct IdentifierDeserializer<'a,T> 
+struct IdentifierDeserializer<'a, T>
 where
-    T: BinaryFormat
+    T: BinaryFormat,
 {
     de: &'a mut CompoundDeserializer<T>,
     fields: &'static [&'static str],
-    id: NBTTypes,
+    types: NBTTypes,
 }
-impl<'de, 'a,T> de::Deserializer<'de> for &mut IdentifierDeserializer<'a,T> 
+impl<'de, 'a, T> de::Deserializer<'de> for &mut IdentifierDeserializer<'a, T>
 where
-    T: BinaryFormat
+    T: BinaryFormat,
 {
     type Error = DeserializeError;
 
@@ -312,7 +317,7 @@ where
                 return visitor.visit_str(&str);
             }
         }
-        self.de.eat_value(self.id);
+        self.de.eat_value(self.types);
         visitor.visit_str(&str)
     }
 
@@ -323,17 +328,17 @@ where
     }
 }
 
-struct MapX<'a,T> 
+struct MapX<'a, T>
 where
-    T: BinaryFormat
+    T: BinaryFormat,
 {
     de: &'a mut CompoundDeserializer<T>,
-    next_id: NBTTypes,
+    next_types: NBTTypes,
     fields: &'static [&'static str],
 }
-impl<'de, 'a,T> de::MapAccess<'de> for MapX<'a,T> 
+impl<'de, 'a, T> de::MapAccess<'de> for MapX<'a, T>
 where
-    T: BinaryFormat
+    T: BinaryFormat,
 {
     type Error = DeserializeError;
 
@@ -341,17 +346,16 @@ where
     where
         K: de::DeserializeSeed<'de>,
     {
-        self.next_id = NBTTypes::from_i8(self.de.get_byte()).unwrap();
-        match self.next_id {
+        self.next_types = NBTTypes::from_i8(self.de.get_byte()).unwrap();
+        match self.next_types {
             NBTTypes::Void => Ok(None),
-            _ => {
-                seed.deserialize(&mut IdentifierDeserializer {
+            _ => seed
+                .deserialize(&mut IdentifierDeserializer {
                     de: &mut *self.de,
                     fields: self.fields,
-                    id: self.next_id,
+                    types: self.next_types,
                 })
-                .map(Some)  
-            }
+                .map(Some),
         }
     }
 
@@ -361,22 +365,22 @@ where
     {
         seed.deserialize(&mut ValueDeserializer {
             de: &mut *self.de,
-            id: self.next_id,
+            types: self.next_types,
         })
     }
 }
 
-struct SeqX<'a,T> 
+struct SeqX<'a, T>
 where
-    T: BinaryFormat
+    T: BinaryFormat,
 {
     de: &'a mut CompoundDeserializer<T>,
-    id: NBTTypes,
+    types: NBTTypes,
     len: usize,
 }
-impl<'de, 'a, T> de::SeqAccess<'de> for SeqX<'a,T> 
+impl<'de, 'a, T> de::SeqAccess<'de> for SeqX<'a, T>
 where
-    T: BinaryFormat
+    T: BinaryFormat,
 {
     type Error = DeserializeError;
 
@@ -390,7 +394,7 @@ where
         self.len -= 1;
         seed.deserialize(&mut ValueDeserializer {
             de: &mut *self.de,
-            id: self.id,
+            types: self.types,
         })
         .map(Some)
     }
@@ -410,7 +414,7 @@ impl<'de, 'a> de::SeqAccess<'de> for NumSeqX<'a> {
         struct NumArrayDeserializer<'a> {
             input: &'a mut BytesMut,
         }
-        impl<'de,'a> de::Deserializer<'de> for &mut NumArrayDeserializer<'a> {
+        impl<'de, 'a> de::Deserializer<'de> for &mut NumArrayDeserializer<'a> {
             type Error = DeserializeError;
             fn deserialize_any<V>(self, _visitor: V) -> Result<V::Value, Self::Error>
             where
@@ -420,24 +424,27 @@ impl<'de, 'a> de::SeqAccess<'de> for NumSeqX<'a> {
             }
 
             fn deserialize_i8<V>(self, visitor: V) -> Result<V::Value, Self::Error>
-                where
-                    V: de::Visitor<'de> {
+            where
+                V: de::Visitor<'de>,
+            {
                 let v = self.input.get_i8();
                 visitor.visit_i8(v)
             }
             fn deserialize_i32<V>(self, visitor: V) -> Result<V::Value, Self::Error>
-                where
-                    V: de::Visitor<'de> {
+            where
+                V: de::Visitor<'de>,
+            {
                 let v = self.input.get_i32_le();
                 visitor.visit_i32(v)
             }
             fn deserialize_i64<V>(self, visitor: V) -> Result<V::Value, Self::Error>
-                where
-                    V: de::Visitor<'de> {
+            where
+                V: de::Visitor<'de>,
+            {
                 let v = self.input.get_i64_le();
                 visitor.visit_i64(v)
             }
-            
+
             forward_to_deserialize_any! {
                 i16 i128 u8 u16 u32 u64 u128 f32 f64 char str string bool
                 bytes byte_buf option unit unit_struct newtype_struct struct seq tuple identifier
@@ -449,29 +456,7 @@ impl<'de, 'a> de::SeqAccess<'de> for NumSeqX<'a> {
             return Ok(None);
         }
         self.len -= 1;
-        seed.deserialize(&mut NumArrayDeserializer {
-            input: self.input,
-        })
-        .map(Some)
-    }
-}
-
-use thiserror::Error;
-
-#[derive(Debug, Error)]
-pub enum DeserializeError {
-    #[error("Failed to parse {0}")]
-    Parse(String),
-    #[error("Unsupported: {0}")]
-    Unsupported(String),
-    #[error("DeserializeError:{0}")]
-    Message(String),
-}
-impl de::Error for DeserializeError {
-    fn custom<T>(msg: T) -> Self
-    where
-        T: std::fmt::Display,
-    {
-        DeserializeError::Message(msg.to_string())
+        seed.deserialize(&mut NumArrayDeserializer { input: self.input })
+            .map(Some)
     }
 }
