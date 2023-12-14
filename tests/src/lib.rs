@@ -5,7 +5,7 @@ mod tests {
     #[test]
     fn get_leveldb_works() {
         let vec = Vec::from_iter(include_bytes!("../level.dat").to_vec().into_iter().skip(8));
-        let level: LevelDB = serde_compound::from_buffer(&vec).unwrap();
+        let level: LevelDB = serde_nbt::LittleEndian::from_buffer(&vec).unwrap();
 
         assert_eq!(
             level,
