@@ -1,11 +1,11 @@
 pub mod binary_format;
 pub mod error;
 
+use self::{binary_format::BinaryFormat, error::DeserializeError};
+use crate::nbt_types::NBTTypes;
 use bytes::{Buf, BytesMut};
 use serde::{de, forward_to_deserialize_any};
 use std::marker::PhantomData;
-use self::{binary_format::BinaryFormat, error::DeserializeError};
-use crate::nbt_types::NBTTypes;
 
 macro_rules! cmp_type {
     ($x:expr , $y:expr) => {
@@ -111,17 +111,11 @@ where
 {
     type Error = DeserializeError;
 
-    fn deserialize_any<V>(self, visitor: V) -> Result<V::Value, Self::Error>
+    fn deserialize_any<V>(self, _visitor: V) -> Result<V::Value, Self::Error>
     where
         V: de::Visitor<'de>,
     {
-        let id = NBTTypes::from_i8(self.get_byte()).unwrap();
-        let _tag = self.get_string();
-        let var = &mut Variant {
-            de: &mut *self,
-            types: id,
-        };
-        var.deserialize_any(visitor)
+        Err(DeserializeError::Unsupported("Unsupported Type".into()))
     }
 
     fn deserialize_struct<V>(
@@ -142,9 +136,38 @@ where
         }))
     }
 
+    fn deserialize_seq<V>(self, visitor: V) -> Result<V::Value, Self::Error>
+    where
+        V: de::Visitor<'de>,
+    {
+        let id = NBTTypes::from_i8(self.get_byte()).unwrap();
+        let _tag = self.get_string();
+        use NBTTypes::*;
+        match id {
+            List => {
+                let id = NBTTypes::from_i8(self.get_byte()).unwrap();
+                let len = self.get_int();
+                visitor.visit_seq(SeqX {
+                    de: &mut *self,
+                    types: id,
+                    len: len as usize,
+                })
+            }
+            ByteArray | IntArray | LongArray => {
+                let len = self.get_int();
+                visitor.visit_seq(NumSeqX {
+                    input: &mut self.input,
+                    types: id,
+                    len: len as usize,
+                })
+            }
+            _ => Err(DeserializeError::Unsupported("Invalid NBT id".into())),
+        }
+    }
+
     forward_to_deserialize_any! {
         i8 i16 i32 i64 i128 u8 u16 u32 u64 u128 f32 f64 char str string bool
-        bytes byte_buf option unit unit_struct newtype_struct seq tuple identifier
+        bytes byte_buf option unit unit_struct newtype_struct tuple identifier
         tuple_struct map enum ignored_any
     }
 }
@@ -367,7 +390,7 @@ impl<'de, 'a> de::SeqAccess<'de> for NumSeqX<'a> {
                     ByteArray => visitor.visit_i8(self.input.get_i8()),
                     IntArray => visitor.visit_i32(self.input.get_i32_le()),
                     LongArray => visitor.visit_i64(self.input.get_i64_le()),
-                    _ => Err(DeserializeError::Message("Parse Error".into())),
+                    _ => Err(DeserializeError::Message("".into())),
                 }
             }
 

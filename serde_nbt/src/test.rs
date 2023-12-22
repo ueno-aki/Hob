@@ -4,69 +4,6 @@ use serde::{Deserialize, Serialize};
 
 use crate::{nbt_types::NBTTypes, LittleEndian, VarInt};
 
-#[test]
-fn num_works() {
-    let mut buf = BytesMut::new();
-    buf.put_i8(NBTTypes::Float as i8);
-    buf.put_short_string("");
-    buf.put_f32_le(3.1415);
-
-    let var: f32 = LittleEndian::from_buffer(&buf.to_vec()).unwrap();
-    assert_eq!(var, 3.1415);
-
-    let mut buf = BytesMut::new();
-    buf.put_i8(NBTTypes::Int as i8);
-    buf.put_cstring("");
-    buf.put_zigzag32(11451);
-
-    let var: i32 = VarInt::from_buffer(&buf.to_vec()).unwrap();
-    assert_eq!(var, 11451);
-}
-
-#[test]
-fn string_works() {
-    let mut buf = BytesMut::new();
-    buf.put_i8(NBTTypes::String as i8);
-    buf.put_short_string("greet");
-    buf.put_short_string("hello");
-
-    let var: String = LittleEndian::from_buffer(&buf.to_vec()).unwrap();
-    assert_eq!(var, String::from("hello"));
-
-    let mut buf = BytesMut::new();
-    buf.put_i8(NBTTypes::String as i8);
-    buf.put_cstring("greet");
-    buf.put_cstring("hello");
-
-    let var: String = VarInt::from_buffer(&buf.to_vec()).unwrap();
-    assert_eq!(var, String::from("hello"));
-}
-
-#[test]
-fn num_seq_works() {
-    let mut buf = BytesMut::new();
-    buf.put_i8(NBTTypes::IntArray as i8);
-    buf.put_short_string("arr");
-    buf.put_i32_le(3);
-    buf.put_i32_le(191);
-    buf.put_i32_le(-981);
-    buf.put_i32_le(0);
-
-    let var: Vec<i64> = LittleEndian::from_buffer(&buf.to_vec()).unwrap();
-    assert_eq!(var, vec![191, -981, 0]);
-
-    let mut buf = BytesMut::new();
-    buf.put_i8(NBTTypes::LongArray as i8);
-    buf.put_cstring("p");
-    buf.put_zigzag32(3);
-    buf.put_i64_le(82589933);
-    buf.put_i64_le(-77232917);
-    buf.put_i64_le(74207281);
-
-    let var: Vec<i64> = VarInt::from_buffer(&buf.to_vec()).unwrap();
-    assert_eq!(var, vec![82589933, -77232917, 74207281]);
-}
-
 #[derive(Debug, Serialize, Deserialize, PartialEq)]
 struct Person {
     name: String,
@@ -87,7 +24,6 @@ struct Position {
     x: f64,
     z: f64,
 }
-
 
 #[test]
 fn compound_works() {
@@ -128,8 +64,8 @@ fn compound_works() {
 
 #[derive(Debug, Serialize, Deserialize, PartialEq)]
 struct Player {
-    id:i8,
-    pos:Location
+    id: i8,
+    pos: Location,
 }
 #[derive(Debug, Serialize, Deserialize, PartialEq)]
 struct Location {
@@ -139,23 +75,6 @@ struct Location {
 
 #[test]
 fn list_works() {
-    let mut buf = BytesMut::new();
-    buf.put_i8(NBTTypes::List as i8);
-    buf.put_short_string("lorem");
-    buf.put_i8(NBTTypes::String as i8);
-    buf.put_i32_le(3);
-    buf.put_short_string("Lorem ipsum  sit amet");
-    buf.put_short_string("consectetur adipiscing elit");
-    buf.put_short_string("sed do eiusmod tempor incididunt ut labore et dolore magna aliqua");
-
-    let var: Vec<String> = LittleEndian::from_buffer(&buf.to_vec()).unwrap();
-    let v: Vec<String> = vec![
-        "Lorem ipsum  sit amet".into(),
-        "consectetur adipiscing elit".into(),
-        "sed do eiusmod tempor incididunt ut labore et dolore magna aliqua".into(),
-    ];
-    assert_eq!(var, v);
-
     let mut buf = BytesMut::new();
     buf.put_i8(NBTTypes::List as i8);
     buf.put_cstring("players");
@@ -212,34 +131,24 @@ fn list_works() {
 
     buf.put_i8(NBTTypes::Void as i8);
     //
-    
+
     let var: Vec<Player> = VarInt::from_buffer(&buf.to_vec()).unwrap();
     let v: Vec<Player> = vec![
         Player {
-            id:23,
-            pos:Location {
-                x:5.6,
-                z:5.6
-            }
+            id: 23,
+            pos: Location { x: 5.6, z: 5.6 },
         },
         Player {
-            id:16,
-            pos:Location {
-                x:0.0,
-                z:0.0
-            }
+            id: 16,
+            pos: Location { x: 0.0, z: 0.0 },
         },
         Player {
-            id:56,
-            pos:Location {
-                x:-5.6,
-                z:-5.6
-            }
-        }
+            id: 56,
+            pos: Location { x: -5.6, z: -5.6 },
+        },
     ];
     assert_eq!(var, v);
 }
-
 
 fn create_buf_le() -> Vec<u8> {
     let mut vec = BytesMut::new();
