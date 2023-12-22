@@ -1,12 +1,13 @@
-pub mod compound;
+pub mod de;
 pub mod nbt_types;
-mod binary_format;
 #[cfg(test)]
 mod test;
 
-pub use binary_format::{LittleEndian,VarInt};
-use compound::{CompoundDeserializer, DeserializeError};
-use serde::de;
+use crate::de::{error::DeserializeError, Deserializer};
+use serde::de::Deserialize;
+
+pub struct LittleEndian;
+pub struct VarInt;
 
 macro_rules! impl_from_buf {
     ($($f:ty),*) => {
@@ -14,13 +15,13 @@ macro_rules! impl_from_buf {
             impl $f {
                 pub fn from_buffer<'a,D>(buf:&[u8]) -> Result<D, DeserializeError>
                 where
-                    D:de::Deserialize<'a>
+                    D:Deserialize<'a>
                 {
-                    let mut deserializer = CompoundDeserializer::<$f>::new(buf);
+                    let mut deserializer = Deserializer::<$f>::new(buf);
                     D::deserialize(&mut deserializer)
                 }
             }
         )*
     };
 }
-impl_from_buf!(LittleEndian,VarInt);
+impl_from_buf!(LittleEndian, VarInt);
