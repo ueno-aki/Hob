@@ -4,8 +4,8 @@ pub trait ConditionalWriter {
     fn put_varint(&mut self, n: u64) -> usize;
     fn put_zigzag32(&mut self, n: i32) -> usize;
     fn put_zigzag64(&mut self, n: i64) -> usize;
-    fn put_cstring(&mut self, str: &str) -> usize;
-    fn put_short_string(&mut self, str: &str) -> usize;
+    fn put_string_varint(&mut self, str: &str) -> usize;
+    fn put_string_short(&mut self, str: &str) -> usize;
     fn put_bool(&mut self, v: bool);
 }
 
@@ -30,13 +30,13 @@ impl ConditionalWriter for BytesMut {
         let v = (n >> 63) ^ (n << 1);
         self.put_varint(v as u64)
     }
-    fn put_cstring(&mut self, str: &str) -> usize {
+    fn put_string_varint(&mut self, str: &str) -> usize {
         let mut size = str.as_bytes().len();
         size += self.put_varint(size as u64);
         self.put(str.as_bytes());
         size
     }
-    fn put_short_string(&mut self, str: &str) -> usize {
+    fn put_string_short(&mut self, str: &str) -> usize {
         let len = str.as_bytes().len();
         self.put_i16_le(len as i16);
         self.put(str.as_bytes());
@@ -51,8 +51,8 @@ pub trait ConditionalReader {
     fn get_varint(&mut self) -> u64;
     fn get_zigzag32(&mut self) -> i32;
     fn get_zigzag64(&mut self) -> i64;
-    fn get_cstring(&mut self) -> String;
-    fn get_short_string(&mut self) -> String;
+    fn get_string_varint(&mut self) -> String;
+    fn get_string_short(&mut self) -> String;
     fn get_bool(&mut self) -> bool;
 }
 
@@ -79,7 +79,7 @@ impl ConditionalReader for BytesMut {
         let value = self.get_varint();
         ((value >> 1) as i64) ^ (-((value & 1) as i64))
     }
-    fn get_cstring(&mut self) -> String {
+    fn get_string_varint(&mut self) -> String {
         let str_len = self.get_varint() as usize;
         let v = self.get(0..str_len);
         let str = match v {
@@ -89,7 +89,7 @@ impl ConditionalReader for BytesMut {
         self.advance(str_len);
         str
     }
-    fn get_short_string(&mut self) -> String {
+    fn get_string_short(&mut self) -> String {
         let str_len = self.get_i16_le() as usize;
         let v = self.get(0..str_len);
         let str = match v {

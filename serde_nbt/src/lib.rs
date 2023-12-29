@@ -1,11 +1,12 @@
 pub mod de;
-pub mod nbt_types;
+pub mod nbt_tag;
 #[cfg(test)]
 mod test;
 
 use crate::de::{error::DeserializeError, Deserializer};
 use serde::de::Deserialize;
 
+pub struct BigEndian;
 pub struct LittleEndian;
 pub struct VarInt;
 
@@ -24,4 +25,4 @@ macro_rules! impl_from_buf {
         )*
     };
 }
-impl_from_buf!(LittleEndian, VarInt);
+impl_from_buf!(BigEndian, LittleEndian, VarInt);

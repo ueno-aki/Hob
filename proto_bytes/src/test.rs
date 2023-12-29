@@ -29,12 +29,12 @@ fn varint_works() {
 #[test]
 fn conditional_string_works() {
     let mut bytes = BytesMut::new();
-    let size = bytes.put_cstring("abcdefg");
+    let size = bytes.put_string_varint("abcdefg");
 
     assert_eq!(bytes.as_ref(), b"\x07abcdefg");
     assert_eq!(size, 8);
 
-    let str = bytes.get_cstring();
+    let str = bytes.get_string_varint();
     assert_eq!(str, "abcdefg");
     assert_eq!(bytes.as_ref(), b"")
 }

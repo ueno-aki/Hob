@@ -1,7 +1,20 @@
 #[cfg(test)]
 mod tests {
     #![allow(non_snake_case, dead_code)]
+
+    use std::collections::HashMap;
+
+    #[test]
+    fn big_endian_works() {
+        let vec = include_bytes!("../hello_world.nbt").to_vec();
+        let value:HashMap<String,String> = serde_nbt::BigEndian::from_buffer(&vec).unwrap();
+        let mut v = HashMap::new();
+        v.insert("name".into(), "Bananrama".into());
+        assert_eq!(value,v)
+    }
+
     use serde::Deserialize;
+
     #[test]
     fn get_leveldb_works() {
         let vec = Vec::from_iter(include_bytes!("../level.dat").to_vec().into_iter().skip(8));
