@@ -7,10 +7,10 @@ mod tests {
     #[test]
     fn big_endian_works() {
         let vec = include_bytes!("../hello_world.nbt").to_vec();
-        let value:HashMap<String,String> = serde_nbt::BigEndian::from_buffer(&vec).unwrap();
+        let value: HashMap<String, String> = serde_nbt::BigEndian::from_buffer(&vec).unwrap();
         let mut v = HashMap::new();
         v.insert("name".into(), "Bananrama".into());
-        assert_eq!(value,v)
+        assert_eq!(value, v)
     }
 
     use serde::Deserialize;

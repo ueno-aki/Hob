@@ -53,7 +53,7 @@ where
                 self.eat_value(NBTTag::from_i8(id).unwrap());
             },
             IntArray => T::eat_int_array(&mut self.input),
-            LongArray => T::eat_long_array(&mut self.input)
+            LongArray => T::eat_long_array(&mut self.input),
         }
     }
 }
@@ -68,7 +68,7 @@ where
     where
         V: de::Visitor<'de>,
     {
-        Err(DeserializeError::Unsupported("Unsupported Type".into(),))
+        Err(DeserializeError::Unsupported("Unsupported Type".into()))
     }
 
     fn deserialize_struct<V>(
@@ -113,7 +113,7 @@ where
             NBTTag::List => {
                 let variant = &mut Variant {
                     de: &mut *self,
-                    tag
+                    tag,
                 };
                 variant.deserialize_any(visitor)
             }
@@ -289,7 +289,7 @@ where
             T: BinaryFormat,
         {
             de: &'a mut Deserializer<T>,
-            types: NBTTag
+            types: NBTTag,
         }
         impl<'de, 'a, T> de::Deserializer<'de> for &mut NumArrayDeserializer<'a, T>
         where
@@ -305,7 +305,7 @@ where
                     ByteArray => visitor.visit_i8(T::get_byte_array_elem(&mut self.de.input)),
                     IntArray => visitor.visit_i32(T::get_int_array_elem(&mut self.de.input)),
                     LongArray => visitor.visit_i64(T::get_long_array_elem(&mut self.de.input)),
-                    _ => Err(DeserializeError::Unsupported("Parse Error".into())),
+                    _ => Err(DeserializeError::Message("Parse Error".into())),
                 }
             }
 
@@ -321,7 +321,7 @@ where
         }
         self.len -= 1;
         seed.deserialize(&mut NumArrayDeserializer {
-            de:&mut *self.de,
+            de: &mut *self.de,
             types: self.tag,
         })
         .map(Some)

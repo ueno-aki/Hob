@@ -1,9 +1,8 @@
-use crate::{LittleEndian, VarInt, BigEndian};
+use crate::{BigEndian, LittleEndian, VarInt};
 use bytes::{Buf, BytesMut};
 use proto_bytes::ConditionalReader;
 
 pub trait BinaryFormat {
-
     #[inline]
     fn get_byte(buf: &mut BytesMut) -> i8 {
         buf.get_i8()
@@ -73,11 +72,9 @@ pub trait BinaryFormat {
         let len = Self::get_int(buf);
         buf.advance(8 * len as usize);
     }
-
 }
 
 impl BinaryFormat for BigEndian {
-
     #[inline]
     fn get_short(buf: &mut BytesMut) -> i16 {
         buf.get_i16()
@@ -110,7 +107,6 @@ impl BinaryFormat for BigEndian {
         cesu8::from_java_cesu8(&bytes).unwrap().to_string()
     }
 
-
     #[inline]
     fn get_int_array_elem(buf: &mut BytesMut) -> i32 {
         Self::get_int(buf)
@@ -132,15 +128,13 @@ impl BinaryFormat for BigEndian {
     }
 
     #[inline]
-    fn eat_string(buf: &mut BytesMut)  {
+    fn eat_string(buf: &mut BytesMut) {
         let len = buf.get_u16();
         buf.advance(len as usize)
     }
-
 }
 
 impl BinaryFormat for LittleEndian {
-
     #[inline]
     fn get_short(buf: &mut BytesMut) -> i16 {
         buf.get_i16_le()
@@ -194,15 +188,13 @@ impl BinaryFormat for LittleEndian {
     }
 
     #[inline]
-    fn eat_string(buf: &mut BytesMut)  {
+    fn eat_string(buf: &mut BytesMut) {
         let len = buf.get_u16_le();
         buf.advance(len as usize)
     }
-    
 }
 
 impl BinaryFormat for VarInt {
-    
     #[inline]
     fn get_short(buf: &mut BytesMut) -> i16 {
         buf.get_i16_le()
@@ -247,12 +239,12 @@ impl BinaryFormat for VarInt {
 
     #[inline]
     fn eat_int(buf: &mut BytesMut) {
-        buf.get_zigzag32();
+        buf.get_varint();
     }
 
     #[inline]
     fn eat_long(buf: &mut BytesMut) {
-        buf.get_zigzag64();
+        buf.get_varint();
     }
 
     #[inline]
@@ -260,5 +252,4 @@ impl BinaryFormat for VarInt {
         let len = buf.get_varint();
         buf.advance(len as usize)
     }
-
 }

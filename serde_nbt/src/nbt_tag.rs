@@ -18,11 +18,11 @@ pub enum NBTTag {
 pub struct NBTTagError(i8);
 impl std::fmt::Display for NBTTagError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f,"Failed conversion from {}",self.0)
+        write!(f, "Failed conversion from {}", self.0)
     }
 }
 impl NBTTag {
-    pub fn from_i8(value: i8) -> Result<Self,NBTTagError> {
+    pub fn from_i8(value: i8) -> Result<Self, NBTTagError> {
         match value {
             0 => Ok(Self::Void),
             1 => Ok(Self::Byte),
@@ -37,7 +37,7 @@ impl NBTTag {
             10 => Ok(Self::Compound),
             11 => Ok(Self::IntArray),
             12 => Ok(Self::LongArray),
-            n => Err(NBTTagError(n))
+            n => Err(NBTTagError(n)),
         }
     }
 }

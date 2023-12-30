@@ -1,5 +1,6 @@
 pub mod de;
 pub mod nbt_tag;
+pub mod ser;
 #[cfg(test)]
 mod test;
 
