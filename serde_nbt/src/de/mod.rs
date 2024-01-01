@@ -1,4 +1,4 @@
-pub mod binary_format;
+mod binary_format;
 pub mod error;
 
 use self::{binary_format::BinaryFormat, error::DeserializeError};
@@ -102,7 +102,6 @@ where
             )),
         }
     }
-
     fn deserialize_seq<V>(self, visitor: V) -> Result<V::Value, Self::Error>
     where
         V: de::Visitor<'de>,
@@ -236,7 +235,7 @@ where
     }
 }
 
-pub struct SeqX<'a, T>
+struct SeqX<'a, T>
 where
     T: BinaryFormat,
 {
@@ -266,7 +265,7 @@ where
     }
 }
 
-pub struct NumSeqX<'a, T>
+struct NumSeqX<'a, T>
 where
     T: BinaryFormat,
 {

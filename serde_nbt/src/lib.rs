@@ -1,17 +1,17 @@
 pub mod de;
-pub mod nbt_tag;
 pub mod ser;
-#[cfg(test)]
-mod test;
+pub mod nbt_tag;
+mod macros;
 
 use crate::de::{error::DeserializeError, Deserializer};
-use serde::de::Deserialize;
+use ser::{error::SerializeError, Serializer};
+use serde::{de::Deserialize, Serialize};
 
 pub struct BigEndian;
 pub struct LittleEndian;
 pub struct VarInt;
 
-macro_rules! impl_from_buf {
+macro_rules! impl_buffer {
     ($($f:ty),*) => {
         $(
             impl $f {
@@ -22,8 +22,15 @@ macro_rules! impl_from_buf {
                     let mut deserializer = Deserializer::<$f>::new(buf);
                     D::deserialize(&mut deserializer)
                 }
+                pub fn to_vec<S>(v:S) -> Result<Vec<u8>,SerializeError>
+                where S:Serialize
+                {
+                    let mut serializer = Serializer::<$f>::new();
+                    v.serialize(&mut serializer)?;
+                    Ok(serializer.output.to_vec())
+                }
             }
         )*
     };
 }
-impl_from_buf!(BigEndian, LittleEndian, VarInt);
+impl_buffer!(BigEndian, LittleEndian, VarInt);

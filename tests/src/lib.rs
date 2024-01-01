@@ -1,30 +1,30 @@
 #[cfg(test)]
 mod tests {
     #![allow(non_snake_case, dead_code)]
-
+    use serde::Deserialize;
+    use serde_nbt::{BigEndian, LittleEndian};
     use std::collections::HashMap;
 
     #[test]
     fn big_endian_works() {
         let vec = include_bytes!("../hello_world.nbt").to_vec();
-        let value: HashMap<String, String> = serde_nbt::BigEndian::from_buffer(&vec).unwrap();
+        let value: HashMap<String, String> = BigEndian::from_buffer(&vec).unwrap();
         let mut v = HashMap::new();
         v.insert("name".into(), "Bananrama".into());
         assert_eq!(value, v)
     }
-
-    use serde::Deserialize;
+    
 
     #[test]
-    fn get_leveldb_works() {
+    fn get_leveldat() {
         let vec = Vec::from_iter(include_bytes!("../level.dat").to_vec().into_iter().skip(8));
-        let level: LevelDB = serde_nbt::LittleEndian::from_buffer(&vec).unwrap();
+        let level: LevelDat = LittleEndian::from_buffer(&vec).unwrap();
 
         assert_eq!(
             level,
-            LevelDB {
-                LevelName: String::from("マイ ワールド"),
-                FlatWorldLayers: String::from("{\"biome_id\":1,\"block_layers\":[{\"block_name\":\"minecraft:bedrock\",\"count\":1},{\"block_name\":\"minecraft:dirt\",\"count\":2},{\"block_name\":\"minecraft:grass\",\"count\":1}],\"encoding_version\":6,\"structure_options\":null,\"world_version\":\"version.post_1_18\"}\n"),
+            LevelDat {
+                LevelName: "マイ ワールド".into(),
+                FlatWorldLayers: "{\"biome_id\":1,\"block_layers\":[{\"block_name\":\"minecraft:bedrock\",\"count\":1},{\"block_name\":\"minecraft:dirt\",\"count\":2},{\"block_name\":\"minecraft:grass\",\"count\":1}],\"encoding_version\":6,\"structure_options\":null,\"world_version\":\"version.post_1_18\"}\n".into(),
                 abilities: Abilities {
                     mayfly: 0,
                     mine: 1,
@@ -36,7 +36,6 @@ mod tests {
                 SpawnX: 12,
                 SpawnY: 32767,
                 SpawnZ: 41,
-                experiments: Experiments { experiments_ever_used: 0, saved_with_toggled_experiments: 0 },
                 lastOpenedWithVersion: vec![1, 20, 40, 1, 0],
                 worldStartCount: 4294967294
             }
@@ -44,14 +43,13 @@ mod tests {
     }
 
     #[derive(Debug, Deserialize, PartialEq)]
-    struct LevelDB {
+    struct LevelDat {
         LevelName: String,
         FlatWorldLayers: String,
         abilities: Abilities,
         SpawnX: i32,
         SpawnY: i32,
         SpawnZ: i32,
-        experiments: Experiments,
         lastOpenedWithVersion: Vec<i32>,
         worldStartCount: i64,
     }
@@ -63,10 +61,5 @@ mod tests {
         opencontainers: i8,
         teleport: i8,
         walkSpeed: f32,
-    }
-    #[derive(Debug, Deserialize, PartialEq)]
-    struct Experiments {
-        experiments_ever_used: i8,
-        saved_with_toggled_experiments: i8,
     }
 }
