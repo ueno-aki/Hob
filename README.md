@@ -1,4 +1,4 @@
-# serde-compound
+# serde-nbt
 
 * BigEndian
 * LittleEndian
