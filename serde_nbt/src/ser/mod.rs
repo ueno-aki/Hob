@@ -338,6 +338,14 @@ where
         Ok(Nil)
     }
 
+    fn serialize_bool(self, _v: bool) -> Result<Self::Ok, Self::Error> {
+        B::put_byte(&mut self.ser.output, NBTTag::Byte as i8);
+        if let Some(ref v) = self.name {
+            B::put_string(&mut self.ser.output, v);
+        }
+        Ok(())
+    }
+
     fn serialize_tuple_struct(
         self,
         name: &'static str,
@@ -361,7 +369,7 @@ where
     }
 
     unimplemented_serealize! {
-        bool u8 u16 u32 u64 char bytes
+        u8 u16 u32 u64 char bytes
         none some unit unit_struct unit_variant newtype_struct newtype_variant
         tuple tuple_variant struct_variant
     }
@@ -448,6 +456,11 @@ where
         })
     }
 
+    fn serialize_bool(self, v: bool) -> Result<Self::Ok, Self::Error> {
+        B::put_byte(&mut self.ser.output, v as i8);
+        Ok(())
+    }
+    
     fn serialize_tuple_struct(
         self,
         name: &'static str,
@@ -469,7 +482,7 @@ where
     }
 
     unimplemented_serealize! {
-        bool u8 u16 u32 u64 char bytes
+        u8 u16 u32 u64 char bytes
         none some unit unit_struct unit_variant newtype_struct newtype_variant
         tuple tuple_variant struct_variant
     }

@@ -162,9 +162,7 @@ impl BinaryFormat for LittleEndian {
 
     #[inline]
     fn get_string(buf: &mut BytesMut) -> String {
-        let len = buf.get_u16_le();
-        let bytes = buf.copy_to_bytes(len as usize).to_vec();
-        String::from_utf8(bytes).unwrap()
+        buf.get_string_lu16()
     }
 
     #[inline]
@@ -222,9 +220,7 @@ impl BinaryFormat for VarInt {
 
     #[inline]
     fn get_string(buf: &mut BytesMut) -> String {
-        let len = buf.get_varint();
-        let bytes = buf.copy_to_bytes(len as usize).to_vec();
-        String::from_utf8(bytes).unwrap()
+        buf.get_string_varint()
     }
 
     #[inline]

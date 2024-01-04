@@ -5,7 +5,7 @@ pub trait ConditionalWriter {
     fn put_zigzag32(&mut self, n: i32) -> usize;
     fn put_zigzag64(&mut self, n: i64) -> usize;
     fn put_string_varint(&mut self, str: &str) -> usize;
-    fn put_string_short(&mut self, str: &str) -> usize;
+    fn put_string_lu16(&mut self, str: &str) -> usize;
     fn put_bool(&mut self, v: bool);
 }
 
@@ -36,9 +36,9 @@ impl<T: BufMut + ?Sized> ConditionalWriter for T {
         self.put_slice(str.as_bytes());
         size
     }
-    fn put_string_short(&mut self, str: &str) -> usize {
+    fn put_string_lu16(&mut self, str: &str) -> usize {
         let len = str.as_bytes().len();
-        self.put_i16_le(len as i16);
+        self.put_u16_le(len as u16);
         self.put_slice(str.as_bytes());
         len + 2
     }
@@ -52,7 +52,7 @@ pub trait ConditionalReader {
     fn get_zigzag32(&mut self) -> i32;
     fn get_zigzag64(&mut self) -> i64;
     fn get_string_varint(&mut self) -> String;
-    fn get_string_short(&mut self) -> String;
+    fn get_string_lu16(&mut self) -> String;
     fn get_bool(&mut self) -> bool;
 }
 
@@ -80,18 +80,14 @@ impl<T: Buf + ?Sized> ConditionalReader for T {
         ((value >> 1) as i64) ^ (-((value & 1) as i64))
     }
     fn get_string_varint(&mut self) -> String {
-        let str_len = self.get_varint() as usize;
-        let v = &self.chunk()[..str_len];
-        let str = String::from_utf8(v.to_vec()).unwrap();
-        self.advance(str_len);
-        str
+        let len = self.get_varint();
+        let bytes = self.copy_to_bytes(len as usize).to_vec();
+        String::from_utf8(bytes).unwrap()
     }
-    fn get_string_short(&mut self) -> String {
-        let str_len = self.get_i16_le() as usize;
-        let v = &self.chunk()[..str_len];
-        let str = String::from_utf8(v.to_vec()).unwrap();
-        self.advance(str_len);
-        str
+    fn get_string_lu16(&mut self) -> String {
+        let len = self.get_u16_le();
+        let bytes = self.copy_to_bytes(len as usize).to_vec();
+        String::from_utf8(bytes).unwrap()
     }
     fn get_bool(&mut self) -> bool {
         match self.get_i8() {

@@ -4,6 +4,7 @@ pub mod error;
 use self::{binary_format::BinaryFormat, error::DeserializeError};
 use crate::nbt_tag::NBTTag;
 use bytes::BytesMut;
+use proto_bytes::ConditionalReader;
 use serde::{de, forward_to_deserialize_any};
 use std::marker::PhantomData;
 
@@ -188,6 +189,15 @@ where
         visitor.visit_unit()
     }
 
+    fn deserialize_bool<V>(self, visitor: V) -> Result<V::Value, Self::Error>
+        where
+            V: de::Visitor<'de> {
+        match self.tag {
+            NBTTag::Byte => visitor.visit_bool(self.de.input.get_bool()),
+            v => Err(DeserializeError::Message(format!("Expected Tag_Byte, Found Tag_{:?}",v)))
+        }
+    }
+
     fn deserialize_newtype_struct<V>(
         self,
         _name: &'static str,
@@ -200,7 +210,7 @@ where
     }
 
     forward_to_deserialize_any! {
-        i8 i16 i32 i64 i128 u8 u16 u32 u64 u128 f32 f64 char str string bool
+        i8 i16 i32 i64 i128 u8 u16 u32 u64 u128 f32 f64 char str string
         bytes byte_buf option struct unit unit_struct tuple seq identifier
         tuple_struct map enum
     }
