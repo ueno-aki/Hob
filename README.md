@@ -9,7 +9,6 @@
 ## todo
 
 * Value(Any) crate
-* Serializer
 
 ## Unsupported
 
