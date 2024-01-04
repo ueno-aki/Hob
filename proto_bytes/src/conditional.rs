@@ -1,4 +1,4 @@
-use bytes::{Buf, BufMut, BytesMut};
+use bytes::{Buf, BufMut};
 
 pub trait ConditionalWriter {
     fn put_varint(&mut self, n: u64) -> usize;
@@ -9,7 +9,7 @@ pub trait ConditionalWriter {
     fn put_bool(&mut self, v: bool);
 }
 
-impl ConditionalWriter for BytesMut {
+impl<T: BufMut + ?Sized> ConditionalWriter for T {
     fn put_varint(&mut self, n: u64) -> usize {
         let mut cursor: usize = 0;
         let mut v = n;
@@ -33,13 +33,13 @@ impl ConditionalWriter for BytesMut {
     fn put_string_varint(&mut self, str: &str) -> usize {
         let mut size = str.as_bytes().len();
         size += self.put_varint(size as u64);
-        self.put(str.as_bytes());
+        self.put_slice(str.as_bytes());
         size
     }
     fn put_string_short(&mut self, str: &str) -> usize {
         let len = str.as_bytes().len();
         self.put_i16_le(len as i16);
-        self.put(str.as_bytes());
+        self.put_slice(str.as_bytes());
         len + 2
     }
     fn put_bool(&mut self, v: bool) {
@@ -56,7 +56,7 @@ pub trait ConditionalReader {
     fn get_bool(&mut self) -> bool;
 }
 
-impl ConditionalReader for BytesMut {
+impl<T: Buf + ?Sized> ConditionalReader for T {
     fn get_varint(&mut self) -> u64 {
         let mut value = 0;
         let mut shift = 0;
@@ -81,21 +81,15 @@ impl ConditionalReader for BytesMut {
     }
     fn get_string_varint(&mut self) -> String {
         let str_len = self.get_varint() as usize;
-        let v = self.get(0..str_len);
-        let str = match v {
-            Some(v) => String::from_utf8(v.to_vec()).unwrap(),
-            None => panic!("MissingCharacters"),
-        };
+        let v = &self.chunk()[..str_len];
+        let str = String::from_utf8(v.to_vec()).unwrap();
         self.advance(str_len);
         str
     }
     fn get_string_short(&mut self) -> String {
         let str_len = self.get_i16_le() as usize;
-        let v = self.get(0..str_len);
-        let str = match v {
-            Some(v) => String::from_utf8(v.to_vec()).unwrap(),
-            None => panic!("MissingCharacters"),
-        };
+        let v = &self.chunk()[..str_len];
+        let str = String::from_utf8(v.to_vec()).unwrap();
         self.advance(str_len);
         str
     }

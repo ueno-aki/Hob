@@ -7,19 +7,19 @@ use bytes::BytesMut;
 use serde::{de, forward_to_deserialize_any};
 use std::marker::PhantomData;
 
-pub struct Deserializer<T>
+pub struct Deserializer<B>
 where
-    T: BinaryFormat,
+    B: BinaryFormat,
 {
     pub input: BytesMut,
-    _marker: PhantomData<T>,
+    _marker: PhantomData<B>,
 }
 
-impl<T> Deserializer<T>
+impl<B> Deserializer<B>
 where
-    T: BinaryFormat,
+    B: BinaryFormat,
 {
-    pub fn new(buf: &[u8]) -> Self {
+    pub fn from_slice(buf: &[u8]) -> Self {
         Deserializer {
             input: BytesMut::from(buf),
             _marker: PhantomData,
@@ -29,38 +29,38 @@ where
         use NBTTag::*;
         match types {
             Void => {}
-            Byte => T::eat_byte(&mut self.input),
-            Short => T::eat_short(&mut self.input),
-            Int => T::eat_int(&mut self.input),
-            Long => T::eat_long(&mut self.input),
-            Float => T::eat_float(&mut self.input),
-            Double => T::eat_double(&mut self.input),
-            ByteArray => T::eat_byte_array(&mut self.input),
-            String => T::eat_string(&mut self.input),
+            Byte => B::eat_byte(&mut self.input),
+            Short => B::eat_short(&mut self.input),
+            Int => B::eat_int(&mut self.input),
+            Long => B::eat_long(&mut self.input),
+            Float => B::eat_float(&mut self.input),
+            Double => B::eat_double(&mut self.input),
+            ByteArray => B::eat_byte_array(&mut self.input),
+            String => B::eat_string(&mut self.input),
             List => {
-                let elem_types = NBTTag::from_i8(T::get_byte(&mut self.input)).unwrap();
-                let len = T::get_int(&mut self.input);
+                let elem_types = NBTTag::from_i8(B::get_byte(&mut self.input)).unwrap();
+                let len = B::get_int(&mut self.input);
                 for _ in 0..len {
                     self.eat_value(elem_types.clone())
                 }
             }
             Compound => loop {
-                let id = T::get_byte(&mut self.input);
+                let id = B::get_byte(&mut self.input);
                 if id == 0 {
                     break;
                 }
                 self.eat_value(String);
                 self.eat_value(NBTTag::from_i8(id).unwrap());
             },
-            IntArray => T::eat_int_array(&mut self.input),
-            LongArray => T::eat_long_array(&mut self.input),
+            IntArray => B::eat_int_array(&mut self.input),
+            LongArray => B::eat_long_array(&mut self.input),
         }
     }
 }
 
-impl<'de, T> de::Deserializer<'de> for &mut Deserializer<T>
+impl<'de, B> de::Deserializer<'de> for &mut Deserializer<B>
 where
-    T: BinaryFormat,
+    B: BinaryFormat,
 {
     type Error = DeserializeError;
 
@@ -87,8 +87,8 @@ where
     where
         V: de::Visitor<'de>,
     {
-        let tag = NBTTag::from_i8(T::get_byte(&mut self.input)).unwrap();
-        let _ = T::get_string(&mut self.input);
+        let tag = NBTTag::from_i8(B::get_byte(&mut self.input)).unwrap();
+        let _ = B::get_string(&mut self.input);
         match tag {
             NBTTag::Compound => {
                 let variant = &mut Variant {
@@ -106,8 +106,8 @@ where
     where
         V: de::Visitor<'de>,
     {
-        let tag = NBTTag::from_i8(T::get_byte(&mut self.input)).unwrap();
-        let _ = T::get_string(&mut self.input);
+        let tag = NBTTag::from_i8(B::get_byte(&mut self.input)).unwrap();
+        let _ = B::get_string(&mut self.input);
         match tag {
             NBTTag::List => {
                 let variant = &mut Variant {
@@ -129,16 +129,16 @@ where
     }
 }
 
-struct Variant<'a, T>
+struct Variant<'a, B>
 where
-    T: BinaryFormat,
+    B: BinaryFormat,
 {
-    de: &'a mut Deserializer<T>,
+    de: &'a mut Deserializer<B>,
     tag: NBTTag,
 }
-impl<'de, 'a, T> de::Deserializer<'de> for &mut Variant<'a, T>
+impl<'de, 'a, B> de::Deserializer<'de> for &mut Variant<'a, B>
 where
-    T: BinaryFormat,
+    B: BinaryFormat,
 {
     type Error = DeserializeError;
 
@@ -148,16 +148,16 @@ where
     {
         use NBTTag::*;
         match self.tag {
-            Byte => visitor.visit_i8(T::get_byte(&mut self.de.input)),
-            Short => visitor.visit_i16(T::get_short(&mut self.de.input)),
-            Int => visitor.visit_i32(T::get_int(&mut self.de.input)),
-            Long => visitor.visit_i64(T::get_long(&mut self.de.input)),
-            Float => visitor.visit_f32(T::get_float(&mut self.de.input)),
-            Double => visitor.visit_f64(T::get_double(&mut self.de.input)),
-            String => visitor.visit_string(T::get_string(&mut self.de.input)),
+            Byte => visitor.visit_i8(B::get_byte(&mut self.de.input)),
+            Short => visitor.visit_i16(B::get_short(&mut self.de.input)),
+            Int => visitor.visit_i32(B::get_int(&mut self.de.input)),
+            Long => visitor.visit_i64(B::get_long(&mut self.de.input)),
+            Float => visitor.visit_f32(B::get_float(&mut self.de.input)),
+            Double => visitor.visit_f64(B::get_double(&mut self.de.input)),
+            String => visitor.visit_string(B::get_string(&mut self.de.input)),
             List => {
-                let elem_tag = NBTTag::from_i8(T::get_byte(&mut self.de.input)).unwrap();
-                let len = T::get_int(&mut self.de.input);
+                let elem_tag = NBTTag::from_i8(B::get_byte(&mut self.de.input)).unwrap();
+                let len = B::get_int(&mut self.de.input);
                 visitor.visit_seq(SeqX {
                     de: &mut *self.de,
                     tag: elem_tag,
@@ -165,7 +165,7 @@ where
                 })
             }
             ByteArray | IntArray | LongArray => {
-                let len = T::get_int(&mut self.de.input);
+                let len = B::get_int(&mut self.de.input);
                 visitor.visit_seq(NumSeqX {
                     de: &mut *self.de,
                     tag: self.tag,
@@ -188,23 +188,34 @@ where
         visitor.visit_unit()
     }
 
+    fn deserialize_newtype_struct<V>(
+        self,
+        _name: &'static str,
+        visitor: V,
+    ) -> Result<V::Value, Self::Error>
+    where
+        V: de::Visitor<'de>,
+    {
+        visitor.visit_newtype_struct(self)
+    }
+
     forward_to_deserialize_any! {
         i8 i16 i32 i64 i128 u8 u16 u32 u64 u128 f32 f64 char str string bool
-        bytes byte_buf option struct unit unit_struct newtype_struct tuple seq identifier
+        bytes byte_buf option struct unit unit_struct tuple seq identifier
         tuple_struct map enum
     }
 }
 
-struct MapX<'a, T>
+struct MapX<'a, B>
 where
-    T: BinaryFormat,
+    B: BinaryFormat,
 {
-    de: &'a mut Deserializer<T>,
+    de: &'a mut Deserializer<B>,
     next_tag: NBTTag,
 }
-impl<'de, 'a, T> de::MapAccess<'de> for MapX<'a, T>
+impl<'de, 'a, B> de::MapAccess<'de> for MapX<'a, B>
 where
-    T: BinaryFormat,
+    B: BinaryFormat,
 {
     type Error = DeserializeError;
 
@@ -212,7 +223,7 @@ where
     where
         K: de::DeserializeSeed<'de>,
     {
-        self.next_tag = NBTTag::from_i8(T::get_byte(&mut self.de.input)).unwrap();
+        self.next_tag = NBTTag::from_i8(B::get_byte(&mut self.de.input)).unwrap();
         match self.next_tag {
             NBTTag::Void => Ok(None),
             _ => seed
@@ -235,17 +246,17 @@ where
     }
 }
 
-struct SeqX<'a, T>
+struct SeqX<'a, B>
 where
-    T: BinaryFormat,
+    B: BinaryFormat,
 {
-    de: &'a mut Deserializer<T>,
+    de: &'a mut Deserializer<B>,
     tag: NBTTag,
     len: usize,
 }
-impl<'de, 'a, T> de::SeqAccess<'de> for SeqX<'a, T>
+impl<'de, 'a, B> de::SeqAccess<'de> for SeqX<'a, B>
 where
-    T: BinaryFormat,
+    B: BinaryFormat,
 {
     type Error = DeserializeError;
 
@@ -265,17 +276,17 @@ where
     }
 }
 
-struct NumSeqX<'a, T>
+struct NumSeqX<'a, B>
 where
-    T: BinaryFormat,
+    B: BinaryFormat,
 {
-    de: &'a mut Deserializer<T>,
+    de: &'a mut Deserializer<B>,
     tag: NBTTag,
     len: usize,
 }
-impl<'de, 'a, T> de::SeqAccess<'de> for NumSeqX<'a, T>
+impl<'de, 'a, B> de::SeqAccess<'de> for NumSeqX<'a, B>
 where
-    T: BinaryFormat,
+    B: BinaryFormat,
 {
     type Error = DeserializeError;
 

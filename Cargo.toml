@@ -1,6 +1,5 @@
 [workspace]
 members = [
     "serde_nbt",
-    "proto_bytes",
-    "tests"
+    "proto_bytes"
 ]

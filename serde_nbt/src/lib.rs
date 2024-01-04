@@ -1,7 +1,7 @@
 pub mod de;
-pub mod ser;
-pub mod nbt_tag;
 mod macros;
+pub mod nbt_tag;
+pub mod ser;
 
 use crate::de::{error::DeserializeError, Deserializer};
 use ser::{error::SerializeError, Serializer};
@@ -15,11 +15,11 @@ macro_rules! impl_buffer {
     ($($f:ty),*) => {
         $(
             impl $f {
-                pub fn from_buffer<'a,D>(buf:&[u8]) -> Result<D, DeserializeError>
+                pub fn from_slice<'a,D>(buf:&'a [u8]) -> Result<D, DeserializeError>
                 where
                     D:Deserialize<'a>
                 {
-                    let mut deserializer = Deserializer::<$f>::new(buf);
+                    let mut deserializer = Deserializer::<$f>::from_slice(buf);
                     D::deserialize(&mut deserializer)
                 }
                 pub fn to_vec<S>(v:S) -> Result<Vec<u8>,SerializeError>

@@ -8,6 +8,7 @@ use self::error::SerializeError;
 
 mod binary_format;
 pub mod error;
+pub mod num_array;
 
 pub struct Serializer<B>
 where
@@ -20,9 +21,11 @@ impl<B> Serializer<B>
 where
     B: BinaryFormat,
 {
-    pub fn new() -> Self
-    {
-        Serializer { output: BytesMut::new(), _marker: PhantomData }
+    pub fn new() -> Self {
+        Serializer {
+            output: BytesMut::new(),
+            _marker: PhantomData,
+        }
     }
 }
 
@@ -37,8 +40,8 @@ where
     type SerializeStruct = Compound<'a, B>;
     type SerializeMap = Compound<'a, B>;
     type SerializeSeq = List<'a, B>;
-    type SerializeTuple = ser::Impossible<(), Self::Error>;
     type SerializeTupleStruct = ser::Impossible<(), Self::Error>;
+    type SerializeTuple = ser::Impossible<(), Self::Error>;
     type SerializeTupleVariant = ser::Impossible<(), Self::Error>;
     type SerializeStructVariant = ser::Impossible<(), Self::Error>;
 
@@ -47,7 +50,7 @@ where
         B::put_string(&mut self.output, "");
         Ok(List {
             ser: &mut *self,
-            tagged:false,
+            tagged: false,
             len: len.unwrap_or(0),
         })
     }
@@ -122,14 +125,14 @@ where
 
     type Error = SerializeError;
 
-    fn serialize_key<T: ?Sized>(&mut self, key: &T) -> Result<(), Self::Error>
+    fn serialize_key<T: ?Sized>(&mut self, _key: &T) -> Result<(), Self::Error>
     where
         T: Serialize,
     {
         unreachable!()
     }
 
-    fn serialize_value<T: ?Sized>(&mut self, value: &T) -> Result<(), Self::Error>
+    fn serialize_value<T: ?Sized>(&mut self, _value: &T) -> Result<(), Self::Error>
     where
         T: Serialize,
     {
@@ -145,9 +148,16 @@ where
         K: Serialize,
         V: Serialize,
     {
-        value.serialize(&mut Tag {ser:&mut *self.ser,name:None})?;
-        key.serialize(&mut Variant {ser:&mut *self.ser})?;
-        value.serialize(&mut Variant {ser:&mut *self.ser})?;
+        value.serialize(&mut Tag {
+            ser: &mut *self.ser,
+            name: None,
+        })?;
+        key.serialize(&mut Variant {
+            ser: &mut *self.ser,
+        })?;
+        value.serialize(&mut Variant {
+            ser: &mut *self.ser,
+        })?;
         Ok(())
     }
 
@@ -162,7 +172,7 @@ where
     B: BinaryFormat,
 {
     ser: &'a mut Serializer<B>,
-    tagged:bool,
+    tagged: bool,
     len: usize,
 }
 
@@ -179,11 +189,16 @@ where
         T: Serialize,
     {
         if self.tagged == false {
-            value.serialize(&mut Tag {ser:&mut *self.ser,name:None})?;
+            value.serialize(&mut Tag {
+                ser: &mut *self.ser,
+                name: None,
+            })?;
             B::put_int(&mut self.ser.output, self.len as i32);
             self.tagged = true;
         }
-        value.serialize(&mut Variant {ser:&mut *self.ser})?;
+        value.serialize(&mut Variant {
+            ser: &mut *self.ser,
+        })?;
         Ok(())
     }
 
@@ -191,6 +206,30 @@ where
         Ok(())
     }
 }
+
+impl<'a, B> ser::SerializeTupleStruct for List<'a, B>
+where
+    B: BinaryFormat,
+{
+    type Ok = ();
+
+    type Error = SerializeError;
+
+    fn serialize_field<T: ?Sized>(&mut self, value: &T) -> Result<(), Self::Error>
+    where
+        T: Serialize,
+    {
+        value.serialize(&mut Variant {
+            ser: &mut *self.ser,
+        })?;
+        Ok(())
+    }
+
+    fn end(self) -> Result<Self::Ok, Self::Error> {
+        Ok(())
+    }
+}
+
 struct Tag<'a, B>
 where
     B: BinaryFormat,
@@ -210,8 +249,8 @@ where
     type SerializeStruct = Nil;
     type SerializeMap = Nil;
     type SerializeSeq = Nil;
+    type SerializeTupleStruct = Nil;
     type SerializeTuple = ser::Impossible<(), Self::Error>;
-    type SerializeTupleStruct = ser::Impossible<(), Self::Error>;
     type SerializeTupleVariant = ser::Impossible<(), Self::Error>;
     type SerializeStructVariant = ser::Impossible<(), Self::Error>;
 
@@ -282,9 +321,12 @@ where
     fn serialize_struct(
         self,
         _name: &'static str,
-        len: usize,
+        _len: usize,
     ) -> Result<Self::SerializeStruct, Self::Error> {
-        self.serialize_map(Some(len))?;
+        B::put_byte(&mut self.ser.output, NBTTag::Compound as i8);
+        if let Some(ref v) = self.name {
+            B::put_string(&mut self.ser.output, &v);
+        }
         Ok(Nil)
     }
 
@@ -296,10 +338,32 @@ where
         Ok(Nil)
     }
 
+    fn serialize_tuple_struct(
+        self,
+        name: &'static str,
+        _len: usize,
+    ) -> Result<Self::SerializeTupleStruct, Self::Error> {
+        let tag = match name {
+            "__nbt_byte_array" => NBTTag::ByteArray,
+            "__nbt_int_array" => NBTTag::IntArray,
+            "__nbt_long_array" => NBTTag::LongArray,
+            _ => {
+                return Err(SerializeError::Unsupported(
+                    "Unsupported 'tuple_struct'".into(),
+                ))
+            }
+        };
+        B::put_byte(&mut self.ser.output, tag as i8);
+        if let Some(ref v) = self.name {
+            B::put_string(&mut self.ser.output, &v);
+        }
+        Ok(Nil)
+    }
+
     unimplemented_serealize! {
         bool u8 u16 u32 u64 char bytes
         none some unit unit_struct unit_variant newtype_struct newtype_variant
-        tuple tuple_struct tuple_variant struct_variant
+        tuple tuple_variant struct_variant
     }
 }
 struct Variant<'a, B>
@@ -320,8 +384,8 @@ where
     type SerializeStruct = Compound<'a, B>;
     type SerializeMap = Compound<'a, B>;
     type SerializeSeq = List<'a, B>;
+    type SerializeTupleStruct = List<'a, B>;
     type SerializeTuple = ser::Impossible<(), Self::Error>;
-    type SerializeTupleStruct = ser::Impossible<(), Self::Error>;
     type SerializeTupleVariant = ser::Impossible<(), Self::Error>;
     type SerializeStructVariant = ser::Impossible<(), Self::Error>;
 
@@ -363,7 +427,7 @@ where
     fn serialize_seq(self, len: Option<usize>) -> Result<Self::SerializeSeq, Self::Error> {
         Ok(List {
             ser: &mut *self.ser,
-            tagged:false,
+            tagged: false,
             len: len.unwrap_or(0),
         })
     }
@@ -384,10 +448,30 @@ where
         })
     }
 
+    fn serialize_tuple_struct(
+        self,
+        name: &'static str,
+        len: usize,
+    ) -> Result<Self::SerializeTupleStruct, Self::Error> {
+        match name {
+            "__nbt_byte_array" | "__nbt_int_array" | "__nbt_long_array" => {
+                B::put_int(&mut self.ser.output, len as i32);
+                Ok(List {
+                    ser: &mut *self.ser,
+                    tagged: true,
+                    len,
+                })
+            }
+            _ => Err(SerializeError::Unsupported(
+                "Unsupported 'tuple_struct'".into(),
+            )),
+        }
+    }
+
     unimplemented_serealize! {
         bool u8 u16 u32 u64 char bytes
         none some unit unit_struct unit_variant newtype_struct newtype_variant
-        tuple tuple_struct tuple_variant struct_variant
+        tuple tuple_variant struct_variant
     }
 }
 
@@ -443,6 +527,23 @@ impl ser::SerializeSeq for Nil {
     type Error = SerializeError;
 
     fn serialize_element<T: ?Sized>(&mut self, _value: &T) -> Result<(), Self::Error>
+    where
+        T: Serialize,
+    {
+        Ok(())
+    }
+
+    fn end(self) -> Result<Self::Ok, Self::Error> {
+        Ok(())
+    }
+}
+
+impl ser::SerializeTupleStruct for Nil {
+    type Ok = ();
+
+    type Error = SerializeError;
+
+    fn serialize_field<T: ?Sized>(&mut self, _value: &T) -> Result<(), Self::Error>
     where
         T: Serialize,
     {
