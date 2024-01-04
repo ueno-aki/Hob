@@ -190,11 +190,15 @@ where
     }
 
     fn deserialize_bool<V>(self, visitor: V) -> Result<V::Value, Self::Error>
-        where
-            V: de::Visitor<'de> {
+    where
+        V: de::Visitor<'de>,
+    {
         match self.tag {
             NBTTag::Byte => visitor.visit_bool(self.de.input.get_bool()),
-            v => Err(DeserializeError::Message(format!("Expected Tag_Byte, Found Tag_{:?}",v)))
+            v => Err(DeserializeError::Message(format!(
+                "Expected Tag_Byte, Found Tag_{:?}",
+                v
+            ))),
         }
     }
 

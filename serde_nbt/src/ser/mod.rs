@@ -460,7 +460,7 @@ where
         B::put_byte(&mut self.ser.output, v as i8);
         Ok(())
     }
-    
+
     fn serialize_tuple_struct(
         self,
         name: &'static str,
