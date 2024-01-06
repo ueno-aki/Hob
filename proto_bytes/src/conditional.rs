@@ -6,6 +6,7 @@ pub trait ConditionalWriter {
     fn put_zigzag64(&mut self, n: i64) -> usize;
     fn put_string_varint(&mut self, str: &str) -> usize;
     fn put_string_lu16(&mut self, str: &str) -> usize;
+    fn put_string_lu32(&mut self, str: &str) -> usize;
     fn put_bool(&mut self, v: bool);
 }
 
@@ -42,6 +43,12 @@ impl<T: BufMut + ?Sized> ConditionalWriter for T {
         self.put_slice(str.as_bytes());
         len + 2
     }
+    fn put_string_lu32(&mut self, str: &str) -> usize {
+        let len = str.as_bytes().len();
+        self.put_u32_le(len as u32);
+        self.put_slice(str.as_bytes());
+        len + 4
+    }
     fn put_bool(&mut self, v: bool) {
         self.put_i8(v as i8);
     }
@@ -53,6 +60,7 @@ pub trait ConditionalReader {
     fn get_zigzag64(&mut self) -> i64;
     fn get_string_varint(&mut self) -> String;
     fn get_string_lu16(&mut self) -> String;
+    fn get_string_lu32(&mut self) -> String;
     fn get_bool(&mut self) -> bool;
 }
 
@@ -86,6 +94,11 @@ impl<T: Buf + ?Sized> ConditionalReader for T {
     }
     fn get_string_lu16(&mut self) -> String {
         let len = self.get_u16_le();
+        let bytes = self.copy_to_bytes(len as usize).to_vec();
+        String::from_utf8(bytes).unwrap()
+    }
+    fn get_string_lu32(&mut self) -> String {
+        let len = self.get_u32_le();
         let bytes = self.copy_to_bytes(len as usize).to_vec();
         String::from_utf8(bytes).unwrap()
     }

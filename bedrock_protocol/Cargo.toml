@@ -1,0 +1,13 @@
+[package]
+name = "bedrock-protocol"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+anyhow = "*"
+serde-nbt = { path = "../serde_nbt" }
+bytes = "1.0.0"
+proto-bytes = { path = "../proto_bytes" }
+from-num = "*"

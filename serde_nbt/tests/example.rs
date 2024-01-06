@@ -1,6 +1,6 @@
 #![allow(non_snake_case, dead_code)]
 use serde::{Deserialize, Serialize};
-use serde_nbt::{ser::num_array::ByteArray, BigEndian};
+use serde_nbt::{ser::ByteArray, BigEndian};
 use std::collections::{HashMap, HashSet};
 
 // https://wiki.vg/NBT#Examples

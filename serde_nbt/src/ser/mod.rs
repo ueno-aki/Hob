@@ -2,13 +2,14 @@ use bytes::BytesMut;
 use serde::{ser, Serialize};
 use std::marker::PhantomData;
 
-use crate::{nbt_tag::NBTTag, ser::binary_format::BinaryFormat, unimplemented_serealize};
-
 use self::error::SerializeError;
+use crate::{nbt_tag::NBTTag, ser::binary_format::BinaryFormat, unimplemented_serealize};
 
 mod binary_format;
 pub mod error;
-pub mod num_array;
+mod num_array;
+
+pub use num_array::*;
 
 pub struct Serializer<B>
 where

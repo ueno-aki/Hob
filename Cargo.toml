@@ -1,5 +1,6 @@
 [workspace]
 members = [
     "serde_nbt",
-    "proto_bytes"
+    "proto_bytes",
+    "bedrock_protocol"
 ]
