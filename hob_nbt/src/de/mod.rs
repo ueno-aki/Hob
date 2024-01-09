@@ -3,8 +3,7 @@ pub mod error;
 
 use self::{binary_format::BinaryFormat, error::DeserializeError};
 use crate::nbt_tag::NBTTag;
-use bytes::BytesMut;
-use proto_bytes::ConditionalReader;
+use proto_bytes::{BytesMut, ConditionalReader};
 use serde::{de, forward_to_deserialize_any};
 use std::marker::PhantomData;
 
@@ -42,7 +41,7 @@ where
                 let elem_types = NBTTag::from_i8(B::get_byte(&mut self.input)).unwrap();
                 let len = B::get_int(&mut self.input);
                 for _ in 0..len {
-                    self.eat_value(elem_types.clone())
+                    self.eat_value(elem_types)
                 }
             }
             Compound => loop {

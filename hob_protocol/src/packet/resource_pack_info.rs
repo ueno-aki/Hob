@@ -1,6 +1,5 @@
 use anyhow::Result;
-use bytes::BufMut;
-use proto_bytes::ConditionalWriter;
+use proto_bytes::{BufMut, ConditionalWriter};
 
 use super::Packet;
 
@@ -15,12 +14,15 @@ pub struct ResourcePacksInfoPacket {
 }
 
 impl Packet for ResourcePacksInfoPacket {
-    fn from_bytes(bytes: &mut bytes::BytesMut) -> Result<Self> where Self: Sized {
+    fn decode(bytes: &mut proto_bytes::BytesMut) -> Result<Self>
+    where
+        Self: Sized,
+    {
         todo!()
     }
 
     #[inline]
-    fn read_to_bytes(&self,bytes: &mut bytes::BytesMut) -> Result<()> {
+    fn encode(&self, bytes: &mut proto_bytes::BytesMut) -> Result<()> {
         bytes.put_bool(self.must_accept);
         bytes.put_bool(self.has_scripts);
         bytes.put_bool(self.force_server_packs);
@@ -33,7 +35,7 @@ impl Packet for ResourcePacksInfoPacket {
 
 impl ResourcePacksInfoPacket {
     #[inline]
-    fn encode_behavior(&self,bytes: &mut bytes::BytesMut) -> Result<()> {
+    fn encode_behavior(&self, bytes: &mut proto_bytes::BytesMut) -> Result<()> {
         bytes.put_i16_le(self.behaviour_packs.len() as i16);
         for behavior in self.behaviour_packs.iter() {
             bytes.put_string_varint(&behavior.uuid);
@@ -47,7 +49,7 @@ impl ResourcePacksInfoPacket {
         Ok(())
     }
     #[inline]
-    fn encode_texture(&self,bytes: &mut bytes::BytesMut) -> Result<()> {
+    fn encode_texture(&self, bytes: &mut proto_bytes::BytesMut) -> Result<()> {
         bytes.put_i16_le(self.texture_packs.len() as i16);
         for resource in self.texture_packs.iter() {
             bytes.put_string_varint(&resource.uuid);
@@ -62,7 +64,7 @@ impl ResourcePacksInfoPacket {
         Ok(())
     }
     #[inline]
-    fn encode_resouce_links(&self,bytes: &mut bytes::BytesMut) -> Result<()> {
+    fn encode_resouce_links(&self, bytes: &mut proto_bytes::BytesMut) -> Result<()> {
         bytes.put_varint(self.resource_pack_links.len() as u64);
         for link in self.resource_pack_links.iter() {
             bytes.put_string_varint(&link.id);

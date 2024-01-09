@@ -1,5 +1,4 @@
-use bytes::BufMut;
-use proto_bytes::ConditionalWriter;
+use proto_bytes::{BufMut, ConditionalWriter};
 
 use super::Packet;
 
@@ -14,11 +13,14 @@ pub struct ResourcePacksStackPacket {
 }
 
 impl Packet for ResourcePacksStackPacket {
-    fn from_bytes(bytes: &mut bytes::BytesMut) -> anyhow::Result<Self> where Self: Sized {
+    fn decode(bytes: &mut proto_bytes::BytesMut) -> anyhow::Result<Self>
+    where
+        Self: Sized,
+    {
         todo!()
     }
 
-    fn read_to_bytes(&self,bytes: &mut bytes::BytesMut) -> anyhow::Result<()> {
+    fn encode(&self, bytes: &mut proto_bytes::BytesMut) -> anyhow::Result<()> {
         bytes.put_bool(self.must_accept);
         bytes.put_varint(self.behavior_packs.len() as u64);
         for p in self.behavior_packs.iter() {

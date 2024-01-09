@@ -8,12 +8,12 @@ pub struct ServerToClientHandshakePacket {
 }
 
 impl Packet for ServerToClientHandshakePacket {
-    fn from_bytes(bytes: &mut bytes::BytesMut) -> anyhow::Result<Self> {
+    fn decode(bytes: &mut proto_bytes::BytesMut) -> anyhow::Result<Self> {
         todo!()
     }
 
     #[inline]
-    fn read_to_bytes(&self,bytes: &mut bytes::BytesMut) -> anyhow::Result<()> {
+    fn encode(&self, bytes: &mut proto_bytes::BytesMut) -> anyhow::Result<()> {
         bytes.put_string_varint(&self.token);
         Ok(())
     }

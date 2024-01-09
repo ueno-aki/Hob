@@ -25,7 +25,7 @@ macro_rules! impl_buffer {
                 pub fn to_vec<S>(v:S) -> Result<Vec<u8>,SerializeError>
                 where S:Serialize
                 {
-                    let mut serializer = Serializer::<$f>::new();
+                    let mut serializer = Serializer::<$f>::default();
                     v.serialize(&mut serializer)?;
                     Ok(serializer.output.to_vec())
                 }

@@ -1,6 +1,7 @@
 [workspace]
 members = [
-    "serde_nbt",
+    "hob_nbt",
     "proto_bytes",
-    "bedrock_protocol"
+    "hob_protocol",
+    "hob_server"
 ]

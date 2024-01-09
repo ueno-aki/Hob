@@ -4,13 +4,13 @@ use super::Packet;
 
 #[derive(Debug)]
 pub struct DisconnectPacket {
-    pub reason:DisconnectFailReason,
+    pub reason: DisconnectFailReason,
     pub hide_disconnect_reason: bool,
     pub message: String,
 }
 
 impl Packet for DisconnectPacket {
-    fn from_bytes(bytes: &mut bytes::BytesMut) -> anyhow::Result<Self>
+    fn decode(bytes: &mut proto_bytes::BytesMut) -> anyhow::Result<Self>
     where
         Self: Sized,
     {
@@ -18,7 +18,7 @@ impl Packet for DisconnectPacket {
     }
 
     #[inline]
-    fn read_to_bytes(&self, bytes: &mut bytes::BytesMut) -> anyhow::Result<()> {
+    fn encode(&self, bytes: &mut proto_bytes::BytesMut) -> anyhow::Result<()> {
         bytes.put_zigzag32(self.reason.clone() as i32);
         bytes.put_bool(self.hide_disconnect_reason);
         bytes.put_string_varint(&self.message);
@@ -26,7 +26,7 @@ impl Packet for DisconnectPacket {
     }
 }
 
-#[derive(Debug,Clone)]
+#[derive(Debug, Clone)]
 pub enum DisconnectFailReason {
     Unknown,
     CantConnectInternet,

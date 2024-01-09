@@ -4,7 +4,7 @@ use serde_nbt::LittleEndian;
 
 #[test]
 fn get_leveldat() {
-    let vec = Vec::from_iter(include_bytes!("./level.dat").to_vec().into_iter().skip(8));
+    let vec = Vec::from_iter(include_bytes!("./level.dat").iter().copied().skip(8));
     let level: LevelDat = LittleEndian::from_slice(&vec).unwrap();
 
     assert_eq!(

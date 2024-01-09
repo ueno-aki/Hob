@@ -16,7 +16,7 @@ fn big_endian_works() {
 
 #[test]
 fn big_endian_ser_de_() {
-    let level: Level = BigEndian::from_slice(&include_bytes!("./bigtest.nbt").to_vec()).unwrap();
+    let level: Level = BigEndian::from_slice(include_bytes!("./bigtest.nbt").as_ref()).unwrap();
     let vec = BigEndian::to_vec(&level).unwrap();
     let a_level: Level = BigEndian::from_slice(&vec).unwrap();
     assert_eq!(level, a_level)

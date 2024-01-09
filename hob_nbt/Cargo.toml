@@ -1,0 +1,13 @@
+[package]
+name = "serde-nbt"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+proto-bytes = { path = "../proto_bytes" }
+cesu8 = "1.1.0"
+serde = { version = "1.0", features = ["derive"] }
+thiserror = "1.0"
+paste = "*"

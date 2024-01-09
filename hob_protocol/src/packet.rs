@@ -1,6 +1,5 @@
 use anyhow::Result;
-use bytes::BytesMut;
-use proto_bytes::*;
+use proto_bytes::{BytesMut, ConditionalReader, ConditionalWriter};
 
 mod login;
 pub use login::*;
@@ -20,41 +19,48 @@ mod resource_pack_response;
 pub use resource_pack_response::*;
 
 pub trait Packet {
-    fn from_bytes(bytes: &mut BytesMut) -> Result<Self> where Self: Sized;
-    fn read_to_bytes(&self,bytes: &mut BytesMut) -> Result<()>;
+    fn decode(bytes: &mut BytesMut) -> Result<Self>
+    where
+        Self: Sized;
+    fn encode(&self, bytes: &mut BytesMut) -> Result<()>;
 }
 
 macro_rules! packet_kind {
     ($($kind:ident = $id:expr)+) => {
+        #[derive(Debug)]
         pub enum PacketKind {
             $($kind($kind),)*
         }
         impl PacketKind {
+            #[inline]
             pub fn id(&self) -> usize {
                 match self {
                     $(Self::$kind(_) => $id,)*
                 }
             }
+            #[inline]
             pub fn name(&self) -> &str {
                 match self {
                     $(Self::$kind(_) => stringify!($kind),)*
                 }
             }
-            pub fn from_bytes(bytes: &mut BytesMut) ->  Result<Self> {
+            #[inline]
+            pub fn decode(bytes: &mut BytesMut) ->  Result<Self> {
                 let id = bytes.get_varint();
                 let packet = match id {
                     $(
-                        $id => $kind::from_bytes(bytes)?.into(),
+                        $id => $kind::decode(bytes)?.into(),
                     )*
                      _ => todo!("packet_id:{}", id),
                 };
                 Ok(packet)
             }
-            pub fn read_to_bytes(&self,bytes: &mut BytesMut) -> Result<()> {
+            #[inline]
+            pub fn encode(&self,bytes: &mut BytesMut) -> Result<()> {
                 bytes.put_varint(self.id() as u64);
                 match self {
                     $(
-                        Self::$kind(v) => v.read_to_bytes(bytes)?,
+                        Self::$kind(v) => v.encode(bytes)?,
                     )*
                 }
                 Ok(())
@@ -62,6 +68,7 @@ macro_rules! packet_kind {
         }
         $(
             impl From<$kind> for PacketKind {
+                #[inline]
                 fn from(value: $kind) -> Self {
                     Self::$kind(value)
                 }
@@ -69,7 +76,7 @@ macro_rules! packet_kind {
         )*
     };
 }
-packet_kind!{
+packet_kind! {
     LoginPacket = 1
     PlayStatusPacket = 2
     ServerToClientHandshakePacket = 3

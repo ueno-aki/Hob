@@ -1,6 +1,5 @@
 use crate::{BigEndian, LittleEndian, VarInt};
-use bytes::{Buf, BytesMut};
-use proto_bytes::ConditionalReader;
+use proto_bytes::{Buf, BytesMut, ConditionalReader};
 
 pub trait BinaryFormat {
     #[inline]

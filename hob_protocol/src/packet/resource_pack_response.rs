@@ -1,6 +1,5 @@
-use bytes::Buf;
 use from_num::from_num;
-use proto_bytes::ConditionalReader;
+use proto_bytes::{Buf, ConditionalReader};
 
 use super::Packet;
 
@@ -11,7 +10,10 @@ pub struct ResourcePackClientResponsePacket {
 }
 
 impl Packet for ResourcePackClientResponsePacket {
-    fn from_bytes(bytes: &mut bytes::BytesMut) -> anyhow::Result<Self> where Self: Sized {
+    fn decode(bytes: &mut proto_bytes::BytesMut) -> anyhow::Result<Self>
+    where
+        Self: Sized,
+    {
         let response_status = ResponseStatus::from_u8(bytes.get_u8())?;
         let len = bytes.get_i16_le();
         let mut resourcepack_ids = Vec::new();
@@ -19,10 +21,13 @@ impl Packet for ResourcePackClientResponsePacket {
             let id = bytes.get_string_varint();
             resourcepack_ids.push(id);
         }
-        Ok(ResourcePackClientResponsePacket { response_status, resourcepack_ids })
+        Ok(ResourcePackClientResponsePacket {
+            response_status,
+            resourcepack_ids,
+        })
     }
 
-    fn read_to_bytes(&self,bytes: &mut bytes::BytesMut) -> anyhow::Result<()> {
+    fn encode(&self, bytes: &mut proto_bytes::BytesMut) -> anyhow::Result<()> {
         todo!()
     }
 }

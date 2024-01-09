@@ -1,4 +1,4 @@
-use bytes::BytesMut;
+use proto_bytes::BytesMut;
 use serde::{ser, Serialize};
 use std::marker::PhantomData;
 
@@ -11,22 +11,21 @@ mod num_array;
 
 pub use num_array::*;
 
-pub struct Serializer<B>
-where
-    B: BinaryFormat,
-{
+pub struct Serializer<B> {
     pub output: BytesMut,
     _marker: PhantomData<B>,
 }
-impl<B> Serializer<B>
-where
-    B: BinaryFormat,
-{
-    pub fn new() -> Self {
+impl<B> Serializer<B> {
+    fn new() -> Self {
         Serializer {
             output: BytesMut::new(),
             _marker: PhantomData,
         }
+    }
+}
+impl<B> Default for Serializer<B> {
+    fn default() -> Self {
+        Self::new()
     }
 }
 
@@ -189,7 +188,7 @@ where
     where
         T: Serialize,
     {
-        if self.tagged == false {
+        if !self.tagged {
             value.serialize(&mut Tag {
                 ser: &mut *self.ser,
                 name: None,
@@ -266,7 +265,7 @@ where
     fn serialize_i16(self, _v: i16) -> Result<Self::Ok, Self::Error> {
         B::put_byte(&mut self.ser.output, NBTTag::Short as i8);
         if let Some(ref v) = self.name {
-            B::put_string(&mut self.ser.output, &v);
+            B::put_string(&mut self.ser.output, v);
         }
         Ok(())
     }
@@ -274,7 +273,7 @@ where
     fn serialize_i32(self, _v: i32) -> Result<Self::Ok, Self::Error> {
         B::put_byte(&mut self.ser.output, NBTTag::Int as i8);
         if let Some(ref v) = self.name {
-            B::put_string(&mut self.ser.output, &v);
+            B::put_string(&mut self.ser.output, v);
         }
         Ok(())
     }
@@ -282,7 +281,7 @@ where
     fn serialize_i64(self, _v: i64) -> Result<Self::Ok, Self::Error> {
         B::put_byte(&mut self.ser.output, NBTTag::Long as i8);
         if let Some(ref v) = self.name {
-            B::put_string(&mut self.ser.output, &v);
+            B::put_string(&mut self.ser.output, v);
         }
         Ok(())
     }
@@ -290,7 +289,7 @@ where
     fn serialize_f32(self, _v: f32) -> Result<Self::Ok, Self::Error> {
         B::put_byte(&mut self.ser.output, NBTTag::Float as i8);
         if let Some(ref v) = self.name {
-            B::put_string(&mut self.ser.output, &v);
+            B::put_string(&mut self.ser.output, v);
         }
         Ok(())
     }
@@ -298,7 +297,7 @@ where
     fn serialize_f64(self, _v: f64) -> Result<Self::Ok, Self::Error> {
         B::put_byte(&mut self.ser.output, NBTTag::Double as i8);
         if let Some(ref v) = self.name {
-            B::put_string(&mut self.ser.output, &v);
+            B::put_string(&mut self.ser.output, v);
         }
         Ok(())
     }
@@ -306,7 +305,7 @@ where
     fn serialize_str(self, _v: &str) -> Result<Self::Ok, Self::Error> {
         B::put_byte(&mut self.ser.output, NBTTag::String as i8);
         if let Some(ref v) = self.name {
-            B::put_string(&mut self.ser.output, &v);
+            B::put_string(&mut self.ser.output, v);
         }
         Ok(())
     }
@@ -314,7 +313,7 @@ where
     fn serialize_seq(self, _len: Option<usize>) -> Result<Self::SerializeSeq, Self::Error> {
         B::put_byte(&mut self.ser.output, NBTTag::List as i8);
         if let Some(ref v) = self.name {
-            B::put_string(&mut self.ser.output, &v);
+            B::put_string(&mut self.ser.output, v);
         }
         Ok(Nil)
     }
@@ -326,7 +325,7 @@ where
     ) -> Result<Self::SerializeStruct, Self::Error> {
         B::put_byte(&mut self.ser.output, NBTTag::Compound as i8);
         if let Some(ref v) = self.name {
-            B::put_string(&mut self.ser.output, &v);
+            B::put_string(&mut self.ser.output, v);
         }
         Ok(Nil)
     }
@@ -334,7 +333,7 @@ where
     fn serialize_map(self, _len: Option<usize>) -> Result<Self::SerializeMap, Self::Error> {
         B::put_byte(&mut self.ser.output, NBTTag::Compound as i8);
         if let Some(ref v) = self.name {
-            B::put_string(&mut self.ser.output, &v);
+            B::put_string(&mut self.ser.output, v);
         }
         Ok(Nil)
     }
@@ -364,7 +363,7 @@ where
         };
         B::put_byte(&mut self.ser.output, tag as i8);
         if let Some(ref v) = self.name {
-            B::put_string(&mut self.ser.output, &v);
+            B::put_string(&mut self.ser.output, v);
         }
         Ok(Nil)
     }
