@@ -1,5 +1,5 @@
 [package]
-name = "bedrock-protocol"
+name = "hob-protocol"
 version = "0.1.0"
 edition = "2021"
 
@@ -7,10 +7,15 @@ edition = "2021"
 
 [dependencies]
 anyhow = "*"
-proto-bytes = { path = "../proto_bytes" }
-from-num = "*"
-hmac-sha256 = { version = "1.1.6", features = [ "traits010" ] }
-flate2 = "1.0.27"
+p384 = { version = "0.13.0", features = [ "ecdsa", "std", "pkcs8" ] }
+hmac-sha256 = { version = "1.1.7", features = [ "traits010" ] }
+hmac-sha512 = { version = "1.1.5", features = [ "traits010", "sha384" ] }
 aes = "0.8.3"
 ctr = "0.9.2"
+flate2 = "1.0.27"
+base64 = "0.21.4"
 rand = "0.8.5"
+from-num = "*"
+proto-bytes = { path = "../proto_bytes" }
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"

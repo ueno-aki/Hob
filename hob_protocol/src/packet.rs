@@ -1,3 +1,5 @@
+use std::fmt;
+
 use anyhow::Result;
 use proto_bytes::{BytesMut, ConditionalReader, ConditionalWriter};
 
@@ -5,10 +7,8 @@ mod login;
 pub use login::*;
 mod play_status;
 pub use play_status::*;
-mod handshake_s2c;
-pub use handshake_s2c::*;
-mod handshake_c2s;
-pub use handshake_c2s::*;
+mod handshake;
+pub use handshake::*;
 mod disconnect;
 pub use disconnect::*;
 mod resource_pack_info;
@@ -17,6 +17,10 @@ mod resource_pack_stack;
 pub use resource_pack_stack::*;
 mod resource_pack_response;
 pub use resource_pack_response::*;
+mod request_network_setting;
+pub use request_network_setting::*;
+mod network_settings;
+pub use network_settings::*;
 
 pub trait Packet {
     fn decode(bytes: &mut BytesMut) -> Result<Self>
@@ -85,4 +89,11 @@ packet_kind! {
     ResourcePacksInfoPacket = 6
     ResourcePacksStackPacket = 7
     ResourcePackClientResponsePacket = 8
+    NetworkSettingsPacket = 143
+    RequestNetworkSettingPacket = 193
+}
+impl fmt::Display for PacketKind {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{{ name:{}, id:{} }}", self.name(), self.id())
+    }
 }

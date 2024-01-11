@@ -1,6 +1,6 @@
 #![allow(non_snake_case, dead_code)]
+use hob_nbt::LittleEndian;
 use serde::Deserialize;
-use serde_nbt::LittleEndian;
 
 #[test]
 fn get_leveldat() {

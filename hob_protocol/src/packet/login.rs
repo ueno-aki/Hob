@@ -1,4 +1,3 @@
-use anyhow::ensure;
 use proto_bytes::{Buf, BytesMut, ConditionalReader};
 
 use super::Packet;
@@ -13,10 +12,7 @@ impl Packet for LoginPacket {
     #[inline]
     fn decode(bytes: &mut BytesMut) -> anyhow::Result<Self> {
         let protocol_version = bytes.get_i32();
-        ensure!(
-            bytes.get_varint() == 2,
-            "Invalid login_packet's payload size"
-        );
+        let _ = bytes.get_varint();
         let identity = bytes.get_string_lu32();
         let client = bytes.get_string_lu32();
         Ok(LoginPacket {

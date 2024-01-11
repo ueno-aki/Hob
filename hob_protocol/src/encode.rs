@@ -15,7 +15,7 @@ type Aes256Ctr = ctr::Ctr64BE<Aes256>;
 pub struct Encoder {
     pub cipher: Option<Aes256Ctr>,
     pub counter: u64,
-    compression_threshold: usize,
+    pub compression_threshold: usize,
     ss_key: [u8; 32],
 }
 
