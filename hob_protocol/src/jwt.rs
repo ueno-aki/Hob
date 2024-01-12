@@ -19,11 +19,6 @@ pub struct ES384Header {
 }
 
 pub struct ES384PublicKey(VerifyingKey);
-impl AsRef<VerifyingKey> for ES384PublicKey {
-    fn as_ref(&self) -> &VerifyingKey {
-        &self.0
-    }
-}
 impl ES384PublicKey {
     pub fn from_der(bytes: &[u8]) -> Result<Self> {
         Ok(Self(
@@ -31,7 +26,7 @@ impl ES384PublicKey {
         ))
     }
     pub fn to_der(&self) -> Result<Vec<u8>> {
-        let p384_pubkey = PublicKey::from(self.as_ref());
+        let p384_pubkey = PublicKey::from(&self.0);
         Ok(p384_pubkey
             .to_public_key_der()
             .map_err(|e| anyhow!("{}", e))?
@@ -48,7 +43,7 @@ impl ES384PublicKey {
     }
     pub fn verify_token<Claim>(&self, token: &str) -> Result<Claim>
     where
-        Claim: Serialize + DeserializeOwned,
+        Claim: DeserializeOwned,
     {
         let mut r_token = token.rsplitn(2, '.');
         let (Some(signature), Some(payload)) = (r_token.next(), r_token.next()) else {
@@ -70,18 +65,13 @@ impl ES384PublicKey {
     }
     pub fn diffie_hellman(&self, peer_secret: &ES384PrivateKey) -> SharedSecret {
         diffie_hellman(
-            peer_secret.as_ref().as_nonzero_scalar(),
-            self.as_ref().as_affine(),
+            peer_secret.0.as_nonzero_scalar(),
+            self.0.as_affine(),
         )
     }
 }
 
 pub struct ES384PrivateKey(SigningKey);
-impl AsRef<SigningKey> for ES384PrivateKey {
-    fn as_ref(&self) -> &SigningKey {
-        &self.0
-    }
-}
 impl ES384PrivateKey {
     pub fn generate() -> Self {
         Self(SigningKey::random(&mut rand::thread_rng()))
@@ -89,19 +79,17 @@ impl ES384PrivateKey {
     pub fn public_key(&self) -> ES384PublicKey {
         ES384PublicKey(*self.0.verifying_key())
     }
-    pub fn sign<Claim>(&self, header: &ES384Header, claim: &Claim) -> Result<String>
+    pub fn sign<Claim>(&self, header: ES384Header, claim: Claim) -> Result<String>
     where
-        Claim: Serialize + DeserializeOwned,
+        Claim: Serialize,
     {
-        let header_json = BASE64_URL_SAFE_NO_PAD.encode(serde_json::to_string(header)?);
-        let claim_json = BASE64_URL_SAFE_NO_PAD.encode(serde_json::to_string(claim)?);
+        let header_json = BASE64_URL_SAFE_NO_PAD.encode(serde_json::to_string(&header)?);
+        let claim_json = BASE64_URL_SAFE_NO_PAD.encode(serde_json::to_string(&claim)?);
         let payload = format!("{}.{}", header_json, claim_json);
 
         let mut digest = sha384::Hash::new();
         digest.update(&payload);
-        let signature: Signature = self
-            .as_ref()
-            .sign_digest_with_rng(&mut rand::thread_rng(), digest);
+        let signature: Signature = self.0.sign_digest_with_rng(&mut rand::thread_rng(), digest);
         let token = format!(
             "{}.{}",
             payload,

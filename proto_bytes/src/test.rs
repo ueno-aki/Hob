@@ -3,17 +3,6 @@ use bytes::{Buf, BufMut, BytesMut};
 use crate::*;
 
 #[test]
-fn bytes_works() {
-    let mut bytes = BytesMut::new();
-    bytes.put_u8(9);
-    bytes.put(vec![0xfe, 0xa].as_ref());
-    bytes.put_u32_le(0xffeeddcc);
-    let b = bytes.get_u32();
-    assert_eq!(b, 0x09fe0acc);
-    assert_eq!(bytes.to_vec(), vec![0xdd, 0xee, 0xff]);
-}
-
-#[test]
 fn varint_works() {
     let mut bytes = BytesMut::new();
     let size = bytes.put_varint(0b10111111100000001111111);

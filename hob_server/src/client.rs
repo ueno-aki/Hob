@@ -4,7 +4,10 @@ use anyhow::{anyhow, Result};
 use hob_protocol::{
     decode::Decoder,
     encode::Encoder,
-    packet::{CompressionAlgorithmType, NetworkSettingsPacket, PacketKind},
+    packet::{
+        network_settings::{CompressionAlgorithmType, NetworkSettingsPacket},
+        PacketKind,
+    },
 };
 use proto_bytes::BytesMut;
 use rust_raknet::RaknetSocket;
@@ -35,7 +38,7 @@ impl Client {
     pub async fn handle(&mut self, packet: PacketKind) -> Result<()> {
         println!("(CtoS) {}", packet);
         match packet {
-            PacketKind::RequestNetworkSettingPacket(v) => {
+            PacketKind::RequestNetworkSetting(v) => {
                 let network_setting = NetworkSettingsPacket {
                     compression_threshold: 512,
                     compression_algorithm: CompressionAlgorithmType::Deflate,
@@ -45,6 +48,9 @@ impl Client {
                 };
                 self.encoder.compression_threshold = 512;
                 self.send_packet(network_setting).await?;
+            }
+            PacketKind::Login(v) => {
+                println!("{}",v.identity)
             }
             _ => {}
         }
