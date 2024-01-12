@@ -6,16 +6,16 @@ use hob_protocol::{
     encode::Encoder,
     packet::{
         network_settings::{CompressionAlgorithmType, NetworkSettingsPacket},
-        PacketKind,
+        PacketKind, login::{verify_login, verify_skin}, handshake::{shared_secret, ServerToClientHandshakePacket}, play_status::PlayStatusPacket, resource_pack_info::ResourcePacksInfoPacket,
     },
 };
 use proto_bytes::BytesMut;
 use rust_raknet::RaknetSocket;
 
 pub struct Client {
-    pub socket: Arc<RaknetSocket>,
-    pub encoder: Encoder,
-    pub decoder: Decoder,
+    socket: Arc<RaknetSocket>,
+    encoder: Encoder,
+    decoder: Decoder,
 }
 
 impl Client {
@@ -46,13 +46,32 @@ impl Client {
                     client_throttle_threshold: 0,
                     client_throttle_scalar: 0.0,
                 };
-                self.encoder.compression_threshold = 512;
                 self.send_packet(network_setting).await?;
+                self.encoder.force_compress = true;
             }
             PacketKind::Login(v) => {
-                println!("{}",v.identity)
+                let (pubkey,client_data) = verify_login(&v.identity)?;
+                let skin = verify_skin(&pubkey, &v.client)?;
+                let (ss_key,token) = shared_secret(&pubkey)?;
+                self.send_packet(ServerToClientHandshakePacket { token }).await?;
+                self.encoder.setup_cipher(ss_key);
+                self.decoder.setup_cipher(ss_key);
             }
-            _ => {}
+            PacketKind::ClientToServerHandshake(_) => {
+                self.send_packet(PlayStatusPacket::LoginSuccess).await?;
+                let resource_info = ResourcePacksInfoPacket {
+                    must_accept: false,
+                    has_scripts: false,
+                    force_server_packs: false,
+                    behaviour_packs: vec![],
+                    texture_packs: vec![],
+                    resource_pack_links: vec![],
+                };
+                self.send_packet(resource_info).await?;
+            }
+            n => {
+                println!("recv=>{}",n)
+            }
         }
         Ok(())
     }

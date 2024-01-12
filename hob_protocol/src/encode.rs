@@ -15,7 +15,7 @@ type Aes256Ctr = ctr::Ctr64BE<Aes256>;
 pub struct Encoder {
     pub cipher: Option<Aes256Ctr>,
     pub counter: u64,
-    pub compression_threshold: usize,
+    pub force_compress: bool,
     ss_key: [u8; 32],
 }
 
@@ -38,7 +38,7 @@ impl Encoder {
         encoded.put_varint(content.len() as u64);
         encoded.put(content);
 
-        if encoded.len() > self.compression_threshold {
+        if self.force_compress {
             self.compress(&mut encoded);
         }
         self.encrypt(&mut encoded);

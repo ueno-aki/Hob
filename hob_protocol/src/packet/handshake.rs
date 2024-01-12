@@ -10,7 +10,7 @@ use super::Packet;
 
 pub fn shared_secret(peer_pubkey_der: &str) -> Result<([u8; 32], String)> {
     let my_secret = ES384PrivateKey::generate();
-    let peer_pubkey = ES384PublicKey::from_der(&BASE64_URL_SAFE_NO_PAD.decode(peer_pubkey_der)?)?;
+    let peer_pubkey = ES384PublicKey::from_der(&BASE64_STANDARD.decode(peer_pubkey_der)?)?;
     let shared_secret = peer_pubkey.diffie_hellman(&my_secret);
 
     let mut digest = hmac_sha256::Hash::new();
@@ -19,13 +19,13 @@ pub fn shared_secret(peer_pubkey_der: &str) -> Result<([u8; 32], String)> {
     digest.update(shared_secret.raw_secret_bytes());
     let ss_key = digest.finalize();
 
-    let my_x509 = BASE64_URL_SAFE_NO_PAD.encode(my_secret.public_key().to_der()?);
+    let my_x509 = BASE64_STANDARD.encode(my_secret.public_key().to_der()?);
     let header = ES384Header {
         alg: "ES384".to_owned(),
         x5u: my_x509.clone(),
     };
     let claim = HandshakeClaim {
-        salt: BASE64_URL_SAFE_NO_PAD.encode(salt),
+        salt: BASE64_STANDARD.encode(salt),
         signed_token: my_x509,
     };
     let token = my_secret.sign(header, claim)?;

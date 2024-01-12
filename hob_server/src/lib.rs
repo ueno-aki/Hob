@@ -15,17 +15,11 @@ impl Server {
         while let Ok(socket) = listener.accept().await {
             tokio::spawn(async move {
                 let mut client = Client::new(socket);
-                if client.listen().await.is_err() {
+                if let Err(e) = client.listen().await {
+                    println!("{:?}",e);
                     client.close().await.unwrap()
                 }
             });
         }
     }
-}
-
-#[tokio::test]
-async fn main() {
-    let server = Server;
-    println!("Hello, world!");
-    server.listen().await;
 }
