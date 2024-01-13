@@ -64,10 +64,7 @@ impl ES384PublicKey {
         )?)
     }
     pub fn diffie_hellman(&self, peer_secret: &ES384PrivateKey) -> SharedSecret {
-        diffie_hellman(
-            peer_secret.0.as_nonzero_scalar(),
-            self.0.as_affine(),
-        )
+        diffie_hellman(peer_secret.0.as_nonzero_scalar(), self.0.as_affine())
     }
 }
 

@@ -5,8 +5,12 @@ use hob_protocol::{
     decode::Decoder,
     encode::Encoder,
     packet::{
+        handshake::{shared_secret, ServerToClientHandshakePacket},
+        login::{verify_login, verify_skin},
         network_settings::{CompressionAlgorithmType, NetworkSettingsPacket},
-        PacketKind, login::{verify_login, verify_skin}, handshake::{shared_secret, ServerToClientHandshakePacket}, play_status::PlayStatusPacket, resource_pack_info::ResourcePacksInfoPacket,
+        play_status::PlayStatusPacket,
+        resource_pack_info::ResourcePacksInfoPacket,
+        PacketKind,
     },
 };
 use proto_bytes::BytesMut;
@@ -50,10 +54,11 @@ impl Client {
                 self.encoder.force_compress = true;
             }
             PacketKind::Login(v) => {
-                let (pubkey,client_data) = verify_login(&v.identity)?;
+                let (pubkey, client_data) = verify_login(&v.identity)?;
                 let skin = verify_skin(&pubkey, &v.client)?;
-                let (ss_key,token) = shared_secret(&pubkey)?;
-                self.send_packet(ServerToClientHandshakePacket { token }).await?;
+                let (ss_key, token) = shared_secret(&pubkey)?;
+                self.send_packet(ServerToClientHandshakePacket { token })
+                    .await?;
                 self.encoder.setup_cipher(ss_key);
                 self.decoder.setup_cipher(ss_key);
             }
@@ -69,9 +74,10 @@ impl Client {
                 };
                 self.send_packet(resource_info).await?;
             }
-            n => {
-                println!("recv=>{}",n)
+            PacketKind::ResourcePackClientResponse(v) => {
+                println!("{:?}", v);
             }
+            _ => {}
         }
         Ok(())
     }

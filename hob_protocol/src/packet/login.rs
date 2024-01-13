@@ -1,4 +1,4 @@
-use anyhow::{Result, ensure, anyhow};
+use anyhow::{anyhow, ensure, Result};
 use base64::prelude::*;
 use proto_bytes::{Buf, BytesMut, ConditionalReader};
 use serde::Deserialize;
@@ -7,7 +7,7 @@ use crate::jwt::ES384PublicKey;
 
 use super::Packet;
 
-#[derive(Debug,Deserialize)]
+#[derive(Debug, Deserialize)]
 pub struct ExtraUserdata {
     #[serde(rename(deserialize = "XUID"))]
     pub xuid: String,
@@ -20,7 +20,7 @@ pub struct ExtraUserdata {
     pub sandbox_id: String,
 }
 
-pub fn verify_login(identity:&str) -> Result<(String, ExtraUserdata)> {
+pub fn verify_login(identity: &str) -> Result<(String, ExtraUserdata)> {
     const MOJANG_PUBKEY: &str = "MHYwEAYHKoZIzj0CAQYFK4EEACIDYgAECRXueJeTDqNRRgJi/vlRufByu/2G0i2Ebt6YMar5QX/R0DIIyrJMcUpruK4QveTfJSTp3Shlq4Gk34cD/4GUWwkv0DVuzeuB+tXija7HBxii03NHDbPAD0AKnLr2wdAp";
     #[derive(Deserialize)]
     struct AuthChain {
@@ -35,7 +35,7 @@ pub fn verify_login(identity:&str) -> Result<(String, ExtraUserdata)> {
     }
 
     let chain = serde_json::from_str::<AuthChain>(identity)?.chain;
-    ensure!(chain.len() == 3,"InvalidChainLength:{}",identity);
+    ensure!(chain.len() == 3, "InvalidChainLength:{}", identity);
     let mut verified = false;
     let mut user_data = None;
     let mut next_pubkey = None;
@@ -55,14 +55,14 @@ pub fn verify_login(identity:&str) -> Result<(String, ExtraUserdata)> {
         }
         next_pubkey = Some(claim.identity_public_key);
     }
-    ensure!(verified,"NotAuthenticated");
+    ensure!(verified, "NotAuthenticated");
     match user_data {
-        Some(data) => Ok((next_pubkey.unwrap(),data)),
-        None => Err(anyhow!("ExtraUserdataNotFound"))
+        Some(data) => Ok((next_pubkey.unwrap(), data)),
+        None => Err(anyhow!("ExtraUserdataNotFound")),
     }
 }
 
-pub fn verify_skin(public_key:&str,client:&str) -> Result<SkinData> {
+pub fn verify_skin(public_key: &str, client: &str) -> Result<SkinData> {
     let key = ES384PublicKey::from_der(&BASE64_STANDARD.decode(public_key)?)?;
     key.verify_token(client)
 }
@@ -92,7 +92,7 @@ impl Packet for LoginPacket {
     }
 }
 
-#[derive(Debug,Deserialize)]
+#[derive(Debug, Deserialize)]
 #[serde(rename_all = "PascalCase")]
 pub struct SkinData {
     pub animated_image_data: Vec<AnimatedImageDataType>,
@@ -140,7 +140,7 @@ pub struct SkinData {
     pub uiprofile: u8,
 }
 
-#[derive(Debug,Deserialize)]
+#[derive(Debug, Deserialize)]
 #[serde(rename_all = "PascalCase")]
 pub struct AnimatedImageDataType {
     pub animation_expression: u64,
@@ -152,7 +152,7 @@ pub struct AnimatedImageDataType {
     pub t_ype: u64,
 }
 
-#[derive(Debug,Deserialize)]
+#[derive(Debug, Deserialize)]
 #[serde(rename_all = "PascalCase")]
 pub struct PersonaPiecesType {
     pub is_default: bool,
@@ -162,7 +162,7 @@ pub struct PersonaPiecesType {
     pub product_id: String,
 }
 
-#[derive(Debug,Deserialize)]
+#[derive(Debug, Deserialize)]
 #[serde(rename_all = "PascalCase")]
 pub struct PieceTintColorsType {
     pub colors: Vec<String>,

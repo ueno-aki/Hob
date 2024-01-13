@@ -3,6 +3,7 @@ use std::fmt;
 use anyhow::Result;
 use proto_bytes::{BytesMut, ConditionalReader, ConditionalWriter};
 
+pub mod client_cache_status;
 pub mod disconnect;
 pub mod handshake;
 pub mod login;
@@ -13,6 +14,7 @@ pub mod resource_pack_info;
 pub mod resource_pack_response;
 pub mod resource_pack_stack;
 
+use client_cache_status::*;
 use disconnect::*;
 use handshake::*;
 use login::*;
@@ -92,6 +94,7 @@ packet_kind! {
     ResourcePacksInfo = 6
     ResourcePacksStack = 7
     ResourcePackClientResponse = 8
+    ClientCacheStatus = 129
     NetworkSettings = 143
     RequestNetworkSetting = 193
 }
