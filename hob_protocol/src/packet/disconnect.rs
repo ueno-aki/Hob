@@ -21,7 +21,9 @@ impl Packet for DisconnectPacket {
     fn encode(&self, bytes: &mut proto_bytes::BytesMut) -> anyhow::Result<()> {
         bytes.put_zigzag32(self.reason.clone() as i32);
         bytes.put_bool(self.hide_disconnect_reason);
-        bytes.put_string_varint(&self.message);
+        if !self.hide_disconnect_reason {
+            bytes.put_string_varint(&self.message);
+        }
         Ok(())
     }
 }

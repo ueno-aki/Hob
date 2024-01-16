@@ -19,4 +19,5 @@ from-num = "*"
 proto-bytes = { path = "../proto_bytes" }
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
+hob-nbt = { path = "../hob_nbt" }
 paste = "*"

@@ -10,7 +10,7 @@ use hob_protocol::{
         network_settings::{CompressionAlgorithmType, NetworkSettingsPacket},
         play_status::PlayStatusPacket,
         resource_pack_info::ResourcePacksInfoPacket,
-        PacketKind,
+        PacketKind, resource_pack_response::ResponseStatus, resource_pack_stack::ResourcePacksStackPacket,
     },
 };
 use proto_bytes::BytesMut;
@@ -75,7 +75,28 @@ impl Client {
                 self.send_packet(resource_info).await?;
             }
             PacketKind::ResourcePackClientResponse(v) => {
-                println!("{:?}", v);
+                match v.response_status {
+                    ResponseStatus::HaveAllPacks => {
+                        let res_stack = ResourcePacksStackPacket {
+                            must_accept: false,
+                            behavior_packs: vec![],
+                            resource_packs: vec![],
+                            game_version: String::from("1.20.50"),
+                            experiments: vec![],
+                            experiments_previously_used: false,
+                        };
+                        self.send_packet(res_stack).await?;
+                    }
+                    ResponseStatus::SendPacks => {
+
+                    }
+                    ResponseStatus::Completed => {
+
+                    }
+                    ResponseStatus::Refused | ResponseStatus::None => {
+                        self.close().await?;
+                    }
+                }
             }
             _ => {}
         }

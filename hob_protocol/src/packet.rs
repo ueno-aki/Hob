@@ -13,6 +13,7 @@ pub mod request_network_setting;
 pub mod resource_pack_info;
 pub mod resource_pack_response;
 pub mod resource_pack_stack;
+pub mod start_game;
 
 use client_cache_status::*;
 use disconnect::*;
@@ -24,6 +25,7 @@ use request_network_setting::*;
 use resource_pack_info::*;
 use resource_pack_response::*;
 use resource_pack_stack::*;
+use start_game::*;
 
 pub trait Packet {
     fn decode(bytes: &mut BytesMut) -> Result<Self>
