@@ -1,7 +1,7 @@
 # Hob
 
 <p align="center">
-  <img src="https://github.com/ueno-aki/Hob/assets/111332986/f8ba12b6-7ceb-49e3-a5e2-bee26b3ef998" alt="Image" width="200" height="122" />
+  <img src="https://github.com/ueno-aki/Hob/assets/111332986/050d8078-2869-44a0-8c06-d62a7bbd0faa" alt="Image" width="200" height="200" />
 </p>
 
 
