@@ -29,50 +29,50 @@ pub struct StartGamePacket {
     platform_broadcast_mode: u64,
     enable_commands: bool,
     is_texturepacks_required: bool,
-    gamerules:Vec<GameRule>,
-    experiments:Vec<Experiment>,
-    experiments_previously_used:bool,
-    bonus_chest:bool,
-    map_enabled:bool,
-    permission_level:PermissionLevel,
-    server_chunk_tick_range:i32,
-    has_locked_behavior_pack:bool,
-    has_locked_resource_pack:bool,
-    is_from_locked_world_template:bool,
-    msa_gamertags_only:bool,
-    is_from_world_template:bool,
-    only_spawn_v1_villagers:bool,
-    persona_disabled:bool,
-    custom_skins_disabled:bool,
-    emote_chat_muted:bool,
-    game_version:String,
-    limited_world_width:i32,
-    limited_world_length:i32,
-    is_new_nether:bool,
-    edu_resource_uri:EducationSharedResourceURI,
-    experimental_gameplay_override:bool,
-    chat_restriction_level:ChatRestrictionLevel,
-    disable_player_interactions:bool,
-    level_id:String,
-    world_name:String,
-    premium_world_template_id:String,
-    is_trial:bool,
-    movement_authority:MovementAuthority,
-    rewind_history_size:i32,
-    server_authoritative_block_breaking:bool,
-    current_tick:i64,
-    enchantment_seed:i32,
-    block_properties:Vec<BlockProperty>,
-    itemstates:Vec<ItemState>,
-    multiplayer_correlation_id:String,
-    server_authoritative_inventory:bool,
-    engine:String,
+    gamerules: Vec<GameRule>,
+    experiments: Vec<Experiment>,
+    experiments_previously_used: bool,
+    bonus_chest: bool,
+    map_enabled: bool,
+    permission_level: PermissionLevel,
+    server_chunk_tick_range: i32,
+    has_locked_behavior_pack: bool,
+    has_locked_resource_pack: bool,
+    is_from_locked_world_template: bool,
+    msa_gamertags_only: bool,
+    is_from_world_template: bool,
+    only_spawn_v1_villagers: bool,
+    persona_disabled: bool,
+    custom_skins_disabled: bool,
+    emote_chat_muted: bool,
+    game_version: String,
+    limited_world_width: i32,
+    limited_world_length: i32,
+    is_new_nether: bool,
+    edu_resource_uri: EducationSharedResourceURI,
+    experimental_gameplay_override: bool,
+    chat_restriction_level: ChatRestrictionLevel,
+    disable_player_interactions: bool,
+    level_id: String,
+    world_name: String,
+    premium_world_template_id: String,
+    is_trial: bool,
+    movement_authority: MovementAuthority,
+    rewind_history_size: i32,
+    server_authoritative_block_breaking: bool,
+    current_tick: i64,
+    enchantment_seed: i32,
+    block_properties: Vec<BlockProperty>,
+    itemstates: Vec<ItemState>,
+    multiplayer_correlation_id: String,
+    server_authoritative_inventory: bool,
+    engine: String,
     // property_data:NBT,
-    block_pallette_checksum:u64,
+    block_pallette_checksum: u64,
     // world_template_id:UUID,
-    client_side_generation:bool,
-    block_network_ids_are_hashes:bool,
-    server_controlled_sound:bool
+    client_side_generation: bool,
+    block_network_ids_are_hashes: bool,
+    server_controlled_sound: bool,
 }
 
 pub enum GameMode {
@@ -98,46 +98,46 @@ pub enum EditorWorldType {
 }
 
 pub struct GameRule {
-    name:String,
-    editable:bool,
-    value:GameRuleTypes
+    name: String,
+    editable: bool,
+    value: GameRuleTypes,
 }
 pub enum GameRuleTypes {
     Int(i32),
     Bool(bool),
     Float(f32),
-    Void
+    Void,
 }
 pub struct Experiment {
-    name:String,
-    enable:bool
+    name: String,
+    enable: bool,
 }
 pub enum PermissionLevel {
     Visitor,
     Member,
     Operator,
-    Custom
+    Custom,
 }
 pub struct EducationSharedResourceURI {
-    button_name:String,
-    link_uri:String
+    button_name: String,
+    link_uri: String,
 }
 pub enum ChatRestrictionLevel {
     None,
     Dropped,
-    Disabled
+    Disabled,
 }
 pub enum MovementAuthority {
     Client,
     Server,
-    ServerWithRewind
+    ServerWithRewind,
 }
 pub struct BlockProperty {
-    name:String,
+    name: String,
     // state:NBT
 }
 pub struct ItemState {
-    name:String,
-    runtime_id:i16,
-    component_based:bool
+    name: String,
+    runtime_id: i16,
+    component_based: bool,
 }

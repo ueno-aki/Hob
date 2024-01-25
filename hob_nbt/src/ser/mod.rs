@@ -13,7 +13,7 @@ pub use num_array::*;
 
 pub struct Serializer<B> {
     pub output: BytesMut,
-    _marker: PhantomData<B>,
+    _marker: PhantomData<fn() -> B>,
 }
 impl<B> Serializer<B> {
     fn new() -> Self {
@@ -219,7 +219,50 @@ where
     where
         T: Serialize,
     {
-        value.serialize(&mut Variant {
+        struct NumArrayVariant<'a, B>
+        where
+            B: BinaryFormat,
+        {
+            ser: &'a mut Serializer<B>,
+        }
+        impl<'a, B> ser::Serializer for &'a mut NumArrayVariant<'a, B>
+        where
+            B: BinaryFormat,
+        {
+            type Ok = ();
+
+            type Error = SerializeError;
+
+            type SerializeStruct = ser::Impossible<(), Self::Error>;
+            type SerializeMap = ser::Impossible<(), Self::Error>;
+            type SerializeSeq = ser::Impossible<(), Self::Error>;
+            type SerializeTupleStruct = ser::Impossible<(), Self::Error>;
+            type SerializeTuple = ser::Impossible<(), Self::Error>;
+            type SerializeTupleVariant = ser::Impossible<(), Self::Error>;
+            type SerializeStructVariant = ser::Impossible<(), Self::Error>;
+
+            fn serialize_i8(self, v: i8) -> Result<Self::Ok, Self::Error> {
+                B::put_byte_array_elem(&mut self.ser.output, v);
+                Ok(())
+            }
+
+            fn serialize_i32(self, v: i32) -> Result<Self::Ok, Self::Error> {
+                B::put_int_array_elem(&mut self.ser.output, v);
+                Ok(())
+            }
+
+            fn serialize_i64(self, v: i64) -> Result<Self::Ok, Self::Error> {
+                B::put_long_array_elem(&mut self.ser.output, v);
+                Ok(())
+            }
+
+            unimplemented_serealize! {
+                i16 f32 f64 u8 u16 u32 u64 bool char bytes str seq struct map tuple_struct
+                none some unit unit_struct unit_variant newtype_struct newtype_variant
+                tuple tuple_variant struct_variant
+            }
+        }
+        value.serialize(&mut NumArrayVariant {
             ser: &mut *self.ser,
         })?;
         Ok(())

@@ -42,7 +42,7 @@ pub fn verify_login(identity: &str) -> Result<(String, ExtraUserdata)> {
     for token in chain.iter() {
         let header = ES384PublicKey::decode_header(token)?;
         let key_der = match next_pubkey {
-            Some(v) => BASE64_STANDARD.decode(&v)?,
+            Some(v) => BASE64_STANDARD.decode(v)?,
             None => BASE64_STANDARD.decode(&header.x5u)?,
         };
         let key = ES384PublicKey::from_der(&key_der)?;

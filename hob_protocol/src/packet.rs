@@ -59,7 +59,7 @@ macro_rules! packet_kind {
                     let id = bytes.get_varint();
                     let packet = match id {
                         $(
-                            $id => [<$kind Packet>]::decode(bytes)?.into(),
+                            $id => Self::$kind([<$kind Packet>]::decode(bytes)?),
                         )*
                          _ => todo!("packet_id:{}", id),
                     };
@@ -76,14 +76,6 @@ macro_rules! packet_kind {
                     Ok(())
                 }
             }
-            $(
-                impl From< [<$kind Packet>] > for PacketKind {
-                    #[inline]
-                    fn from(value: [<$kind Packet>]) -> Self {
-                        Self::$kind(value)
-                    }
-                }
-            )*
         }
     };
 }

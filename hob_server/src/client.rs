@@ -10,7 +10,9 @@ use hob_protocol::{
         network_settings::{CompressionAlgorithmType, NetworkSettingsPacket},
         play_status::PlayStatusPacket,
         resource_pack_info::ResourcePacksInfoPacket,
-        PacketKind, resource_pack_response::ResponseStatus, resource_pack_stack::ResourcePacksStackPacket,
+        resource_pack_response::ResponseStatus,
+        resource_pack_stack::ResourcePacksStackPacket,
+        PacketKind,
     },
 };
 use proto_bytes::BytesMut;
@@ -50,20 +52,24 @@ impl Client {
                     client_throttle_threshold: 0,
                     client_throttle_scalar: 0.0,
                 };
-                self.send_packet(network_setting).await?;
+                self.send_packet(PacketKind::NetworkSettings(network_setting))
+                    .await?;
                 self.encoder.force_compress = true;
             }
             PacketKind::Login(v) => {
                 let (pubkey, client_data) = verify_login(&v.identity)?;
                 let skin = verify_skin(&pubkey, &v.client)?;
                 let (ss_key, token) = shared_secret(&pubkey)?;
-                self.send_packet(ServerToClientHandshakePacket { token })
-                    .await?;
+                self.send_packet(PacketKind::ServerToClientHandshake(
+                    ServerToClientHandshakePacket { token },
+                ))
+                .await?;
                 self.encoder.setup_cipher(ss_key);
                 self.decoder.setup_cipher(ss_key);
             }
             PacketKind::ClientToServerHandshake(_) => {
-                self.send_packet(PlayStatusPacket::LoginSuccess).await?;
+                self.send_packet(PacketKind::PlayStatus(PlayStatusPacket::LoginSuccess))
+                    .await?;
                 let resource_info = ResourcePacksInfoPacket {
                     must_accept: false,
                     has_scripts: false,
@@ -72,38 +78,33 @@ impl Client {
                     texture_packs: vec![],
                     resource_pack_links: vec![],
                 };
-                self.send_packet(resource_info).await?;
+                self.send_packet(PacketKind::ResourcePacksInfo(resource_info))
+                    .await?;
             }
-            PacketKind::ResourcePackClientResponse(v) => {
-                match v.response_status {
-                    ResponseStatus::HaveAllPacks => {
-                        let res_stack = ResourcePacksStackPacket {
-                            must_accept: false,
-                            behavior_packs: vec![],
-                            resource_packs: vec![],
-                            game_version: String::from("1.20.50"),
-                            experiments: vec![],
-                            experiments_previously_used: false,
-                        };
-                        self.send_packet(res_stack).await?;
-                    }
-                    ResponseStatus::SendPacks => {
-
-                    }
-                    ResponseStatus::Completed => {
-
-                    }
-                    ResponseStatus::Refused | ResponseStatus::None => {
-                        self.close().await?;
-                    }
+            PacketKind::ResourcePackClientResponse(v) => match v.response_status {
+                ResponseStatus::HaveAllPacks => {
+                    let res_stack = ResourcePacksStackPacket {
+                        must_accept: false,
+                        behavior_packs: vec![],
+                        resource_packs: vec![],
+                        game_version: String::from("1.20.50"),
+                        experiments: vec![],
+                        experiments_previously_used: false,
+                    };
+                    self.send_packet(PacketKind::ResourcePacksStack(res_stack))
+                        .await?;
                 }
-            }
+                ResponseStatus::SendPacks => {}
+                ResponseStatus::Completed => {}
+                ResponseStatus::Refused | ResponseStatus::None => {
+                    self.close().await?;
+                }
+            },
             _ => {}
         }
         Ok(())
     }
-    pub async fn send_packet<T: Into<PacketKind>>(&mut self, packet: T) -> Result<()> {
-        let packet: PacketKind = packet.into();
+    pub async fn send_packet(&mut self, packet: PacketKind) -> Result<()> {
         println!("(StoC) {}", packet);
         let buffer = self.encoder.encode(packet);
         self.socket

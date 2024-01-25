@@ -10,7 +10,7 @@ fn get_leveldat() {
     assert_eq!(
         level,
         LevelDat {
-            LevelName: Name("マイ ワールド".into()),
+            LevelName: Name::Str("マイ ワールド".into()),
             FlatWorldLayers: "{\"biome_id\":1,\"block_layers\":[{\"block_name\":\"minecraft:bedrock\",\"count\":1},{\"block_name\":\"minecraft:dirt\",\"count\":2},{\"block_name\":\"minecraft:grass\",\"count\":1}],\"encoding_version\":6,\"structure_options\":null,\"world_version\":\"version.post_1_18\"}\n".into(),
             abilities: Abilities {
                 mayfly: 0,
@@ -50,4 +50,9 @@ struct Abilities {
     walkSpeed: f32,
 }
 #[derive(Debug, Deserialize, PartialEq)]
-struct Name(String);
+#[serde(untagged)]
+enum Name {
+    Num(i8),
+    Str(String),
+    F(Vec<i8>),
+}

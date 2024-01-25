@@ -34,8 +34,8 @@ struct Level {
     stringTest: String,
     #[serde(rename(serialize = "listTest (long)", deserialize = "listTest (long)"))]
     listTestLong: Vec<i64>,
-    doubleTest: f32,
-    floatTest: f64,
+    doubleTest: f64,
+    floatTest: f32,
     #[serde(rename(serialize = "listTest (compound)", deserialize = "listTest (compound)"))]
     listTestCompound: HashSet<Issuer>,
     #[serde(rename(

@@ -35,12 +35,16 @@ impl Decoder {
             bytes.get_u8() == 0xfe,
             "invalid packet header,expected 0xfe"
         );
-        self.decrypt(bytes)?;
+        if self.cipher.is_some() {
+            self.decrypt(bytes)?;
+        }
         self.decompress(bytes);
         let mut packets = Vec::new();
         while !bytes.is_empty() {
-            let _ = bytes.get_varint();
+            let size = bytes.get_varint();
+            let expected = bytes.len() - size as usize;
             packets.push(PacketKind::decode(bytes)?);
+            ensure!(bytes.len() == expected, "Invalid packet size");
         }
         Ok(packets)
     }
@@ -53,12 +57,13 @@ impl Decoder {
         }
     }
     fn decrypt(&mut self, bytes: &mut BytesMut) -> Result<()> {
-        if let Some(ref mut ci) = self.cipher {
-            ci.apply_keystream(bytes.as_mut());
-            self.verify(bytes)?;
-            bytes.truncate(bytes.len() - 8);
-            self.counter += 1;
-        }
+        self.cipher
+            .as_mut()
+            .unwrap()
+            .apply_keystream(bytes.as_mut());
+        self.verify(bytes)?;
+        bytes.truncate(bytes.len() - 8);
+        self.counter += 1;
         Ok(())
     }
     fn verify(&mut self, bytes: &mut BytesMut) -> Result<()> {

@@ -2,6 +2,8 @@ pub mod de;
 mod macros;
 pub mod nbt_tag;
 pub mod ser;
+pub mod value;
+mod test;
 
 use crate::de::{error::DeserializeError, Deserializer};
 use ser::{error::SerializeError, Serializer};

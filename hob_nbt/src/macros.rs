@@ -1,3 +1,22 @@
+/// # Example
+///
+/// ```
+/// fn deserialize_i8<V>(self, visitor: V) -> Result<V::Value, Self::Error>
+/// where
+///     V: de::Visitor<'de> {
+///     ensure_nbt!(self.tag == NBTTag::Byte,"Expected a Tag_Byte, found {:?}",self.tag);
+///     visitor.visit_i8(B::get_byte(&mut self.de.input))
+/// }
+/// ```
+#[macro_export]
+macro_rules! ensure_nbt {
+    ($cond:expr,$fmt:expr,$($arg:tt)*) => {
+        if !$cond {
+            return Err(DeserializeError::Message(format!($fmt, $($arg)*)))
+        }
+    };
+}
+
 #[macro_export(local_inner_macros)]
 macro_rules! unimplemented_serealize {
     ($($prem:ident)*) => {
@@ -77,7 +96,7 @@ macro_rules! unimplemented_serealize_helper {
         }
     };
     (seq) => {
-        fn serialize_seq(self, len: Option<usize>) -> Result<Self::SerializeSeq, Self::Error> {
+        fn serialize_seq(self, _len: Option<usize>) -> Result<Self::SerializeSeq, Self::Error> {
             Err(SerializeError::Unsupported("Unsupported Type".into()))
         }
     };
@@ -96,15 +115,15 @@ macro_rules! unimplemented_serealize_helper {
         }
     };
     (map) => {
-        fn serialize_map(self, len: Option<usize>) -> Result<Self::SerializeMap, Self::Error> {
+        fn serialize_map(self, _len: Option<usize>) -> Result<Self::SerializeMap, Self::Error> {
             Err(SerializeError::Unsupported("Unsupported Type".into()))
         }
     };
     (struct) => {
         fn serialize_struct(
             self,
-            name: &'static str,
-            len: usize,
+            _name: &'static str,
+            _len: usize,
         ) -> Result<Self::SerializeStruct, Self::Error> {
             Err(SerializeError::Unsupported("Unsupported Type".into()))
         }
