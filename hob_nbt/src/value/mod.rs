@@ -90,10 +90,10 @@ impl<'de> serde::de::Visitor<'de> for NBTValueVisitor {
     where
         A: serde::de::SeqAccess<'de>,
     {
-        #[derive(Debug,Deserialize)]
-        struct NumArray(i8,i64);
+        #[derive(Debug, Deserialize)]
+        struct NumArray(i8, i64);
         if let Ok(Some(first)) = seq.next_element::<NumArray>() {
-            let (tag,first) = (first.0,first.1);
+            let (tag, first) = (first.0, first.1);
             match tag {
                 0x7 => {
                     let mut vec = vec![first as i8];
@@ -101,24 +101,24 @@ impl<'de> serde::de::Visitor<'de> for NBTValueVisitor {
                         vec.push(value)
                     }
                     Ok(Value::ByteArray(vec))
-                },
+                }
                 0xB => {
                     let mut vec = vec![first as i32];
                     while let Some(value) = seq.next_element::<i32>()? {
                         vec.push(value)
                     }
                     Ok(Value::IntArray(vec))
-                },
+                }
                 0xC => {
                     let mut vec = vec![first];
                     while let Some(value) = seq.next_element::<i64>()? {
                         vec.push(value)
                     }
                     Ok(Value::LongArray(vec))
-                },
-                _ => panic!("Unknown")
+                }
+                _ => panic!("Unknown"),
             }
-        }else {
+        } else {
             let mut vec = Vec::new();
             while let Some(value) = seq.next_element::<Value>()? {
                 vec.push(value)

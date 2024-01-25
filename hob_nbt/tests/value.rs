@@ -41,7 +41,7 @@ fn value_works() {
         ],
     };
     let buf = VarInt::to_vec(ins).unwrap();
-    println!("{:?}",buf);
+    println!("{:?}", buf);
     let value: Value = VarInt::from_slice(&buf).unwrap();
     println!("{:?}", value);
 }
