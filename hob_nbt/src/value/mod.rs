@@ -1,8 +1,8 @@
+pub mod de;
+
 use std::collections::HashMap;
 
-use serde::Deserialize;
-
-#[derive(Debug)]
+#[derive(Debug,PartialEq)]
 pub enum Value {
     Byte(i8),
     Short(i16),
@@ -18,112 +18,126 @@ pub enum Value {
     LongArray(Vec<i64>),
 }
 
-impl<'de> serde::Deserialize<'de> for Value {
-    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
-    where
-        D: serde::Deserializer<'de>,
-    {
-        deserializer.deserialize_any(NBTValueVisitor)
-    }
-}
-
-struct NBTValueVisitor;
-impl<'de> serde::de::Visitor<'de> for NBTValueVisitor {
-    type Value = Value;
-
-    fn expecting(&self, formatter: &mut std::fmt::Formatter) -> std::fmt::Result {
-        formatter.write_str("any valid NBT value")
-    }
-    fn visit_i8<E>(self, v: i8) -> Result<Self::Value, E>
-    where
-        E: serde::de::Error,
-    {
-        Ok(Value::Byte(v))
-    }
-    fn visit_i16<E>(self, v: i16) -> Result<Self::Value, E>
-    where
-        E: serde::de::Error,
-    {
-        Ok(Value::Short(v))
-    }
-    fn visit_i32<E>(self, v: i32) -> Result<Self::Value, E>
-    where
-        E: serde::de::Error,
-    {
-        Ok(Value::Int(v))
-    }
-    fn visit_i64<E>(self, v: i64) -> Result<Self::Value, E>
-    where
-        E: serde::de::Error,
-    {
-        Ok(Value::Long(v))
-    }
-    fn visit_f32<E>(self, v: f32) -> Result<Self::Value, E>
-    where
-        E: serde::de::Error,
-    {
-        Ok(Value::Float(v))
-    }
-    fn visit_f64<E>(self, v: f64) -> Result<Self::Value, E>
-    where
-        E: serde::de::Error,
-    {
-        Ok(Value::Double(v))
-    }
-    fn visit_str<E>(self, v: &str) -> Result<Self::Value, E>
-    where
-        E: serde::de::Error,
-    {
-        Ok(Value::String(v.to_owned()))
-    }
-    fn visit_map<A>(self, mut map: A) -> Result<Self::Value, A::Error>
-    where
-        A: serde::de::MapAccess<'de>,
-    {
-        let mut compound = HashMap::new();
-        while let Some((key, value)) = map.next_entry::<String, Value>()? {
-            compound.insert(key, value);
-        }
-        Ok(Value::Compound(compound))
-    }
-    fn visit_seq<A>(self, mut seq: A) -> Result<Self::Value, A::Error>
-    where
-        A: serde::de::SeqAccess<'de>,
-    {
-        #[derive(Debug, Deserialize)]
-        struct NumArray(i8, i64);
-        if let Ok(Some(first)) = seq.next_element::<NumArray>() {
-            let (tag, first) = (first.0, first.1);
-            match tag {
-                0x7 => {
-                    let mut vec = vec![first as i8];
-                    while let Some(value) = seq.next_element::<i8>()? {
-                        vec.push(value)
-                    }
-                    Ok(Value::ByteArray(vec))
-                }
-                0xB => {
-                    let mut vec = vec![first as i32];
-                    while let Some(value) = seq.next_element::<i32>()? {
-                        vec.push(value)
-                    }
-                    Ok(Value::IntArray(vec))
-                }
-                0xC => {
-                    let mut vec = vec![first];
-                    while let Some(value) = seq.next_element::<i64>()? {
-                        vec.push(value)
-                    }
-                    Ok(Value::LongArray(vec))
-                }
-                _ => panic!("Unknown"),
-            }
-        } else {
-            let mut vec = Vec::new();
-            while let Some(value) = seq.next_element::<Value>()? {
-                vec.push(value)
-            }
-            Ok(Value::List(vec))
+impl Value {
+    pub fn as_byte(&self) -> Option<&i8> {
+        match self {
+            Value::Byte(v) => Some(v),
+            _ => None
         }
     }
+    pub fn is_byte(&self) -> bool {
+        self.as_byte().is_some()
+    }
+
+    pub fn as_short(&self) -> Option<&i16> {
+        match self {
+            Value::Short(v) => Some(v),
+            _ => None
+        }
+    }
+    pub fn is_short(&self) -> bool {
+        self.as_short().is_some()
+    }
+
+    pub fn as_int(&self) -> Option<&i32> {
+        match self {
+            Value::Int(v) => Some(v),
+            _ => None
+        }
+    }
+    pub fn is_int(&self) -> bool {
+        self.as_int().is_some()
+    }
+
+    pub fn as_long(&self) -> Option<&i64> {
+        match self {
+            Value::Long(v) => Some(v),
+            _ => None
+        }
+    }
+    pub fn is_long(&self) -> bool {
+        self.as_long().is_some()
+    }
+
+
+    pub fn as_float(&self) -> Option<&f32> {
+        match self {
+            Value::Float(v) => Some(v),
+            _ => None
+        }
+    }
+    pub fn is_float(&self) -> bool {
+        self.as_float().is_some()
+    }
+
+    pub fn as_double(&self) -> Option<&f64> {
+        match self {
+            Value::Double(v) => Some(v),
+            _ => None
+        }
+    }
+    pub fn is_double(&self) -> bool {
+        self.as_double().is_some()
+    }
+
+    pub fn as_str(&self) -> Option<&str> {
+        match self {
+            Value::String(v) => Some(v),
+            _ => None
+        }
+    }
+    pub fn is_str(&self) -> bool {
+        self.as_str().is_some()
+    }
+
+    pub fn as_compound(&self) -> Option<&HashMap<String,Value>> {
+        match self {
+            Value::Compound(v) => Some(v),
+            _ => None
+        }
+    }
+    pub fn is_compound(&self) -> bool {
+        self.as_compound().is_some()
+    }
+
+    pub fn as_byte_array(&self) -> Option<&[i8]> {
+        match self {
+            Value::ByteArray(v) => Some(v),
+            _ => None
+        }
+    }
+    pub fn is_byte_array(&self) -> bool {
+        self.as_byte_array().is_some()
+    }
+
+    pub fn as_int_array(&self) -> Option<&[i32]> {
+        match self {
+            Value::IntArray(v) => Some(v),
+            _ => None
+        }
+    }
+    pub fn is_int_array(&self) -> bool {
+        self.as_int_array().is_some()
+    }
+
+    pub fn as_long_array(&self) -> Option<&[i64]> {
+        match self {
+            Value::LongArray(v) => Some(v),
+            _ => None
+        }
+    }
+    pub fn is_long_array(&self) -> bool {
+        self.as_long_array().is_some()
+    }
+
+    pub fn as_list(&self) -> Option<&[Value]> {
+        match self {
+            Value::List(v) => Some(v),
+            _ => None
+        }
+    }
+    pub fn is_list(&self) -> bool {
+        self.as_list().is_some()
+    }
+
 }

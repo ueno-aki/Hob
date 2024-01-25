@@ -1,9 +1,7 @@
-use std::f32::consts::PI;
+use std::{collections::HashMap, f32::consts::PI};
 
 use hob_nbt::{
-    ser::{ByteArray, IntArray, LongArray},
-    value::Value,
-    VarInt,
+    ser::{ByteArray, IntArray, LongArray}, value::Value, LittleEndian, VarInt
 };
 use serde::{Deserialize, Serialize};
 
@@ -41,7 +39,11 @@ fn value_works() {
         ],
     };
     let buf = VarInt::to_vec(ins).unwrap();
-    println!("{:?}", buf);
     let value: Value = VarInt::from_slice(&buf).unwrap();
-    println!("{:?}", value);
+    assert!(value.is_compound());
+
+    let map:HashMap<String,String> = HashMap::new();
+    let buf = LittleEndian::to_vec(map).unwrap();
+    let value: Value = LittleEndian::from_slice(&buf).unwrap();
+    assert_eq!(*value.as_compound().unwrap(),HashMap::<String,Value>::new())
 }
