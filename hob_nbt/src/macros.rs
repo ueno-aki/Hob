@@ -1,13 +1,3 @@
-/// # Example
-///
-/// ```
-/// fn deserialize_i8<V>(self, visitor: V) -> Result<V::Value, Self::Error>
-/// where
-///     V: de::Visitor<'de> {
-///     ensure_nbt!(self.tag == NBTTag::Byte,"Expected a Tag_Byte, found {:?}",self.tag);
-///     visitor.visit_i8(B::get_byte(&mut self.de.input))
-/// }
-/// ```
 #[macro_export]
 macro_rules! ensure_nbt {
     ($cond:expr,$fmt:expr,$($arg:tt)*) => {
