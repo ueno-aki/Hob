@@ -87,7 +87,7 @@ impl Packet for LoginPacket {
         })
     }
 
-    fn encode(&self, bytes: &mut BytesMut) -> anyhow::Result<()> {
+    fn encode(&self, _bytes: &mut BytesMut) -> anyhow::Result<()> {
         todo!()
     }
 }

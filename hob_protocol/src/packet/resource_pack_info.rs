@@ -14,7 +14,7 @@ pub struct ResourcePacksInfoPacket {
 }
 
 impl Packet for ResourcePacksInfoPacket {
-    fn decode(bytes: &mut proto_bytes::BytesMut) -> Result<Self>
+    fn decode(_bytes: &mut proto_bytes::BytesMut) -> Result<Self>
     where
         Self: Sized,
     {

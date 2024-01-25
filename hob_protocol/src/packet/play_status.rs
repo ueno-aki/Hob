@@ -17,7 +17,7 @@ pub enum PlayStatusPacket {
 }
 
 impl Packet for PlayStatusPacket {
-    fn decode(bytes: &mut proto_bytes::BytesMut) -> anyhow::Result<Self> {
+    fn decode(_bytes: &mut proto_bytes::BytesMut) -> anyhow::Result<Self> {
         todo!()
     }
 

@@ -13,7 +13,7 @@ pub struct ResourcePacksStackPacket {
 }
 
 impl Packet for ResourcePacksStackPacket {
-    fn decode(bytes: &mut proto_bytes::BytesMut) -> anyhow::Result<Self>
+    fn decode(_bytes: &mut proto_bytes::BytesMut) -> anyhow::Result<Self>
     where
         Self: Sized,
     {

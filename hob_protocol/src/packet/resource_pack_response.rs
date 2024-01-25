@@ -27,7 +27,7 @@ impl Packet for ResourcePackClientResponsePacket {
         })
     }
 
-    fn encode(&self, bytes: &mut proto_bytes::BytesMut) -> anyhow::Result<()> {
+    fn encode(&self, _bytes: &mut proto_bytes::BytesMut) -> anyhow::Result<()> {
         todo!()
     }
 }

@@ -45,7 +45,7 @@ pub struct ServerToClientHandshakePacket {
 }
 
 impl Packet for ServerToClientHandshakePacket {
-    fn decode(bytes: &mut proto_bytes::BytesMut) -> anyhow::Result<Self> {
+    fn decode(_bytes: &mut proto_bytes::BytesMut) -> anyhow::Result<Self> {
         todo!()
     }
 

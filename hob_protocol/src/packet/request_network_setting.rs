@@ -16,7 +16,7 @@ impl Packet for RequestNetworkSettingPacket {
         Ok(RequestNetworkSettingPacket { client_protocol })
     }
 
-    fn encode(&self, bytes: &mut proto_bytes::BytesMut) -> anyhow::Result<()> {
+    fn encode(&self, _bytes: &mut proto_bytes::BytesMut) -> anyhow::Result<()> {
         todo!()
     }
 }
