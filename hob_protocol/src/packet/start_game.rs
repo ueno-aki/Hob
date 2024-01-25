@@ -67,7 +67,7 @@ pub struct StartGamePacket {
     multiplayer_correlation_id: String,
     server_authoritative_inventory: bool,
     engine: String,
-    // property_data:NBT,
+    property_data:hob_nbt::value::Value,
     block_pallette_checksum: u64,
     // world_template_id:UUID,
     client_side_generation: bool,
