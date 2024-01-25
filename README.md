@@ -9,7 +9,7 @@
 ![GitHub language count](https://img.shields.io/github/languages/count/ueno-aki/Hob)
 [![GitHub last commit (master)](https://img.shields.io/github/last-commit/ueno-aki/Hob/master)](https://github.com/ueno-aki/Hob/commits/master/)
 [![Rust](https://github.com/ueno-aki/Hob/actions/workflows/rust.yml/badge.svg)](https://github.com/ueno-aki/Hob/actions/workflows/rust.yml)
-![GitHub forks](https://img.shields.io/github/forks/ueno-aki/Hob)
+[![GitHub forks](https://img.shields.io/github/forks/ueno-aki/Hob)](https://github.com/ueno-aki/Hob/forks)
 
 Server software for Minecraft: Bedrock Edition, written in Rust. It is currently in the early stages of development. 🚧
 We are Looking For Developers, think your interested, see how to apply here: 
