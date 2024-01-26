@@ -12,7 +12,7 @@ use hob_protocol::{
         resource_pack_info::ResourcePacksInfoPacket,
         resource_pack_response::ResponseStatus,
         resource_pack_stack::ResourcePacksStackPacket,
-        PacketKind,
+        Packet, PacketKind,
     },
 };
 use proto_bytes::BytesMut;
@@ -35,7 +35,7 @@ impl Client {
     pub async fn listen(&mut self) -> Result<()> {
         loop {
             let buf = self.socket.recv().await.map_err(|e| anyhow!("{:?}", e))?;
-            let mut bytes = BytesMut::from(buf.as_slice());
+            let mut bytes = BytesMut::from(&buf[..]);
             for packet in self.decoder.decode(&mut bytes)? {
                 self.handle(packet).await?;
             }
@@ -104,7 +104,8 @@ impl Client {
         }
         Ok(())
     }
-    pub async fn send_packet(&mut self, packet: PacketKind) -> Result<()> {
+    pub async fn send_packet<T: Into<PacketKind>>(&mut self, packet: T) -> Result<()> {
+        let packet = packet.into();
         println!("(StoC) {}", packet);
         let buffer = self.encoder.encode(packet);
         self.socket
@@ -113,6 +114,9 @@ impl Client {
             .map_err(|e| anyhow!("{:?}", e))?;
         Ok(())
     }
+    // pub async fn send_disconnect(&mut self) -> Result<()> {
+    //     self.send_packet(Dis)
+    // }
     pub async fn close(&mut self) -> Result<()> {
         self.socket.close().await.map_err(|e| anyhow!("{:?}", e))?;
         println!("disconnect");

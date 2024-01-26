@@ -2,7 +2,7 @@ pub mod de;
 
 use std::collections::HashMap;
 
-#[derive(Debug,PartialEq)]
+#[derive(Debug, PartialEq)]
 pub enum Value {
     Byte(i8),
     Short(i16),
@@ -22,7 +22,7 @@ impl Value {
     pub fn as_byte(&self) -> Option<&i8> {
         match self {
             Value::Byte(v) => Some(v),
-            _ => None
+            _ => None,
         }
     }
     pub fn is_byte(&self) -> bool {
@@ -32,7 +32,7 @@ impl Value {
     pub fn as_short(&self) -> Option<&i16> {
         match self {
             Value::Short(v) => Some(v),
-            _ => None
+            _ => None,
         }
     }
     pub fn is_short(&self) -> bool {
@@ -42,7 +42,7 @@ impl Value {
     pub fn as_int(&self) -> Option<&i32> {
         match self {
             Value::Int(v) => Some(v),
-            _ => None
+            _ => None,
         }
     }
     pub fn is_int(&self) -> bool {
@@ -52,18 +52,17 @@ impl Value {
     pub fn as_long(&self) -> Option<&i64> {
         match self {
             Value::Long(v) => Some(v),
-            _ => None
+            _ => None,
         }
     }
     pub fn is_long(&self) -> bool {
         self.as_long().is_some()
     }
 
-
     pub fn as_float(&self) -> Option<&f32> {
         match self {
             Value::Float(v) => Some(v),
-            _ => None
+            _ => None,
         }
     }
     pub fn is_float(&self) -> bool {
@@ -73,7 +72,7 @@ impl Value {
     pub fn as_double(&self) -> Option<&f64> {
         match self {
             Value::Double(v) => Some(v),
-            _ => None
+            _ => None,
         }
     }
     pub fn is_double(&self) -> bool {
@@ -83,17 +82,17 @@ impl Value {
     pub fn as_str(&self) -> Option<&str> {
         match self {
             Value::String(v) => Some(v),
-            _ => None
+            _ => None,
         }
     }
     pub fn is_str(&self) -> bool {
         self.as_str().is_some()
     }
 
-    pub fn as_compound(&self) -> Option<&HashMap<String,Value>> {
+    pub fn as_compound(&self) -> Option<&HashMap<String, Value>> {
         match self {
             Value::Compound(v) => Some(v),
-            _ => None
+            _ => None,
         }
     }
     pub fn is_compound(&self) -> bool {
@@ -103,7 +102,7 @@ impl Value {
     pub fn as_byte_array(&self) -> Option<&[i8]> {
         match self {
             Value::ByteArray(v) => Some(v),
-            _ => None
+            _ => None,
         }
     }
     pub fn is_byte_array(&self) -> bool {
@@ -113,7 +112,7 @@ impl Value {
     pub fn as_int_array(&self) -> Option<&[i32]> {
         match self {
             Value::IntArray(v) => Some(v),
-            _ => None
+            _ => None,
         }
     }
     pub fn is_int_array(&self) -> bool {
@@ -123,7 +122,7 @@ impl Value {
     pub fn as_long_array(&self) -> Option<&[i64]> {
         match self {
             Value::LongArray(v) => Some(v),
-            _ => None
+            _ => None,
         }
     }
     pub fn is_long_array(&self) -> bool {
@@ -133,11 +132,10 @@ impl Value {
     pub fn as_list(&self) -> Option<&[Value]> {
         match self {
             Value::List(v) => Some(v),
-            _ => None
+            _ => None,
         }
     }
     pub fn is_list(&self) -> bool {
         self.as_list().is_some()
     }
-
 }
