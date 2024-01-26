@@ -166,7 +166,24 @@ impl Packet for StartGamePacket {
         bytes.put_i32_le(self.limited_world_width);
         bytes.put_i32_le(self.limited_world_length);
         bytes.put_bool(self.is_new_nether);
-        
+        {
+            let EducationSharedResourceURI { button_name, link_uri } = &self.edu_resource_uri;
+            bytes.put_string_varint(button_name);
+            bytes.put_string_varint(link_uri);
+        }
+        bytes.put_bool(self.experimental_gameplay_override);
+        bytes.put_u8(self.chat_restriction_level as u8);
+        bytes.put_bool(self.disable_player_interactions);
+        bytes.put_string_varint(&self.level_id);
+        bytes.put_string_varint(&self.world_name);
+        bytes.put_string_varint(&self.premium_world_template_id);
+        bytes.put_bool(self.is_trial);
+        bytes.put_zigzag32(self.movement_authority as i32);
+        bytes.put_zigzag32(self.rewind_history_size);
+        bytes.put_bool(self.server_authoritative_block_breaking);
+        bytes.put_i64_le(self.current_tick);
+        bytes.put_zigzag32(self.enchantment_seed);
+
         todo!()
     }
 }
@@ -253,14 +270,14 @@ pub struct EducationSharedResourceURI {
     link_uri: String,
 }
 
-#[derive(Debug)]
+#[derive(Debug,Clone,Copy)]
 pub enum ChatRestrictionLevel {
     None,
     Dropped,
     Disabled,
 }
 
-#[derive(Debug)]
+#[derive(Debug,Clone,Copy)]
 pub enum MovementAuthority {
     Client,
     Server,
@@ -270,7 +287,7 @@ pub enum MovementAuthority {
 #[derive(Debug)]
 pub struct BlockProperty {
     name: String,
-    // state:NBT
+    // state:hob_nbt::
 }
 
 #[derive(Debug)]
