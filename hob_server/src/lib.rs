@@ -17,7 +17,6 @@ impl Server {
                 let mut client = Client::new(socket);
                 if let Err(e) = client.listen().await {
                     println!("{:?}", e);
-                    client.close().await.unwrap()
                 }
             });
         }

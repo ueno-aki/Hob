@@ -1,3 +1,4 @@
+use anyhow::Context;
 use proto_bytes::ConditionalWriter;
 
 use super::Packet;
@@ -5,8 +6,8 @@ use super::Packet;
 #[derive(Debug)]
 pub struct DisconnectPacket {
     pub reason: DisconnectFailReason,
-    pub hide_disconnect_reason: bool,
-    pub message: String,
+    pub hide_message: bool,
+    pub message: Option<String>,
 }
 
 impl Packet for DisconnectPacket {
@@ -20,9 +21,13 @@ impl Packet for DisconnectPacket {
     #[inline]
     fn encode(&self, bytes: &mut proto_bytes::BytesMut) -> anyhow::Result<()> {
         bytes.put_zigzag32(self.reason.clone() as i32);
-        bytes.put_bool(self.hide_disconnect_reason);
-        if !self.hide_disconnect_reason {
-            bytes.put_string_varint(&self.message);
+        bytes.put_bool(self.hide_message);
+        if !self.hide_message {
+            bytes.put_string_varint(
+                self.message
+                    .as_ref()
+                    .context("Unknown DisconnectMessage.")?,
+            );
         }
         Ok(())
     }
