@@ -41,8 +41,12 @@ fn value_works() {
         ],
     };
     let buf = VarInt::to_vec(ins).unwrap();
+    println!("{:x?}",buf);
     let value: Value = VarInt::from_slice(&buf).unwrap();
     assert!(value.is_compound());
+
+    let buf = VarInt::to_vec(&value).unwrap();
+    assert_eq!(value,VarInt::from_slice(&buf).unwrap());
 
     let map: HashMap<String, String> = HashMap::new();
     let buf = LittleEndian::to_vec(map).unwrap();

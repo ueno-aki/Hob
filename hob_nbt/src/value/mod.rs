@@ -1,4 +1,5 @@
 pub mod de;
+pub mod ser;
 
 use std::collections::HashMap;
 
