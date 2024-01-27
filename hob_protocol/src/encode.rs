@@ -20,7 +20,7 @@ pub struct Encoder {
 }
 
 impl Encoder {
-    pub fn setup_cipher(&mut self, shared_secret: [u8; 32]) {
+    pub fn setup_cipher(&mut self, shared_secret: &[u8; 32]) {
         let mut iv: [u8; 16] = [0; 16];
         iv[15] = 2;
         iv[..12].copy_from_slice(&shared_secret[..12]);
@@ -28,7 +28,7 @@ impl Encoder {
             shared_secret.as_ref().into(),
             iv.as_ref().into(),
         ));
-        self.ss_key = shared_secret;
+        self.ss_key.copy_from_slice(shared_secret);
     }
     pub fn encode(&mut self, packet: PacketKind) -> Vec<u8> {
         let mut encoded = BytesMut::new();

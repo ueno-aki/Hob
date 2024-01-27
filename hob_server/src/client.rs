@@ -69,8 +69,8 @@ impl Client {
                     ServerToClientHandshakePacket { token },
                 ))
                 .await?;
-                self.encoder.setup_cipher(ss_key);
-                self.decoder.setup_cipher(ss_key);
+                self.encoder.setup_cipher(&ss_key);
+                self.decoder.setup_cipher(&ss_key);
             }
             PacketKind::ClientToServerHandshake(_) => {
                 self.send_packet(PacketKind::PlayStatus(PlayStatusPacket::LoginSuccess))
