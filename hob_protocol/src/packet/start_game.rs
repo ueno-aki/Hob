@@ -1,3 +1,5 @@
+use anyhow::anyhow;
+use hob_nbt::VarInt;
 use proto_bytes::{BufMut, ConditionalWriter};
 use uuid::Uuid;
 
@@ -183,8 +185,31 @@ impl Packet for StartGamePacket {
         bytes.put_bool(self.server_authoritative_block_breaking);
         bytes.put_i64_le(self.current_tick);
         bytes.put_zigzag32(self.enchantment_seed);
-
-        todo!()
+        bytes.put_varint(self.block_properties.len() as u64);
+        for BlockProperty { name, state } in self.block_properties.iter() {
+            bytes.put_string_varint(name);
+            bytes.put_slice(&VarInt::to_vec(state).map_err(|e|anyhow!("{e}"))?);
+        }
+        bytes.put_varint(self.itemstates.len() as u64);
+        for ItemState { name, runtime_id, component_based } in self.itemstates.iter() {
+            bytes.put_string_varint(name);
+            bytes.put_i16_le(*runtime_id);
+            bytes.put_bool(*component_based);
+        }
+        bytes.put_string_varint(&self.multiplayer_correlation_id);
+        bytes.put_bool(self.server_authoritative_inventory);
+        bytes.put_string_varint(&self.engine);
+        bytes.put_slice(&VarInt::to_vec(&self.property_data).map_err(|e|anyhow!("{e}"))?);
+        bytes.put_u64_le(self.block_pallette_checksum);
+        {
+            let (most_sig,least_sig) = self.world_template_id.as_u64_pair();
+            bytes.put_u64_le(most_sig);
+            bytes.put_u64_le(least_sig);
+        }
+        bytes.put_bool(self.client_side_generation);
+        bytes.put_bool(self.block_network_ids_are_hashes);
+        bytes.put_bool(self.server_controlled_sound);
+        Ok(())
     }
 }
 
@@ -287,7 +312,7 @@ pub enum MovementAuthority {
 #[derive(Debug)]
 pub struct BlockProperty {
     name: String,
-    // state:hob_nbt::
+    state:hob_nbt::value::Value
 }
 
 #[derive(Debug)]
