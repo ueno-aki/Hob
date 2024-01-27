@@ -95,9 +95,10 @@ packet_kind! {
     ResourcePacksInfo = 6
     ResourcePacksStack = 7
     ResourcePackClientResponse = 8
-    ClientCacheStatus = 129
-    NetworkSettings = 143
-    RequestNetworkSetting = 193
+    StartGame = 0xB
+    ClientCacheStatus = 0x81
+    NetworkSettings = 0x8F
+    RequestNetworkSetting = 0xC1
 }
 impl fmt::Display for PacketKind {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
