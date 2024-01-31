@@ -1,7 +1,7 @@
 use std::fmt;
 
 use anyhow::Result;
-use proto_bytes::{BytesMut, ConditionalReader, ConditionalWriter};
+use proto_bytes::{BytesMut, ConditionalBuf, ConditionalBufMut};
 
 pub mod client_cache_status;
 pub mod disconnect;

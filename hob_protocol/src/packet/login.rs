@@ -1,6 +1,6 @@
 use anyhow::{anyhow, ensure, Result};
 use base64::prelude::*;
-use proto_bytes::{Buf, BytesMut, ConditionalReader};
+use proto_bytes::{Buf, BytesMut, ConditionalBuf};
 use serde::Deserialize;
 
 use crate::jwt::ES384PublicKey;

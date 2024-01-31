@@ -1,6 +1,6 @@
 use anyhow::Result;
 use base64::prelude::*;
-use proto_bytes::ConditionalWriter;
+use proto_bytes::ConditionalBufMut;
 use rand::distributions::{Alphanumeric, DistString};
 use serde::{Deserialize, Serialize};
 

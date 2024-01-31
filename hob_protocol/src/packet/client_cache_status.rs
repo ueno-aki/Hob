@@ -1,4 +1,4 @@
-use proto_bytes::ConditionalReader;
+use proto_bytes::ConditionalBuf;
 
 use super::Packet;
 

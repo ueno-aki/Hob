@@ -1,6 +1,8 @@
+use std::str::from_utf8;
+
 use bytes::{Buf, BufMut};
 
-pub trait ConditionalWriter {
+pub trait ConditionalBufMut {
     fn put_varint(&mut self, n: u64) -> usize;
     fn put_zigzag32(&mut self, n: i32) -> usize;
     fn put_zigzag64(&mut self, n: i64) -> usize;
@@ -10,7 +12,7 @@ pub trait ConditionalWriter {
     fn put_bool(&mut self, v: bool);
 }
 
-impl<T: BufMut + ?Sized> ConditionalWriter for T {
+impl<T: BufMut + ?Sized> ConditionalBufMut for T {
     fn put_varint(&mut self, n: u64) -> usize {
         let mut cursor: usize = 0;
         let mut v = n;
@@ -54,7 +56,7 @@ impl<T: BufMut + ?Sized> ConditionalWriter for T {
     }
 }
 
-pub trait ConditionalReader {
+pub trait ConditionalBuf {
     fn get_varint(&mut self) -> u64;
     fn get_zigzag32(&mut self) -> i32;
     fn get_zigzag64(&mut self) -> i64;
@@ -64,7 +66,7 @@ pub trait ConditionalReader {
     fn get_bool(&mut self) -> bool;
 }
 
-impl<T: Buf + ?Sized> ConditionalReader for T {
+impl<T: Buf + ?Sized> ConditionalBuf for T {
     fn get_varint(&mut self) -> u64 {
         let mut value = 0;
         let mut shift = 0;
@@ -89,18 +91,18 @@ impl<T: Buf + ?Sized> ConditionalReader for T {
     }
     fn get_string_varint(&mut self) -> String {
         let len = self.get_varint();
-        let bytes = self.copy_to_bytes(len as usize).to_vec();
-        String::from_utf8(bytes).unwrap()
+        let bytes = self.copy_to_bytes(len as usize);
+        from_utf8(&bytes).unwrap().to_owned()
     }
     fn get_string_lu16(&mut self) -> String {
         let len = self.get_u16_le();
-        let bytes = self.copy_to_bytes(len as usize).to_vec();
-        String::from_utf8(bytes).unwrap()
+        let bytes = self.copy_to_bytes(len as usize);
+        from_utf8(&bytes).unwrap().to_owned()
     }
     fn get_string_lu32(&mut self) -> String {
         let len = self.get_u32_le();
-        let bytes = self.copy_to_bytes(len as usize).to_vec();
-        String::from_utf8(bytes).unwrap()
+        let bytes = self.copy_to_bytes(len as usize);
+        from_utf8(&bytes).unwrap().to_owned()
     }
     fn get_bool(&mut self) -> bool {
         match self.get_i8() {

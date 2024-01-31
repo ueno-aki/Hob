@@ -1,5 +1,5 @@
 use anyhow::Context;
-use proto_bytes::ConditionalWriter;
+use proto_bytes::ConditionalBufMut;
 
 use super::Packet;
 

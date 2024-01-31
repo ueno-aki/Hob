@@ -3,7 +3,7 @@ pub mod error;
 
 use self::{binary_format::BinaryFormat, error::DeserializeError};
 use crate::{ensure_nbt, nbt_tag::NBTTag};
-use proto_bytes::{BytesMut, ConditionalReader};
+use proto_bytes::{BytesMut, ConditionalBuf};
 use serde::{de, forward_to_deserialize_any};
 use std::marker::PhantomData;
 

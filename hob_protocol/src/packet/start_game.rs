@@ -1,6 +1,6 @@
 use anyhow::anyhow;
 use hob_nbt::VarInt;
-use proto_bytes::{BufMut, ConditionalWriter};
+use proto_bytes::{BufMut, ConditionalBufMut};
 use uuid::Uuid;
 
 use super::Packet;

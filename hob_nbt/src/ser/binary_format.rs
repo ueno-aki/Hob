@@ -1,4 +1,4 @@
-use proto_bytes::{BufMut, BytesMut, ConditionalWriter};
+use proto_bytes::{BufMut, BytesMut, ConditionalBufMut};
 
 use crate::{BigEndian, LittleEndian, VarInt};
 

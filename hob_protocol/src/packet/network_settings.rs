@@ -1,4 +1,4 @@
-use proto_bytes::{BufMut, ConditionalWriter};
+use proto_bytes::{BufMut, ConditionalBufMut};
 
 use super::Packet;
 

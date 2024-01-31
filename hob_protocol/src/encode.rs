@@ -5,7 +5,7 @@ use aes::{
     Aes256,
 };
 use flate2::{read::DeflateEncoder, Compression};
-use proto_bytes::{BufMut, BytesMut, ConditionalWriter};
+use proto_bytes::{BufMut, BytesMut, ConditionalBufMut};
 
 use crate::packet::PacketKind;
 

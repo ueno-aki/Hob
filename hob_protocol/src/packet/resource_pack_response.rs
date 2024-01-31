@@ -1,5 +1,5 @@
 use from_num::from_num;
-use proto_bytes::{Buf, ConditionalReader};
+use proto_bytes::{Buf, ConditionalBuf};
 
 use super::Packet;
 
