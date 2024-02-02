@@ -9,5 +9,9 @@ edition = "2021"
 anyhow = "*"
 tokio = { version = "1.20.1", features = ["full"] }
 rust-raknet = "0.12.0"
-proto-bytes = { path = "../proto_bytes" }
-hob-protocol = { path = "../hob_protocol" }
+specs = "*"
+flume = "0.11.0"
+proto-bytes = { path = "../../proto_bytes" }
+hob-protocol = { path = "../protocol" }
+log = "0.4"
+log4rs = "1.2"

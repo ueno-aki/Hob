@@ -25,8 +25,8 @@ impl Encoder {
         iv[15] = 2;
         iv[..12].copy_from_slice(&shared_secret[..12]);
         self.cipher = Some(Aes256Ctr::new(
-            shared_secret.as_ref().into(),
-            iv.as_ref().into(),
+            shared_secret.into(),
+            &iv.into(),
         ));
         self.ss_key.copy_from_slice(shared_secret);
     }

@@ -11,4 +11,8 @@
 [![GitHub forks](https://img.shields.io/github/forks/ueno-aki/Hob)](https://github.com/ueno-aki/Hob/forks)
 
 Server software for Minecraft: Bedrock Edition, written in Rust. It is currently in the early stages of development. 🚧
-We are Looking For Developers, think your interested, see how to apply here: 
+We are Looking For Developers, think your interested, see how to apply here: <https://discord.gg/bC3wnqm8Uu>
+
+## Acknowlege
+
+* [feather](https://github.com/feather-rs/feather/blob/main/LICENSE.md)

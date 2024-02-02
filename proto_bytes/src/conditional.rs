@@ -22,8 +22,7 @@ impl<T: BufMut + ?Sized> ConditionalBufMut for T {
             v >>= 7;
         }
         self.put_u8(v as u8);
-        cursor += 1;
-        cursor
+        cursor + 1
     }
     fn put_zigzag32(&mut self, n: i32) -> usize {
         let v = (n >> 31) ^ (n << 1);
@@ -71,14 +70,13 @@ impl<T: Buf + ?Sized> ConditionalBuf for T {
         let mut value = 0;
         let mut shift = 0;
         loop {
+            assert!(shift < 63,"varint is too big");
             let b = self.get_u8() as u64;
             value |= (b & 0x7f) << shift;
-            shift += 7;
             if b & 0x80 == 0 {
                 break value;
-            } else if shift > 63 {
-                panic!("Too Big")
             }
+            shift += 7;
         }
     }
     fn get_zigzag32(&mut self) -> i32 {
@@ -92,7 +90,7 @@ impl<T: Buf + ?Sized> ConditionalBuf for T {
     fn get_string_varint(&mut self) -> String {
         let len = self.get_varint();
         let bytes = self.copy_to_bytes(len as usize);
-        from_utf8(&bytes).unwrap().to_owned()
+        from_utf8(bytes.chunk()).unwrap().to_owned()
     }
     fn get_string_lu16(&mut self) -> String {
         let len = self.get_u16_le();
@@ -105,10 +103,6 @@ impl<T: Buf + ?Sized> ConditionalBuf for T {
         from_utf8(&bytes).unwrap().to_owned()
     }
     fn get_bool(&mut self) -> bool {
-        match self.get_i8() {
-            0 => false,
-            1 => true,
-            _ => panic!("FailedIntoBoolean"),
-        }
+        !matches!(self.get_i8(), 0)
     }
 }

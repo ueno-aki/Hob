@@ -18,17 +18,20 @@ use hob_protocol::{
 };
 use proto_bytes::BytesMut;
 use rust_raknet::RaknetSocket;
+use tokio::runtime::Runtime;
 
 pub struct Client {
     socket: Arc<RaknetSocket>,
+    runtime:Arc<Runtime>,
     encoder: Encoder,
     decoder: Decoder,
 }
 
 impl Client {
-    pub fn new(socket: RaknetSocket) -> Self {
+    pub fn new(socket: RaknetSocket,runtime:Arc<Runtime>) -> Self {
         Client {
             socket: Arc::new(socket),
+            runtime,
             encoder: Encoder::default(),
             decoder: Decoder::default(),
         }
