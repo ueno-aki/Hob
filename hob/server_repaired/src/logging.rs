@@ -5,7 +5,7 @@ use log4rs::{
     Config,
 };
 
-pub use log::{debug, error, info, trace, warn, LevelFilter};
+use log::{debug, error, info, trace, warn, LevelFilter};
 
 pub fn setup(level: LevelFilter) {
     let stdio = ConsoleAppender::builder()

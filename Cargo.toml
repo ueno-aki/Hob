@@ -15,5 +15,9 @@ members = [
     "proto_bytes",
     "hob/nbt",
     "hob/protocol",
-    "hob/server"
+    "hob/server",
+    "hob/server_repaired"
 ]
+
+[workspace.dependencies]
+log = "0.4"

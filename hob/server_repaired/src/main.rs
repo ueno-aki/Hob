@@ -3,14 +3,13 @@ use std::sync::{
     Arc,
 };
 
-// use hob_server::server::Server;
+use anyhow::{Ok, Result};
+use server_repaired::{logging, Server};
 use tokio::runtime::Builder;
 
-use hob_server::{logging, server::Server};
+fn main() -> Result<()> {
+    logging::setup(log::LevelFilter::Debug);
 
-fn main() {
-    logging::setup(logging::LevelFilter::Debug);
-    logging::info!("Sever Stated!");
     let runtime = Arc::new(
         Builder::new_multi_thread()
             .enable_all()
@@ -23,11 +22,11 @@ fn main() {
             .unwrap(),
     );
     runtime.block_on(async {
-        let server = Server::init(Arc::clone(&runtime)).await.unwrap();
-    });
-    // let server = Server::new(Arc::clone(&runtime));
-    // runtime.block_on(async {
-    //     println!("Server Started");
-    //     server.listen().await;
-    // })
+        let server = Server::create(Arc::clone(&runtime)).await?;
+
+        tokio::time::sleep(std::time::Duration::from_millis(10000)).await;
+        Ok(())
+    })?;
+    println!("Hello World");
+    Ok(())
 }

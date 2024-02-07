@@ -70,7 +70,7 @@ impl<T: Buf + ?Sized> ConditionalBuf for T {
         let mut value = 0;
         let mut shift = 0;
         loop {
-            assert!(shift < 63,"varint is too big");
+            assert!(shift < 63, "varint is too big");
             let b = self.get_u8() as u64;
             value |= (b & 0x7f) << shift;
             if b & 0x80 == 0 {
@@ -90,7 +90,7 @@ impl<T: Buf + ?Sized> ConditionalBuf for T {
     fn get_string_varint(&mut self) -> String {
         let len = self.get_varint();
         let bytes = self.copy_to_bytes(len as usize);
-        from_utf8(bytes.chunk()).unwrap().to_owned()
+        from_utf8(&bytes).unwrap().to_owned()
     }
     fn get_string_lu16(&mut self) -> String {
         let len = self.get_u16_le();

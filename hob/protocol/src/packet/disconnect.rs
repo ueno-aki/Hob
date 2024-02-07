@@ -9,7 +9,15 @@ pub struct DisconnectPacket {
     pub hide_message: bool,
     pub message: Option<String>,
 }
-
+impl DisconnectPacket {
+    pub fn from_str(message: &str) -> Self {
+        Self {
+            reason: DisconnectFailReason::Unknown,
+            hide_message: false,
+            message: Some(message.to_owned()),
+        }
+    }
+}
 impl Packet for DisconnectPacket {
     fn decode(_bytes: &mut proto_bytes::BytesMut) -> anyhow::Result<Self>
     where

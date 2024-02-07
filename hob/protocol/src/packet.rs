@@ -1,6 +1,6 @@
 use std::fmt;
 
-use anyhow::Result;
+use anyhow::{anyhow, Result};
 use proto_bytes::{BytesMut, ConditionalBuf, ConditionalBufMut};
 
 pub mod client_cache_status;
@@ -40,18 +40,21 @@ macro_rules! packet_kind {
             #[derive(Debug)]
             pub enum PacketKind {
                 $($kind( [<$kind Packet>] ),)*
+                Unknown
             }
             impl PacketKind {
                 #[inline]
                 pub fn id(&self) -> usize {
                     match self {
                         $(Self::$kind(_) => $id,)*
+                        Self::Unknown => 0
                     }
                 }
                 #[inline]
                 pub fn name(&self) -> &str {
                     match self {
                         $(Self::$kind(_) => stringify!($kind),)*
+                        Self::Unknown => "Unknown"
                     }
                 }
                 #[inline]
@@ -72,6 +75,9 @@ macro_rules! packet_kind {
                         $(
                             Self::$kind(v) => Packet::encode(v,bytes)?,
                         )*
+                        Self::Unknown => {
+                            return Err(anyhow!("Unknown Packet cannot be encoded."))
+                        }
                     }
                     Ok(())
                 }

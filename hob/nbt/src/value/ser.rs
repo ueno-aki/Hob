@@ -7,7 +7,8 @@ use super::Value;
 impl Serialize for Value {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
-        S: serde::Serializer {
+        S: serde::Serializer,
+    {
         match self {
             Value::Byte(n) => serializer.serialize_i8(*n),
             Value::Short(n) => serializer.serialize_i16(*n),
@@ -19,7 +20,7 @@ impl Serialize for Value {
             Value::List(v) => v.serialize(serializer),
             Value::Compound(m) => {
                 let mut map = serializer.serialize_map(None)?;
-                for (key,v) in m {
+                for (key, v) in m {
                     map.serialize_entry(key, v)?;
                 }
                 map.end()

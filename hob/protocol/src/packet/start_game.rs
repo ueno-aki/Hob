@@ -49,7 +49,7 @@ pub struct StartGamePacket {
     is_from_locked_world_template: bool,
     msa_gamertags_only: bool,
     is_from_world_template: bool,
-    is_world_template_settings_locked:bool,
+    is_world_template_settings_locked: bool,
     only_spawn_v1_villagers: bool,
     persona_disabled: bool,
     custom_skins_disabled: bool,
@@ -78,7 +78,7 @@ pub struct StartGamePacket {
     engine: String,
     property_data: hob_nbt::value::Value,
     block_pallette_checksum: u64,
-    world_template_id:Uuid,
+    world_template_id: Uuid,
     client_side_generation: bool,
     block_network_ids_are_hashes: bool,
     server_controlled_sound: bool,
@@ -87,7 +87,8 @@ pub struct StartGamePacket {
 impl Packet for StartGamePacket {
     fn decode(_bytes: &mut proto_bytes::BytesMut) -> anyhow::Result<Self>
     where
-        Self: Sized {
+        Self: Sized,
+    {
         todo!()
     }
 
@@ -98,13 +99,13 @@ impl Packet for StartGamePacket {
         bytes.put_varint(self.runtime_entity_id);
         bytes.put_zigzag32(self.gamemode as i32);
         {
-            let (x,y,z) = self.player_position;
+            let (x, y, z) = self.player_position;
             bytes.put_f32_le(x);
             bytes.put_f32_le(y);
             bytes.put_f32_le(z);
         }
         {
-            let (x,z) = self.rotation;
+            let (x, z) = self.rotation;
             bytes.put_f32_le(x);
             bytes.put_f32_le(z);
         }
@@ -118,7 +119,7 @@ impl Packet for StartGamePacket {
         bytes.put_zigzag32(self.world_gamemode as i32);
         bytes.put_zigzag32(self.difficulty);
         {
-            let (x,y,z) = self.spawn_position;
+            let (x, y, z) = self.spawn_position;
             bytes.put_zigzag32(x);
             bytes.put_varint(y as u32 as u64); // 32 most significant bits are set to 0;
             bytes.put_zigzag32(z);
@@ -169,7 +170,10 @@ impl Packet for StartGamePacket {
         bytes.put_i32_le(self.limited_world_length);
         bytes.put_bool(self.is_new_nether);
         {
-            let EducationSharedResourceURI { button_name, link_uri } = &self.edu_resource_uri;
+            let EducationSharedResourceURI {
+                button_name,
+                link_uri,
+            } = &self.edu_resource_uri;
             bytes.put_string_varint(button_name);
             bytes.put_string_varint(link_uri);
         }
@@ -188,10 +192,15 @@ impl Packet for StartGamePacket {
         bytes.put_varint(self.block_properties.len() as u64);
         for BlockProperty { name, state } in self.block_properties.iter() {
             bytes.put_string_varint(name);
-            bytes.put_slice(&VarInt::to_vec(state).map_err(|e|anyhow!("{e}"))?);
+            bytes.put_slice(&VarInt::to_vec(state).map_err(|e| anyhow!("{e}"))?);
         }
         bytes.put_varint(self.itemstates.len() as u64);
-        for ItemState { name, runtime_id, component_based } in self.itemstates.iter() {
+        for ItemState {
+            name,
+            runtime_id,
+            component_based,
+        } in self.itemstates.iter()
+        {
             bytes.put_string_varint(name);
             bytes.put_i16_le(*runtime_id);
             bytes.put_bool(*component_based);
@@ -199,10 +208,10 @@ impl Packet for StartGamePacket {
         bytes.put_string_varint(&self.multiplayer_correlation_id);
         bytes.put_bool(self.server_authoritative_inventory);
         bytes.put_string_varint(&self.engine);
-        bytes.put_slice(&VarInt::to_vec(&self.property_data).map_err(|e|anyhow!("{e}"))?);
+        bytes.put_slice(&VarInt::to_vec(&self.property_data).map_err(|e| anyhow!("{e}"))?);
         bytes.put_u64_le(self.block_pallette_checksum);
         {
-            let (most_sig,least_sig) = self.world_template_id.as_u64_pair();
+            let (most_sig, least_sig) = self.world_template_id.as_u64_pair();
             bytes.put_u64_le(most_sig);
             bytes.put_u64_le(least_sig);
         }
@@ -213,7 +222,7 @@ impl Packet for StartGamePacket {
     }
 }
 
-#[derive(Debug,Clone,Copy)]
+#[derive(Debug, Clone, Copy)]
 pub enum GameMode {
     Survival,
     Creative,
@@ -224,14 +233,14 @@ pub enum GameMode {
     Spectator,
 }
 
-#[derive(Debug,Clone,Copy)]
+#[derive(Debug, Clone, Copy)]
 pub enum Dimension {
     OverWorld,
     Nether,
     End,
 }
 
-#[derive(Debug,Clone,Copy)]
+#[derive(Debug, Clone, Copy)]
 pub enum EditorWorldType {
     NotEditor,
     Project,
@@ -281,7 +290,7 @@ pub struct Experiment {
     enable: bool,
 }
 
-#[derive(Debug,Clone,Copy)]
+#[derive(Debug, Clone, Copy)]
 pub enum PermissionLevel {
     Visitor,
     Member,
@@ -295,14 +304,14 @@ pub struct EducationSharedResourceURI {
     link_uri: String,
 }
 
-#[derive(Debug,Clone,Copy)]
+#[derive(Debug, Clone, Copy)]
 pub enum ChatRestrictionLevel {
     None,
     Dropped,
     Disabled,
 }
 
-#[derive(Debug,Clone,Copy)]
+#[derive(Debug, Clone, Copy)]
 pub enum MovementAuthority {
     Client,
     Server,
@@ -312,7 +321,7 @@ pub enum MovementAuthority {
 #[derive(Debug)]
 pub struct BlockProperty {
     name: String,
-    state:hob_nbt::value::Value
+    state: hob_nbt::value::Value,
 }
 
 #[derive(Debug)]

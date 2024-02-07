@@ -24,10 +24,7 @@ impl Decoder {
         let mut iv: [u8; 16] = [0; 16];
         iv[15] = 2;
         iv[..12].copy_from_slice(&shared_secret[..12]);
-        self.cipher = Some(Aes256Ctr::new(
-            shared_secret.into(),
-            &iv.into(),
-        ));
+        self.cipher = Some(Aes256Ctr::new(shared_secret.into(), &iv.into()));
         self.ss_key.copy_from_slice(shared_secret);
     }
     pub fn decode(&mut self, bytes: &mut BytesMut) -> Result<Vec<PacketKind>> {

@@ -12,7 +12,7 @@ fn varint_works() {
         vec![0b11111111, 0b10000000, 0b11111111, 0b10]
     );
     assert_eq!(size, 4);
-    assert_eq!(bytes.get_varint(),0b10111111100000001111111)
+    assert_eq!(bytes.get_varint(), 0b10111111100000001111111)
 }
 
 #[test]

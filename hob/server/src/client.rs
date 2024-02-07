@@ -22,13 +22,13 @@ use tokio::runtime::Runtime;
 
 pub struct Client {
     socket: Arc<RaknetSocket>,
-    runtime:Arc<Runtime>,
+    runtime: Arc<Runtime>,
     encoder: Encoder,
     decoder: Decoder,
 }
 
 impl Client {
-    pub fn new(socket: RaknetSocket,runtime:Arc<Runtime>) -> Self {
+    pub fn new(socket: RaknetSocket, runtime: Arc<Runtime>) -> Self {
         Client {
             socket: Arc::new(socket),
             runtime,
