@@ -4,8 +4,9 @@ use aes::{
     cipher::{KeyIvInit, StreamCipher},
     Aes256,
 };
-use anyhow::{ensure, Result};
+use anyhow::{bail, ensure, Result};
 use flate2::read::DeflateDecoder;
+use log::debug;
 use proto_bytes::{Buf, BufMut, BytesMut, ConditionalBuf};
 
 use crate::packet::PacketKind;
@@ -16,6 +17,7 @@ type Aes256Ctr = ctr::Ctr64BE<Aes256>;
 pub struct Decoder {
     pub cipher: Option<Aes256Ctr>,
     pub counter: u64,
+    pub compression_ready: bool,
     ss_key: [u8; 32],
 }
 
@@ -35,7 +37,14 @@ impl Decoder {
         if self.cipher.is_some() {
             self.decrypt(bytes)?;
         }
-        self.decompress(bytes);
+        if self.compression_ready {
+            match bytes.get_u8() {
+                0x00 => self.decompress(bytes),
+                0x01 => bail!("snappy compression is not supported"),
+                0xff => {},
+                _ => bail!("invalid compression type"),
+            }
+        }
         let mut packets = Vec::new();
         while !bytes.is_empty() {
             let size = bytes.get_varint();
@@ -46,7 +55,7 @@ impl Decoder {
         Ok(packets)
     }
     fn decompress(&mut self, bytes: &mut BytesMut) {
-        let mut decoder = DeflateDecoder::new(bytes.as_ref());
+        let mut decoder = DeflateDecoder::new(&bytes[..]);
         let mut flate = Vec::new();
         if decoder.read_to_end(&mut flate).is_ok() {
             bytes.clear();

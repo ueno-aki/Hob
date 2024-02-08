@@ -15,7 +15,7 @@ type Aes256Ctr = ctr::Ctr64BE<Aes256>;
 pub struct Encoder {
     pub cipher: Option<Aes256Ctr>,
     pub counter: u64,
-    pub force_compress: bool,
+    pub compression_ready: bool,
     ss_key: [u8; 32],
 }
 
@@ -28,21 +28,33 @@ impl Encoder {
         self.ss_key.copy_from_slice(shared_secret);
     }
     pub fn encode(&mut self, packet: PacketKind) -> Vec<u8> {
-        let mut encoded = BytesMut::new();
-
         let mut content = BytesMut::new();
-        packet.encode(&mut content).unwrap();
-        encoded.put_varint(content.len() as u64);
-        encoded.put(content);
-
-        if self.force_compress {
-            self.compress(&mut encoded);
+        {
+            let mut packet_buf = BytesMut::new();
+            packet.encode(&mut packet_buf).unwrap();
+            content.put_varint(packet_buf.len() as u64);
+            content.put(packet_buf);
         }
+
+        if self.compression_ready {
+            let mut compressed = Vec::new();
+            if content.len() > 512 {
+                compressed.put_u8(0x00);
+                self.compress(&mut content);
+            } else {
+                compressed.put_u8(0xff);
+            }
+            compressed.extend_from_slice(&content);
+
+            content.clear();
+            content.extend_from_slice(&compressed);
+        }
+        
         if self.cipher.is_some() {
-            self.encrypt(&mut encoded);
+            self.encrypt(&mut content);
         }
         let mut result = vec![0xfe];
-        result.extend_from_slice(&encoded);
+        result.extend_from_slice(&content);
         result
     }
     fn compress(&mut self, bytes: &mut BytesMut) {

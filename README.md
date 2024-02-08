@@ -13,6 +13,11 @@
 Server software for Minecraft: Bedrock Edition, written in Rust. It is currently in the early stages of development. 🚧
 We are Looking For Developers, think your interested, see how to apply here: <https://discord.gg/bC3wnqm8Uu>
 
+## Now
+
+Only supported latest version.
+Compresser is Deflate only.
+
 ## Acknowlege
 
 * [feather](https://github.com/feather-rs/feather/blob/main/LICENSE.md)

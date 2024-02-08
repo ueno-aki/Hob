@@ -4,6 +4,7 @@ use std::sync::{
 };
 
 use anyhow::{Ok, Result};
+use log::info;
 use server_repaired::{logging, Server};
 use tokio::runtime::Builder;
 
@@ -22,11 +23,15 @@ fn main() -> Result<()> {
             .unwrap(),
     );
     runtime.block_on(async {
-        let server = Server::create(Arc::clone(&runtime)).await?;
+        let mut server = Server::create(Arc::clone(&runtime)).await.unwrap();
 
-        tokio::time::sleep(std::time::Duration::from_millis(10000)).await;
-        Ok(())
-    })?;
-    println!("Hello World");
+        info!("Server Created");
+        loop {
+            if let Some(player) = server.player_registry.recv().await {
+                info!("Player Joined {:?}", player.user);
+            }
+        }
+    });
+
     Ok(())
 }

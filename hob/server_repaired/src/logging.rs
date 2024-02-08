@@ -5,12 +5,12 @@ use log4rs::{
     Config,
 };
 
-use log::{debug, error, info, trace, warn, LevelFilter};
+use log::{debug, LevelFilter};
 
 pub fn setup(level: LevelFilter) {
     let stdio = ConsoleAppender::builder()
         .encoder(Box::new(PatternEncoder::new(
-            "{({d(%H:%M:%S%.6f)}):15.15} {h({({l}):5})} [{target}] - {message}\n",
+            "[{d(%Y-%m-%d %H:%M:%S:%3f)} {h({l})}] - {message}\n",
         )))
         .build();
 

@@ -58,7 +58,7 @@ impl Client {
                 };
                 self.send_packet(PacketKind::NetworkSettings(network_setting))
                     .await?;
-                self.encoder.force_compress = true;
+                self.encoder.compression_ready = true;
             }
             PacketKind::Login(v) => {
                 let Ok((pubkey, client_data)) = verify_login(&v.identity) else {

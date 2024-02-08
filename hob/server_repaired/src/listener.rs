@@ -4,7 +4,7 @@ use anyhow::Result;
 use rust_raknet::{RaknetListener, RaknetSocket};
 use tokio::{runtime::Runtime, sync::mpsc::Sender};
 
-use crate::{into_anyhow, player_init::PlayerRegistry};
+use crate::{connection_client::ConnectionClient, into_anyhow, player_init::PlayerRegistry};
 
 pub struct Listener {
     listener: RaknetListener,
@@ -39,6 +39,8 @@ impl Listener {
         }
     }
     async fn accept(&mut self, socket: RaknetSocket) {
-        println!("{:?}", socket.peer_addr());
+        let connection =
+            ConnectionClient::new(socket, self.player_registry.clone(), self.runtime.clone());
+        connection.start();
     }
 }

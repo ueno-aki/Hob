@@ -2,6 +2,7 @@ use std::sync::Arc;
 
 use anyhow::Result;
 use hob_protocol::{decode::Decoder, encode::Encoder, packet::PacketKind};
+use log::{debug, info};
 use proto_bytes::BytesMut;
 use rust_raknet::RaknetSocket;
 use tokio::{
@@ -9,7 +10,11 @@ use tokio::{
     sync::mpsc::{self, Receiver, Sender},
 };
 
-use crate::{into_anyhow, player_init::PlayerRegistry};
+use crate::{
+    initial_handler::{login_process, LoginResult},
+    into_anyhow,
+    player_init::PlayerRegistry,
+};
 
 pub struct ConnectionClient {
     pub reader: Reader,
@@ -40,8 +45,59 @@ impl ConnectionClient {
             runtime,
         }
     }
-    pub fn start(self) {
-        Arc::clone(&self.runtime).spawn(async move { self });
+    pub fn start(mut self) {
+        let runtime_ref = Arc::clone(&self.runtime);
+        runtime_ref.spawn(async move {
+            let result = login_process(&mut self).await;
+            if result.is_err() {
+                debug!("login failed: {:?}", result);
+                return;
+            }
+            self.proceed(result.unwrap()).await;
+        });
+    }
+
+    pub async fn proceed(self, result: LoginResult) {
+        let Self {
+            reader,
+            writer,
+            packet_from_client,
+            packet_to_client,
+            player_registry,
+            runtime,
+        } = self;
+
+        match result {
+            LoginResult::Success(skin, userdata) => {
+                info!("login success {:?}", userdata);
+                let player = PlayerRegistry {
+                    skin,
+                    user: userdata,
+                    packet_from_client,
+                    packet_to_client,
+                };
+                player_registry.send(player).await.unwrap();
+                Self::split(reader, writer, runtime);
+            }
+            LoginResult::Failed => {
+                info!("login failed");
+            }
+        }
+    }
+
+    pub fn split(reader: Reader, writer: Writer, runtime: Arc<Runtime>) {
+        let reader = runtime.spawn(async move { reader.run().await });
+        let writer = runtime.spawn(async move { writer.run().await });
+        runtime.spawn(async move {
+            tokio::select! {
+                e = reader => {
+                    debug!("reader finished: {:?}", e);
+                },
+                e = writer => {
+                    debug!("writer finished {:?}", e);
+                },
+            }
+        });
     }
     pub async fn read(&mut self) -> Result<Vec<PacketKind>> {
         self.reader.read().await
@@ -54,7 +110,8 @@ impl ConnectionClient {
         self.writer.encoder.setup_cipher(key);
     }
     pub fn enable_compression(&mut self) {
-        self.writer.encoder.force_compress = true
+        self.reader.decoder.compression_ready = true;
+        self.writer.encoder.compression_ready = true;
     }
 }
 
@@ -76,6 +133,7 @@ impl Reader {
         loop {
             let packets = self.read().await?;
             for packet in packets {
+                debug!("received packet: {}", packet);
                 self.packet_from_client.send(packet).await?;
             }
         }
@@ -101,10 +159,11 @@ impl Writer {
         }
     }
     pub async fn run(mut self) -> Result<()> {
-        while let Some(v) = self.packet_to_client.recv().await {
-            self.write(v).await?;
+        loop {
+            if let Some(v) = self.packet_to_client.recv().await {
+                self.write(v).await?;
+            }
         }
-        Ok(())
     }
     pub async fn write(&mut self, packet: PacketKind) -> Result<()> {
         let buffer = self.encoder.encode(packet);
