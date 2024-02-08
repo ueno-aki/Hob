@@ -2,7 +2,7 @@ use std::sync::Arc;
 
 use anyhow::Result;
 use hob_protocol::{decode::Decoder, encode::Encoder, packet::PacketKind};
-use log::{debug, info};
+use log::debug;
 use proto_bytes::BytesMut;
 use rust_raknet::RaknetSocket;
 use tokio::{
@@ -78,8 +78,8 @@ impl ConnectionClient {
                 player_registry.send(player).await.unwrap();
                 Self::split(reader, writer, runtime);
             }
-            LoginResult::Failed => {
-                info!("login failed");
+            LoginResult::Failed(e) => {
+                debug!("login failed: {:?}", e);
             }
         }
     }

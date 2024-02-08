@@ -1,4 +1,4 @@
-use anyhow::{anyhow, Result};
+use anyhow::{anyhow, Error, Result};
 use hob_protocol::packet::{
     disconnect::DisconnectPacket,
     handshake::{shared_secret, ServerToClientHandshakePacket},
@@ -7,32 +7,29 @@ use hob_protocol::packet::{
     play_status::PlayStatusPacket,
     PacketKind,
 };
-use log::debug;
 
 use crate::connection_client::ConnectionClient;
 
 #[derive(Debug)]
 pub enum LoginResult {
     Success(Box<SkinData>, ExtraUserdata),
-    Failed,
+    Failed(Error),
 }
 
 static PROTOCOL_VERSION: i32 = 649;
 
 pub async fn login_process(connection: &mut ConnectionClient) -> Result<LoginResult> {
     if let Err(e) = handle_request(connection).await {
-        debug!("login_process failed: {:?}", e);
-        return Ok(LoginResult::Failed);
+        return Ok(LoginResult::Failed(e));
     }
 
     match handle_login(connection).await {
         Ok((skin, userdata)) => Ok(LoginResult::Success(skin, userdata)),
         Err(e) => {
-            debug!("login_process failed: {:?}", e);
             connection
                 .write(DisconnectPacket::from("disconnectionScreen.notAuthenticated").into())
                 .await?;
-            Ok(LoginResult::Failed)
+            Ok(LoginResult::Failed(e))
         }
     }
 }
