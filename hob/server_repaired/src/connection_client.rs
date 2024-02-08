@@ -69,7 +69,6 @@ impl ConnectionClient {
 
         match result {
             LoginResult::Success(skin, userdata) => {
-                info!("login success {:?}", userdata);
                 let player = PlayerRegistry {
                     skin,
                     user: userdata,
@@ -161,6 +160,7 @@ impl Writer {
     pub async fn run(mut self) -> Result<()> {
         loop {
             if let Some(v) = self.packet_to_client.recv().await {
+                debug!("sending packet: {}", v);
                 self.write(v).await?;
             }
         }
