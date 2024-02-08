@@ -14,6 +14,7 @@ use tokio::{
 
 use player_init::PlayerRegistry;
 
+#[derive(Debug)]
 pub struct Server {
     pub runtime: Arc<Runtime>,
     pub player_registry: Receiver<PlayerRegistry>,

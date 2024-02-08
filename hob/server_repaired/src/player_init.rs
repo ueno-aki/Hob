@@ -4,6 +4,7 @@ use hob_protocol::packet::{
 };
 use tokio::sync::mpsc::{Receiver, Sender};
 
+#[derive(Debug)]
 pub struct PlayerRegistry {
     pub skin: Box<SkinData>,
     pub user: ExtraUserdata,
