@@ -29,11 +29,20 @@ fn main() -> Result<()> {
         info!("Server Created");
         loop {
             if let Some(mut player) = server.player_registry.recv().await {
-                info!("Player connected: {}, xuid:{}", player.user.display_name,player.user.xuid);
+                info!(
+                    "Player connected: {}, xuid:{}",
+                    player.user.display_name, player.user.xuid
+                );
                 runtime.spawn(async move {
-                    let v = player.packet_from_client.recv().await.unwrap();
-                    if let PacketKind::ClientToServerHandshake(_) = v {
-                        player.packet_to_client.send(PlayStatusPacket::LoginSuccess.into()).await.unwrap();
+                    loop {
+                        let v = player.packet_from_client.recv().await.unwrap();
+                        if let PacketKind::ClientToServerHandshake(_) = v {
+                            player
+                                .packet_to_client
+                                .send(PlayStatusPacket::LoginSuccess.into())
+                                .await
+                                .unwrap();
+                        }
                     }
                 });
             }
