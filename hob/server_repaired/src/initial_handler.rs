@@ -30,7 +30,7 @@ pub async fn login_process(connection: &mut ConnectionClient) -> Result<LoginRes
         Err(e) => {
             debug!("login_process failed: {:?}", e);
             connection
-                .write(DisconnectPacket::from_str("disconnectionScreen.notAuthenticated").into())
+                .write(DisconnectPacket::from("disconnectionScreen.notAuthenticated").into())
                 .await?;
             Ok(LoginResult::Failed)
         }

@@ -10,7 +10,7 @@ use log::{debug, LevelFilter};
 pub fn setup(level: LevelFilter) {
     let stdio = ConsoleAppender::builder()
         .encoder(Box::new(PatternEncoder::new(
-            "[{d(%Y-%m-%d %H:%M:%S:%3f)} {h({l})}] - {message}\n",
+            "{([{d(%Y-%m-%d %H:%M:%S:%3f)} {h({l})}]):31} - {message}\n",
         )))
         .build();
 

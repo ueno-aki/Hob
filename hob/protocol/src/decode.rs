@@ -6,7 +6,6 @@ use aes::{
 };
 use anyhow::{bail, ensure, Result};
 use flate2::read::DeflateDecoder;
-use log::debug;
 use proto_bytes::{Buf, BufMut, BytesMut, ConditionalBuf};
 
 use crate::packet::PacketKind;

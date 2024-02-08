@@ -4,7 +4,7 @@ use std::sync::{
 };
 
 use anyhow::{Ok, Result};
-use hob_protocol::packet::{play_status::PlayStatusPacket, PacketKind};
+use hob_protocol::packet::{disconnect::{DisconnectFailReason, DisconnectPacket}, play_status::PlayStatusPacket, PacketKind};
 use log::info;
 use server_repaired::{logging, Server};
 use tokio::runtime::Builder;
@@ -35,11 +35,15 @@ fn main() -> Result<()> {
                 );
                 runtime.spawn(async move {
                     loop {
-                        let v = player.packet_from_client.recv().await.unwrap();
-                        if let PacketKind::ClientToServerHandshake(_) = v {
+                        let v = player.packet_from_client.recv().await;
+                        if v.is_none() {
+                            info!("Player disconnected: {}", player.user.display_name);
+                            break;
+                        }
+                        if let PacketKind::ClientToServerHandshake(_) = v.unwrap() {
                             player
                                 .packet_to_client
-                                .send(PlayStatusPacket::LoginSuccess.into())
+                                .send(DisconnectPacket::from("Good afternoon.").into())
                                 .await
                                 .unwrap();
                         }
