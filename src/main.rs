@@ -3,14 +3,15 @@ use std::sync::{
     Arc,
 };
 
-// use hob_server::server::Server;
+use anyhow::{Ok, Result};
+use hob_protocol::packet::{disconnect::DisconnectPacket, PacketKind};
+use log::info;
+use server_repaired::{logging, Server};
 use tokio::runtime::Builder;
 
-use hob_server::{logging, server::Server};
+fn main() -> Result<()> {
+    logging::setup(log::LevelFilter::Debug);
 
-fn main() {
-    logging::setup(logging::LevelFilter::Debug);
-    logging::info!("Sever Stated!");
     let runtime = Arc::new(
         Builder::new_multi_thread()
             .enable_all()
@@ -23,11 +24,33 @@ fn main() {
             .unwrap(),
     );
     runtime.block_on(async {
-        let server = Server::init(Arc::clone(&runtime)).await.unwrap();
+        let mut server = Server::create(Arc::clone(&runtime)).await.unwrap();
+
+        info!("Server Created");
+        loop {
+            if let Some(mut player) = server.player_registry.recv().await {
+                info!(
+                    "Player connected: {}, xuid:{}",
+                    player.user.display_name, player.user.xuid
+                );
+                runtime.spawn(async move {
+                    loop {
+                        let v = player.packet_from_client.recv().await;
+                        if v.is_none() {
+                            info!("Player disconnected: {}", player.user.display_name);
+                            break;
+                        }
+                        if let PacketKind::ClientToServerHandshake(_) = v.unwrap() {
+                            player
+                                .packet_to_client
+                                .send(DisconnectPacket::from("Good afternoon.").into())
+                                .await
+                                .unwrap();
+                        }
+                    }
+                });
+            }
+        }
     });
-    // let server = Server::new(Arc::clone(&runtime));
-    // runtime.block_on(async {
-    //     println!("Server Started");
-    //     server.listen().await;
-    // })
+    Ok(())
 }

@@ -6,8 +6,10 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-hob-server = { path = "./hob/server" }
-num_cpus = "*"
+server_repaired = { path = "./hob/server_repaired" }
+hob-protocol = { path = "./hob/protocol" }
+log = "0.4"
+anyhow = "1.0"
 tokio = { version = "1.20.1", features = ["full"] }
 
 [workspace]
@@ -21,3 +23,4 @@ members = [
 
 [workspace.dependencies]
 log = "0.4"
+anyhow = "1.0"
