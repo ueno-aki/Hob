@@ -7,7 +7,7 @@ edition = "2021"
 
 [dependencies]
 server_repaired = { path = "./hob/server_repaired" }
-hob-protocol = { path = "./hob/protocol" }
+hob_protocol = { path = "./hob/protocol" }
 log = "0.4"
 anyhow = "1.0"
 tokio = { version = "1.20.1", features = ["full"] }
@@ -24,3 +24,6 @@ members = [
 [workspace.dependencies]
 log = "0.4"
 anyhow = "1.0"
+hob_protocol = { path = "./hob/protocol" }
+hob_nbt = { path = "./hob/nbt" }
+proto_bytes = { path = "./proto_bytes" }

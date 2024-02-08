@@ -1,5 +1,5 @@
 [package]
-name = "hob-protocol"
+name = "hob_protocol"
 version = "0.1.0"
 edition = "2021"
 
@@ -16,10 +16,11 @@ base64 = "0.21.4"
 rand = "0.8.5"
 uuid = "1.7.0"
 from-num = "*"
-proto-bytes = { path = "../../proto_bytes" }
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
-hob-nbt = { path = "../nbt" }
 paste = "*"
+
 anyhow.workspace = true
 log.workspace = true
+proto_bytes.workspace = true
+hob_nbt.workspace = true
