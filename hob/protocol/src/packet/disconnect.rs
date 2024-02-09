@@ -18,6 +18,15 @@ impl From<DisconnectFailReason> for DisconnectPacket {
         }
     }
 }
+impl From<String> for DisconnectPacket {
+    fn from(s: String) -> Self {
+        Self {
+            reason: DisconnectFailReason::Unknown,
+            hide_message: false,
+            message: Some(s),
+        }
+    }
+}
 impl<'a> From<&'a str> for DisconnectPacket {
     fn from(s: &'a str) -> Self {
         Self {
