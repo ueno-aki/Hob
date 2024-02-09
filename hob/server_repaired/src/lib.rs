@@ -1,3 +1,4 @@
+pub mod client;
 pub mod connection_client;
 pub mod initial_handler;
 pub mod listener;
