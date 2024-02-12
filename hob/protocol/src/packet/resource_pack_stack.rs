@@ -11,6 +11,40 @@ pub struct ResourcePacksStackPacket {
     pub experiments: Vec<StackExperiment>,
     pub experiments_previously_used: bool,
 }
+impl Default for ResourcePacksStackPacket {
+    fn default() -> Self {
+        Self {
+            must_accept: false,
+            behavior_packs: vec![],
+            resource_packs: vec![],
+            game_version: String::from("*"),
+            experiments: vec![],
+            experiments_previously_used: false,
+        }
+    }
+}
+impl ResourcePacksStackPacket {
+    pub fn new(
+        must_accept: bool,
+        behavior_packs: Vec<StackPackIdVersion>,
+        resource_packs: Vec<StackPackIdVersion>,
+        game_version: &str,
+        experiments: Vec<StackExperiment>,
+        experiments_previously_used: bool,
+    ) -> Self {
+        Self {
+            must_accept,
+            behavior_packs,
+            resource_packs,
+            game_version: game_version.to_owned(),
+            experiments,
+            experiments_previously_used,
+        }
+    }
+    pub fn add_experiment(&mut self, name: &str, enabled: bool) {
+        self.experiments.push(StackExperiment::new(name, enabled));
+    }
+}
 
 impl Packet for ResourcePacksStackPacket {
     fn decode(_bytes: &mut proto_bytes::BytesMut) -> anyhow::Result<Self>
@@ -56,4 +90,12 @@ pub struct StackPackIdVersion {
 pub struct StackExperiment {
     pub name: String,
     pub enabled: bool,
+}
+impl StackExperiment {
+    pub fn new(name: &str, enabled: bool) -> Self {
+        Self {
+            name: name.to_owned(),
+            enabled,
+        }
+    }
 }

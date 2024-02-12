@@ -3,7 +3,7 @@ use proto_bytes::{BufMut, ConditionalBufMut};
 
 use super::Packet;
 
-#[derive(Debug)]
+#[derive(Debug, Default)]
 pub struct ResourcePacksInfoPacket {
     pub must_accept: bool,
     pub has_scripts: bool,
