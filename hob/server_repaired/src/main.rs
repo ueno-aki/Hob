@@ -12,7 +12,7 @@ use hob_protocol::packet::{
     resource_pack_response::ResponseStatus, resource_pack_stack::ResourcePacksStackPacket,
     PacketKind,
 };
-use log::{debug, info, warn};
+use log::{info, warn};
 use server_repaired::{client::Client, logging, Server};
 use specs::prelude::*;
 use tokio::{runtime::Builder, sync::mpsc::error::TryRecvError, time::Instant};
@@ -86,7 +86,7 @@ impl<'a> System<'a> for AcceptNewPlayer {
         &mut self,
         (entities, mut server, mut count, mut runtime_id, mut clients): Self::SystemData,
     ) {
-        while let Ok(player) = server.player_registry.try_recv() {
+        for player in server.try_accept_players(32) {
             info!(
                 "Player connected: {}, xuid:{}",
                 player.user.display_name, player.user.xuid
