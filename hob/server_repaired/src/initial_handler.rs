@@ -1,8 +1,8 @@
-use anyhow::{anyhow, Error, Result};
+use anyhow::{bail, Error, Result};
 use hob_protocol::packet::{
     disconnect::DisconnectPacket,
     handshake::{shared_secret, ServerToClientHandshakePacket},
-    login::{verify_login, verify_skin, ExtraUserdata, SkinData},
+    login::{verify_login, verify_skin, ExtraUserdata, LoginPacket, SkinData},
     network_settings::{CompressionAlgorithmType, NetworkSettingsPacket},
     play_status::PlayStatusPacket,
     PacketKind,
@@ -37,9 +37,7 @@ pub async fn login_process(connection: &mut ConnectionClient) -> Result<LoginRes
 pub async fn handle_request(connection: &mut ConnectionClient) -> Result<()> {
     let packets = connection.read().await?;
     let PacketKind::RequestNetworkSetting(request) = &packets[0] else {
-        return Err(anyhow!(
-            "login_process packet missmatch,expected:RequestNetworkSetting"
-        ));
+        bail!("login_process packet missmatch,expected:RequestNetworkSetting")
     };
     match request.client_protocol {
         n if n < PROTOCOL_VERSION => {
@@ -60,28 +58,52 @@ pub async fn handle_request(connection: &mut ConnectionClient) -> Result<()> {
                 client_throttle_threshold: 0,
                 client_throttle_scalar: 0.0,
             };
-            connection.writer.write(network_setting.into()).await?;
+            connection.write(network_setting.into()).await?;
             connection.enable_compression();
             return Ok(());
         }
     }
-    Err(anyhow!("login_process protocol missmatch"))
+    bail!("protocol version missmatch");
 }
 
 pub async fn handle_login(
     connection: &mut ConnectionClient,
 ) -> Result<(Box<SkinData>, ExtraUserdata)> {
-    let PacketKind::Login(login) = &connection.read().await?[0] else {
-        return Err(anyhow!("login_process packet missmatch,expected:Login"));
-    };
-    let (pubkey, client_data) = verify_login(&login.identity)?;
-    let skin = verify_skin(&pubkey, &login.client)?;
-    let (secret, token) = shared_secret(&pubkey)?;
-    connection
-        .write(ServerToClientHandshakePacket { token }.into())
-        .await?;
-
-    connection.enable_encryption(&secret);
-
-    Ok((Box::new(skin), client_data))
+    let packet = connection.read().await?;
+    if let Some(PacketKind::Login(login)) = packet.into_iter().next() {
+        let LoginProcess {
+            skin,
+            secret_key,
+            token,
+            user_data,
+        } = connection
+            .runtime
+            .spawn_blocking(|| LoginProcess::verify(login))
+            .await??;
+        connection
+            .write(ServerToClientHandshakePacket { token }.into())
+            .await?;
+        connection.enable_encryption(&secret_key);
+        return Ok((skin, user_data));
+    }
+    bail!("login_process packet missmatch,expected:Login")
+}
+struct LoginProcess {
+    skin: Box<SkinData>,
+    secret_key: [u8; 32],
+    token: String,
+    user_data: ExtraUserdata,
+}
+impl LoginProcess {
+    pub fn verify(login: LoginPacket) -> Result<LoginProcess> {
+        let (pubkey, user_data) = verify_login(&login.identity)?;
+        let skin = verify_skin(&pubkey, &login.client)?;
+        let (secret_key, token) = shared_secret(&pubkey)?;
+        Ok(LoginProcess {
+            skin: Box::new(skin),
+            secret_key,
+            token,
+            user_data,
+        })
+    }
 }

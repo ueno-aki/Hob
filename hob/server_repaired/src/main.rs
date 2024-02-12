@@ -9,9 +9,10 @@ use std::{
 use anyhow::Result;
 use hob_protocol::packet::{
     play_status::PlayStatusPacket, resource_pack_info::ResourcePacksInfoPacket,
-    resource_pack_response::ResponseStatus, PacketKind,
+    resource_pack_response::ResponseStatus, resource_pack_stack::ResourcePacksStackPacket,
+    PacketKind,
 };
-use log::{info, warn};
+use log::{debug, info, warn};
 use server_repaired::{client::Client, logging, Server};
 use specs::prelude::*;
 use tokio::{runtime::Builder, sync::mpsc::error::TryRecvError, time::Instant};
@@ -39,6 +40,7 @@ fn main() -> Result<()> {
 
         let mut world = World::new();
         world.register::<Client>();
+        world.register::<RuntimeId>();
         world.insert(server);
         world.insert(EntityCount(0));
 
@@ -64,47 +66,59 @@ fn main() -> Result<()> {
 #[derive(Debug, Default)]
 struct EntityCount(u64);
 
+#[derive(Debug, Default)]
+struct RuntimeId(u64);
+impl Component for RuntimeId {
+    type Storage = VecStorage<Self>;
+}
+
 struct AcceptNewPlayer;
 impl<'a> System<'a> for AcceptNewPlayer {
     type SystemData = (
+        Entities<'a>,
         WriteExpect<'a, Server>,
         Write<'a, EntityCount>,
+        WriteStorage<'a, RuntimeId>,
         WriteStorage<'a, Client>,
-        Entities<'a>,
     );
 
-    fn run(&mut self, (mut server, mut count, mut clients, entities): Self::SystemData) {
+    fn run(
+        &mut self,
+        (entities, mut server, mut count, mut runtime_id, mut clients): Self::SystemData,
+    ) {
         while let Ok(player) = server.player_registry.try_recv() {
             info!(
                 "Player connected: {}, xuid:{}",
                 player.user.display_name, player.user.xuid
             );
+            count.0 += 1;
             let client = Client::new(player);
             let entity = entities.create();
             clients.insert(entity, client).unwrap();
-            count.0 += 1;
+            runtime_id.insert(entity, RuntimeId(count.0)).unwrap();
         }
     }
 }
 
 struct PacketHandler;
 impl<'a> System<'a> for PacketHandler {
-    type SystemData = (WriteStorage<'a, Client>, Entities<'a>);
+    type SystemData = (Entities<'a>, WriteStorage<'a, Client>);
 
-    fn run(&mut self, (mut clients, entities): Self::SystemData) {
+    fn run(&mut self, (entities, mut clients): Self::SystemData) {
         (&mut clients, &entities)
             .par_join()
-            .for_each(|(client, ent)| loop {
-                match client.try_recv_packet() {
-                    Ok(packet) => {
-                        handle_packet(client, packet);
+            .for_each(|(client, ent)| {
+                let packets = client.try_recv_many_packets(100);
+                match packets {
+                    Ok(packets) => {
+                        for packet in packets {
+                            handle_packet(client, packet);
+                        }
                     }
+                    Err(TryRecvError::Empty) => {}
                     Err(TryRecvError::Disconnected) => {
+                        info!("Client disconnected: {}", client.name);
                         entities.delete(ent).unwrap();
-                        break;
-                    }
-                    Err(TryRecvError::Empty) => {
-                        break;
                     }
                 }
             })
@@ -116,20 +130,18 @@ fn handle_packet(client: &mut Client, packet: PacketKind) {
             client
                 .try_send_packet(PlayStatusPacket::LoginSuccess)
                 .unwrap();
-            let resource_info = ResourcePacksInfoPacket {
-                must_accept: false,
-                has_scripts: false,
-                force_server_packs: false,
-                behaviour_packs: vec![],
-                texture_packs: vec![],
-                resource_pack_links: vec![],
-            };
+            let resource_info = ResourcePacksInfoPacket::default();
             client.try_send_packet(resource_info).unwrap();
         }
+
         PacketKind::ResourcePackClientResponse(v) => match v.response_status {
             ResponseStatus::None | ResponseStatus::Refused => {}
             ResponseStatus::SendPacks => {}
-            ResponseStatus::HaveAllPacks => {}
+            ResponseStatus::HaveAllPacks => {
+                let mut res_stack = ResourcePacksStackPacket::default();
+                res_stack.add_experiment("gametest", true);
+                client.try_send_packet(res_stack).unwrap();
+            }
             ResponseStatus::Completed => {}
         },
         _ => {}
