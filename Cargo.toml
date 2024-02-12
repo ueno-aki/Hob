@@ -17,7 +17,6 @@ members = [
     "proto_bytes",
     "hob/nbt",
     "hob/protocol",
-    "hob/server",
     "hob/server_repaired"
 ]
 

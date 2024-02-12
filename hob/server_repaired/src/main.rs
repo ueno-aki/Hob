@@ -86,7 +86,7 @@ impl<'a> System<'a> for AcceptNewPlayer {
         &mut self,
         (entities, mut server, mut count, mut runtime_id, mut clients): Self::SystemData,
     ) {
-        for player in server.try_accept_players(32) {
+        for player in server.accept_players() {
             info!(
                 "Player connected: {}, xuid:{}",
                 player.user.display_name, player.user.xuid

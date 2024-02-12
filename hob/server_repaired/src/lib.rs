@@ -29,9 +29,9 @@ impl Server {
             player_registry: player_registry_rx,
         })
     }
-    pub fn try_accept_players(&mut self,max:usize)->Vec<PlayerRegistry>{
-        let mut players = Vec::with_capacity(max);
-        for _ in 0..max {
+    pub fn accept_players(&mut self) -> Vec<PlayerRegistry>{
+        let mut players = Vec::with_capacity(32);
+        for _ in 0..32 {
             match self.player_registry.try_recv() {
                 Ok(player) => players.push(player),
                 Err(mpsc::error::TryRecvError::Empty) => break,
