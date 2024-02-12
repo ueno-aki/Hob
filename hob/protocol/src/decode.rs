@@ -40,7 +40,7 @@ impl Decoder {
             match bytes.get_u8() {
                 0x00 => self.decompress(bytes),
                 0x01 => bail!("snappy compression is not supported"),
-                0xff => {},
+                0xff => {}
                 _ => bail!("invalid compression type"),
             }
         }

@@ -53,4 +53,15 @@ impl Client {
             e @ Err(_) => e,
         }
     }
+    pub fn try_recv_many_packets(&mut self, max: usize) -> Result<Vec<PacketKind>, TryRecvError> {
+        let mut packets = Vec::with_capacity(max);
+        for _ in 0..max {
+            match self.try_recv_packet() {
+                Ok(packet) => packets.push(packet),
+                Err(TryRecvError::Empty) => break,
+                Err(TryRecvError::Disconnected) => return Err(TryRecvError::Disconnected),
+            }
+        }
+        Ok(packets)
+    }
 }
