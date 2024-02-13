@@ -1,13 +1,16 @@
-use std::sync::{
-    atomic::{AtomicUsize, Ordering},
-    Arc,
+use std::{
+    sync::{
+        atomic::{AtomicUsize, Ordering},
+        Arc,
+    },
+    time::Duration,
 };
 
 use anyhow::{Ok, Result};
-use hob_protocol::packet::{disconnect::DisconnectPacket, PacketKind};
+use hob_ecs::{WorldExt,init_game};
 use log::info;
-use server_repaired::{logging, Server};
-use tokio::runtime::Builder;
+use hob_server::{logging, Server};
+use tokio::{runtime::Builder, time::Instant};
 
 fn main() -> Result<()> {
     logging::setup(log::LevelFilter::Debug);
@@ -24,31 +27,23 @@ fn main() -> Result<()> {
             .unwrap(),
     );
     runtime.block_on(async {
-        let mut server = Server::create(Arc::clone(&runtime)).await.unwrap();
+        pub const TPS: u32 = 20;
+        pub const TICK_MILLIS: u32 = 1000 / TPS;
+        pub const TICK_DURATION: Duration = Duration::from_millis(TICK_MILLIS as u64);
 
+        let server = Server::create(Arc::clone(&runtime)).await.unwrap();
         info!("Server Created");
+        let (mut world, mut dispatcher) = init_game(server);
+        dispatcher.setup(&mut world);
         loop {
-            if let Some(mut player) = server.player_registry.recv().await {
-                info!(
-                    "Player connected: {}, xuid:{}",
-                    player.user.display_name, player.user.xuid
-                );
-                runtime.spawn(async move {
-                    loop {
-                        let v = player.packet_from_client.recv().await;
-                        if v.is_none() {
-                            info!("Player disconnected: {}", player.user.display_name);
-                            break;
-                        }
-                        if let PacketKind::ClientToServerHandshake(_) = v.unwrap() {
-                            player
-                                .packet_to_client
-                                .send(DisconnectPacket::from("Good afternoon.").into())
-                                .await
-                                .unwrap();
-                        }
-                    }
-                });
+            let start = Instant::now();
+            dispatcher.dispatch(&world);
+            world.maintain();
+            let elapsed = start.elapsed();
+            if elapsed <= TICK_DURATION {
+                tokio::time::sleep(TICK_DURATION - elapsed).await;
+            } else {
+                log::warn!("Tick took too long: {:?}", elapsed - TICK_DURATION)
             }
         }
     });

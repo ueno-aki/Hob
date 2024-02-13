@@ -29,7 +29,7 @@ impl Server {
             player_registry: player_registry_rx,
         })
     }
-    pub fn accept_players(&mut self) -> Vec<PlayerRegistry>{
+    pub fn accept_players(&mut self) -> Vec<PlayerRegistry> {
         let mut players = Vec::with_capacity(32);
         for _ in 0..32 {
             match self.player_registry.try_recv() {

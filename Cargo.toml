@@ -6,7 +6,8 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-server_repaired = { path = "./hob/server_repaired" }
+hob_server = { path = "./hob/server" }
+hob_ecs = { path = "./hob/ecs" }
 hob_protocol = { path = "./hob/protocol" }
 log = "0.4"
 anyhow = "1.0"
@@ -17,7 +18,8 @@ members = [
     "proto_bytes",
     "hob/nbt",
     "hob/protocol",
-    "hob/server_repaired"
+    "hob/server",
+    "hob/ecs"
 ]
 
 [workspace.dependencies]
@@ -25,4 +27,6 @@ log = "0.4"
 anyhow = "1.0"
 hob_protocol = { path = "./hob/protocol" }
 hob_nbt = { path = "./hob/nbt" }
+hob_server = { path = "./hob/server" }
+hob_ecs = { path = "./hob/ecs" }
 proto_bytes = { path = "./proto_bytes" }

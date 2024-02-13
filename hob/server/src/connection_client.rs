@@ -31,7 +31,7 @@ impl ConnectionClient {
         runtime: Arc<Runtime>,
     ) -> Self {
         let socket = Arc::new(socket);
-        let (packet_to_client_tx, packet_to_client_rx) = mpsc::channel(32);
+        let (packet_to_client_tx, packet_to_client_rx) = mpsc::channel(100);
         let (packet_from_client_tx, packet_from_client_rx) = mpsc::channel(100);
         let reader = Reader::new(socket.clone(), packet_from_client_tx);
         let writer = Writer::new(socket, packet_to_client_rx);

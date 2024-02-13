@@ -49,7 +49,7 @@ impl Encoder {
             content.clear();
             content.extend_from_slice(&compressed);
         }
-        
+
         if self.cipher.is_some() {
             self.encrypt(&mut content);
         }
