@@ -19,7 +19,7 @@ pub(crate) fn handle_packet(world: &mut World) {
     (&mut conns, &display, &entities)
         .par_join()
         .for_each(|(conn, display, ent)| {
-            let packets = conn.try_recv_many_packets(100);
+            let packets = conn.try_recv_many_packets(32);
             match packets {
                 Ok(packets) => {
                     for packet in packets {

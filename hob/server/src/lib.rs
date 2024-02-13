@@ -1,9 +1,8 @@
-pub mod client;
 pub mod connection_client;
 pub mod initial_handler;
 pub mod listener;
 pub mod logging;
-pub mod player_init;
+pub mod player_registry;
 
 use anyhow::{anyhow, Result};
 use listener::Listener;
@@ -13,7 +12,7 @@ use tokio::{
     sync::mpsc::{self, Receiver},
 };
 
-use player_init::PlayerRegistry;
+use player_registry::PlayerRegistry;
 
 #[derive(Debug)]
 pub struct Server {
@@ -29,9 +28,9 @@ impl Server {
             player_registry: player_registry_rx,
         })
     }
-    pub fn accept_players(&mut self) -> Vec<PlayerRegistry> {
-        let mut players = Vec::with_capacity(32);
-        for _ in 0..32 {
+    pub fn accept_players(&mut self,max:usize) -> Vec<PlayerRegistry> {
+        let mut players = Vec::with_capacity(max);
+        for _ in 0..max {
             match self.player_registry.try_recv() {
                 Ok(player) => players.push(player),
                 Err(mpsc::error::TryRecvError::Empty) => break,

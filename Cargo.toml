@@ -25,6 +25,7 @@ members = [
 [workspace.dependencies]
 log = "0.4"
 anyhow = "1.0"
+tokio = { version = "1.20.1", features = ["full"] }
 hob_protocol = { path = "./hob/protocol" }
 hob_nbt = { path = "./hob/nbt" }
 hob_server = { path = "./hob/server" }

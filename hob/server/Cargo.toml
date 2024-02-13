@@ -6,11 +6,11 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-tokio = { version = "1.20.1", features = ["full"] }
 rust-raknet = "0.12.0"
 log4rs = "1.2"
 
 log.workspace = true
+tokio.workspace = true
 proto_bytes.workspace = true
 hob_protocol.workspace = true
 anyhow.workspace = true

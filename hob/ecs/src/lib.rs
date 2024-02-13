@@ -7,6 +7,8 @@ use player::{handle_player, init_player};
 use specs::prelude::*;
 use world::{handle_world, init_world};
 
+// You can add a list of dependency to dispatcher
+// Dispatcher is excuted in main loop of the game.
 pub fn init_game(server: Server) -> (World, Dispatcher<'static, 'static>) {
     let mut world = World::new();
     world.insert(server);
@@ -16,7 +18,8 @@ pub fn init_game(server: Server) -> (World, Dispatcher<'static, 'static>) {
     (world, dispatcher.build())
 }
 
-// nodependency system call for the game
+// System fn; easy access to world.
+// This is the main loop.
 pub fn handle_game(world: &mut World) {
     handle_player(world);
     handle_world(world);

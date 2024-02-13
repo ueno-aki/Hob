@@ -4,7 +4,7 @@ use anyhow::Result;
 use rust_raknet::{RaknetListener, RaknetSocket};
 use tokio::{runtime::Runtime, sync::mpsc::Sender};
 
-use crate::{connection_client::ConnectionClient, into_anyhow, player_init::PlayerRegistry};
+use crate::{connection_client::ConnectionClient, into_anyhow, player_registry::PlayerRegistry};
 
 pub struct Listener {
     listener: RaknetListener,

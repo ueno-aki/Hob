@@ -1,5 +1,5 @@
 use hob_protocol::packet::login::ExtraUserdata;
-use hob_server::{player_init::PlayerRegistry, Server};
+use hob_server::{player_registry::PlayerRegistry, Server};
 use log::info;
 use specs::prelude::*;
 
@@ -26,7 +26,7 @@ impl<'a> System<'a> for AcceptNewPlayer {
             packet_to_client,
             user,
             ..
-        } in server.accept_players()
+        } in server.accept_players(32)
         {
             let ExtraUserdata {
                 display_name, xuid, ..
