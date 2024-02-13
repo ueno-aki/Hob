@@ -1,10 +1,10 @@
 use hob_protocol::packet::login::ExtraUserdata;
-use log::info;
 use hob_server::{player_init::PlayerRegistry, Server};
+use log::info;
 use specs::prelude::*;
 
 use crate::{
-    player::components::{ConnectionStreamComponent, DisplayNameComponent},
+    player::components::{ConnectionStreamComponent, DisplayNameComponent, XUIDComponent},
     world::components::EntityRuntimeIdComponent,
 };
 
@@ -17,15 +17,10 @@ impl<'a> System<'a> for AcceptNewPlayer {
         Entities<'a>,
         WriteExpect<'a, Server>,
         Write<'a, EntityCountResource>,
-        WriteStorage<'a, EntityRuntimeIdComponent>,
-        WriteStorage<'a, ConnectionStreamComponent>,
-        WriteStorage<'a, DisplayNameComponent>,
+        Read<'a, LazyUpdate>,
     );
 
-    fn run(
-        &mut self,
-        (entities, mut server, mut count, mut runtime_id, mut conns, mut display): Self::SystemData,
-    ) {
+    fn run(&mut self, (entities, mut server, mut count, updater): Self::SystemData) {
         for PlayerRegistry {
             packet_from_client,
             packet_to_client,
@@ -39,22 +34,13 @@ impl<'a> System<'a> for AcceptNewPlayer {
             info!("Player connected: {display_name}, xuid:{xuid}");
             let entity = entities.create();
             count.0 += 1;
-            conns
-                .insert(
-                    entity,
-                    ConnectionStreamComponent::new(
-                        packet_from_client,
-                        packet_to_client,
-                        &display_name,
-                    ),
-                )
-                .unwrap();
-            runtime_id
-                .insert(entity, EntityRuntimeIdComponent(count.0))
-                .unwrap();
-            display
-                .insert(entity, DisplayNameComponent(display_name))
-                .unwrap();
+            updater.insert(
+                entity,
+                ConnectionStreamComponent::new(packet_from_client, packet_to_client, &display_name),
+            );
+            updater.insert(entity, EntityRuntimeIdComponent(count.0));
+            updater.insert(entity, XUIDComponent(xuid));
+            updater.insert(entity, DisplayNameComponent(display_name));
         }
     }
 }

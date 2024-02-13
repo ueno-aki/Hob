@@ -7,6 +7,11 @@ impl Component for DisplayNameComponent {
     type Storage = specs::VecStorage<Self>;
 }
 
+pub struct XUIDComponent(pub String);
+impl Component for XUIDComponent {
+    type Storage = specs::VecStorage<Self>;
+}
+
 pub struct ConnectionStreamComponent {
     name: String,
     pub packet_from_client: Receiver<PacketKind>,

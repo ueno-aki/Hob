@@ -1,7 +1,6 @@
 use anyhow::Result;
 use hob_protocol::packet::{login::SkinData, PacketKind};
 use log::debug;
-use specs::{Component, VecStorage};
 use tokio::sync::mpsc::{
     error::{TryRecvError, TrySendError},
     Receiver, Sender,
@@ -15,10 +14,6 @@ pub struct Client {
     pub name: String,
     packet_from_client: Receiver<PacketKind>,
     packet_to_client: Sender<PacketKind>,
-}
-
-impl Component for Client {
-    type Storage = VecStorage<Self>;
 }
 
 impl Client {

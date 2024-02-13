@@ -3,13 +3,14 @@ pub mod systems;
 
 use specs::{world, WorldExt};
 
-use self::{
-    components::{ConnectionStreamComponent, DisplayNameComponent},
-    systems::PacketHandler,
-};
+use self::{components::{ConnectionStreamComponent, DisplayNameComponent, XUIDComponent}, systems::packet_handler::handle_packet};
 
-pub fn init_player(world: &mut world::World, dispatcher: &mut specs::DispatcherBuilder) {
+pub(crate) fn init_player(world: &mut world::World, dispatcher: &mut specs::DispatcherBuilder) {
     world.register::<DisplayNameComponent>();
+    world.register::<XUIDComponent>();
     world.register::<ConnectionStreamComponent>();
-    dispatcher.add(PacketHandler, "packet_handler", &[]);
+}
+
+pub(crate) fn handle_player(world: &mut world::World) {
+    handle_packet(world);
 }

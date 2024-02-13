@@ -7,9 +7,9 @@ use std::{
 };
 
 use anyhow::{Ok, Result};
-use hob_ecs::{WorldExt,init_game};
-use log::info;
+use hob_ecs::{handle_game, init_game, WorldExt};
 use hob_server::{logging, Server};
+use log::info;
 use tokio::{runtime::Builder, time::Instant};
 
 fn main() -> Result<()> {
@@ -38,6 +38,7 @@ fn main() -> Result<()> {
         loop {
             let start = Instant::now();
             dispatcher.dispatch(&world);
+            handle_game(&mut world);
             world.maintain();
             let elapsed = start.elapsed();
             if elapsed <= TICK_DURATION {
