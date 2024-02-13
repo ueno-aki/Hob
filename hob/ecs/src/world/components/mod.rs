@@ -1,6 +1,6 @@
 use specs::Component;
 
-pub struct EntityRuntimeIdComponent(pub u64);
-impl Component for EntityRuntimeIdComponent {
+pub struct RuntimeIdComponent(pub u64);
+impl Component for RuntimeIdComponent {
     type Storage = specs::VecStorage<Self>;
 }

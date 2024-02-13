@@ -4,8 +4,8 @@ use log::info;
 use specs::prelude::*;
 
 use crate::{
-    player::components::{ConnectionStreamComponent, DisplayNameComponent, XUIDComponent},
-    world::components::EntityRuntimeIdComponent,
+    player::components::{ connection::{ConnectionAddressComponent, ConnectionStreamComponent}, DisplayNameComponent, XUIDComponent},
+    world::components::RuntimeIdComponent,
 };
 
 use super::resources::EntityCountResource;
@@ -22,6 +22,7 @@ impl<'a> System<'a> for AcceptNewPlayer {
 
     fn run(&mut self, (entities, mut server, mut count, updater): Self::SystemData) {
         for PlayerRegistry {
+            address,
             packet_from_client,
             packet_to_client,
             user,
@@ -38,7 +39,8 @@ impl<'a> System<'a> for AcceptNewPlayer {
                 entity,
                 ConnectionStreamComponent::new(packet_from_client, packet_to_client, &display_name),
             );
-            updater.insert(entity, EntityRuntimeIdComponent(count.0));
+            updater.insert(entity, ConnectionAddressComponent(address));
+            updater.insert(entity, RuntimeIdComponent(count.0));
             updater.insert(entity, XUIDComponent(xuid));
             updater.insert(entity, DisplayNameComponent(display_name));
         }

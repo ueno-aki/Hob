@@ -8,8 +8,8 @@ use specs::prelude::*;
 use tokio::sync::mpsc::error::TryRecvError;
 
 use crate::{
-    player::components::{ConnectionStreamComponent, DisplayNameComponent},
-    world::components::EntityRuntimeIdComponent,
+    player::components::{connection::ConnectionStreamComponent, DisplayNameComponent},
+    world::components::RuntimeIdComponent,
 };
 
 pub(crate) fn handle_packet(world: &mut World) {
@@ -57,7 +57,7 @@ fn match_packets(
                 conn.send_packet(res_stack);
             }
             ResponseStatus::Completed => {
-                let runtime_id = world.read_component::<EntityRuntimeIdComponent>();
+                let runtime_id = world.read_component::<RuntimeIdComponent>();
                 let runtime_id = runtime_id.get(ent).unwrap();
                 log::debug!(
                     "Resource pack response completed for entity {}",

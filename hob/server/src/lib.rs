@@ -16,7 +16,6 @@ use player_registry::PlayerRegistry;
 
 #[derive(Debug)]
 pub struct Server {
-    pub runtime: Arc<Runtime>,
     pub player_registry: Receiver<PlayerRegistry>,
 }
 impl Server {
@@ -24,7 +23,6 @@ impl Server {
         let (player_registry_tx, player_registry_rx) = mpsc::channel(32);
         Listener::start(Arc::clone(&runtime), player_registry_tx).await?;
         Ok(Server {
-            runtime,
             player_registry: player_registry_rx,
         })
     }

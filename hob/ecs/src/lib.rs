@@ -7,20 +7,24 @@ use player::{handle_player, init_player};
 use specs::prelude::*;
 use world::{handle_world, init_world};
 
-// You can add a list of dependency to dispatcher
-// Dispatcher is excuted in main loop of the game.
-pub fn init_game(server: Server) -> (World, Dispatcher<'static, 'static>) {
-    let mut world = World::new();
-    world.insert(server);
-    let mut dispatcher = DispatcherBuilder::new();
-    init_player(&mut world, &mut dispatcher);
-    init_world(&mut world, &mut dispatcher);
-    (world, dispatcher.build())
+pub struct Game {
+    world: World,
+    dispatcher: Dispatcher<'static, 'static>,
 }
+impl Game {
+    pub fn new(server: Server) -> Self {
+        let mut world = World::new();
+        world.insert(server);
 
-// System fn; easy access to world.
-// This is the main loop.
-pub fn handle_game(world: &mut World) {
-    handle_player(world);
-    handle_world(world);
+        let mut dispatcher = DispatcherBuilder::new();
+        init_player(&mut world, &mut dispatcher);
+        init_world(&mut world, &mut dispatcher);
+        Game { world, dispatcher: dispatcher.build() }
+    }
+    pub fn handle(&mut self) {
+        self.dispatcher.dispatch(&self.world);
+        handle_player(&mut self.world);
+        handle_world(&mut self.world);
+        self.world.maintain();
+    }
 }

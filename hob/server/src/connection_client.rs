@@ -1,4 +1,4 @@
-use std::sync::Arc;
+use std::{net::SocketAddr, sync::Arc};
 
 use anyhow::Result;
 use hob_protocol::{decode::Decoder, encode::Encoder, packet::PacketKind};
@@ -19,6 +19,7 @@ use crate::{
 pub struct ConnectionClient {
     pub reader: Reader,
     pub writer: Writer,
+    pub address: SocketAddr,
     pub packet_from_client: Receiver<PacketKind>,
     pub packet_to_client: Sender<PacketKind>,
     pub player_registry: Sender<PlayerRegistry>,
@@ -34,11 +35,12 @@ impl ConnectionClient {
         let (packet_to_client_tx, packet_to_client_rx) = mpsc::channel(32);
         let (packet_from_client_tx, packet_from_client_rx) = mpsc::channel(32);
         let reader = Reader::new(socket.clone(), packet_from_client_tx);
-        let writer = Writer::new(socket, packet_to_client_rx);
+        let writer = Writer::new(socket.clone(), packet_to_client_rx);
 
         Self {
             reader,
             writer,
+            address:socket.peer_addr().unwrap(),
             packet_from_client: packet_from_client_rx,
             packet_to_client: packet_to_client_tx,
             player_registry,
@@ -61,6 +63,7 @@ impl ConnectionClient {
         let Self {
             reader,
             writer,
+            address,
             packet_from_client,
             packet_to_client,
             player_registry,
@@ -72,6 +75,7 @@ impl ConnectionClient {
                 let player = PlayerRegistry {
                     skin,
                     user: userdata,
+                    address,
                     packet_from_client,
                     packet_to_client,
                 };

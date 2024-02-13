@@ -7,7 +7,7 @@ use std::{
 };
 
 use anyhow::{Ok, Result};
-use hob_ecs::{handle_game, init_game, WorldExt};
+use hob_ecs::Game;
 use hob_server::{logging, Server};
 use log::info;
 use tokio::{runtime::Builder, time::Instant};
@@ -32,14 +32,11 @@ fn main() -> Result<()> {
         pub const TICK_DURATION: Duration = Duration::from_millis(TICK_MILLIS as u64);
 
         let server = Server::create(Arc::clone(&runtime)).await.unwrap();
+        let mut game = Game::new(server);
         info!("Server Created");
-        let (mut world, mut dispatcher) = init_game(server);
-        dispatcher.setup(&mut world);
         loop {
             let start = Instant::now();
-            dispatcher.dispatch(&world);
-            handle_game(&mut world);
-            world.maintain();
+            game.handle();
             let elapsed = start.elapsed();
             if elapsed <= TICK_DURATION {
                 tokio::time::sleep(TICK_DURATION - elapsed).await;
