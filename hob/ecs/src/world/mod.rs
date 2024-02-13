@@ -12,5 +12,4 @@ pub fn init_world(world: &mut specs::World, dispatcher: &mut specs::DispatcherBu
     dispatcher.add(systems::AcceptNewPlayer, "accept_new_player", &[]);
 }
 
-pub(crate) fn handle_world(world: &mut world::World) {
-}
+pub(crate) fn handle_world(world: &mut world::World) {}

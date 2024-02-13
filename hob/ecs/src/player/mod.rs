@@ -3,7 +3,10 @@ pub mod systems;
 
 use specs::{world, WorldExt};
 
-use self::{components::{ConnectionStreamComponent, DisplayNameComponent, XUIDComponent}, systems::packet_handler::handle_packet};
+use self::{
+    components::{ConnectionStreamComponent, DisplayNameComponent, XUIDComponent},
+    systems::packet_handler::handle_packet,
+};
 
 pub(crate) fn init_player(world: &mut world::World, dispatcher: &mut specs::DispatcherBuilder) {
     world.register::<DisplayNameComponent>();

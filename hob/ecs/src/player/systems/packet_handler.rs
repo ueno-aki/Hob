@@ -7,9 +7,12 @@ use log::info;
 use specs::prelude::*;
 use tokio::sync::mpsc::error::TryRecvError;
 
-use crate::{player::components::{ConnectionStreamComponent, DisplayNameComponent}, world::components::EntityRuntimeIdComponent};
+use crate::{
+    player::components::{ConnectionStreamComponent, DisplayNameComponent},
+    world::components::EntityRuntimeIdComponent,
+};
 
-pub(crate) fn handle_packet(world:&mut World) {
+pub(crate) fn handle_packet(world: &mut World) {
     let mut conns = world.write_storage::<ConnectionStreamComponent>();
     let display = world.read_storage::<DisplayNameComponent>();
     let entities = world.entities();
@@ -32,7 +35,12 @@ pub(crate) fn handle_packet(world:&mut World) {
         });
 }
 
-fn match_packets(conn: &mut ConnectionStreamComponent, packet: PacketKind, world: &World, ent: Entity) {
+fn match_packets(
+    conn: &mut ConnectionStreamComponent,
+    packet: PacketKind,
+    world: &World,
+    ent: Entity,
+) {
     match packet {
         PacketKind::ClientToServerHandshake(_) => {
             conn.send_packet(PlayStatusPacket::LoginSuccess);
@@ -51,7 +59,10 @@ fn match_packets(conn: &mut ConnectionStreamComponent, packet: PacketKind, world
             ResponseStatus::Completed => {
                 let runtime_id = world.read_component::<EntityRuntimeIdComponent>();
                 let runtime_id = runtime_id.get(ent).unwrap();
-                log::debug!("Resource pack response completed for entity {}", runtime_id.0);
+                log::debug!(
+                    "Resource pack response completed for entity {}",
+                    runtime_id.0
+                );
             }
         },
         _ => {}
