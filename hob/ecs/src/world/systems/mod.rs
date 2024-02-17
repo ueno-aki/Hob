@@ -4,7 +4,10 @@ use log::info;
 use specs::prelude::*;
 
 use crate::{
-    player::components::{ connection::{ConnectionAddressComponent, ConnectionStreamComponent}, DisplayNameComponent, XUIDComponent},
+    player::components::{
+        connection::{ConnectionAddressComponent, ConnectionStreamComponent},
+        DisplayNameComponent, XUIDComponent,
+    },
     world::components::RuntimeIdComponent,
 };
 
@@ -33,16 +36,17 @@ impl<'a> System<'a> for AcceptNewPlayer {
                 display_name, xuid, ..
             } = user;
             info!("Player connected: {display_name}, xuid:{xuid}");
-            let entity = entities.create();
             count.0 += 1;
-            updater.insert(
-                entity,
-                ConnectionStreamComponent::new(packet_from_client, packet_to_client, &display_name),
-            );
-            updater.insert(entity, ConnectionAddressComponent(address));
-            updater.insert(entity, RuntimeIdComponent(count.0));
-            updater.insert(entity, XUIDComponent(xuid));
-            updater.insert(entity, DisplayNameComponent(display_name));
+            updater.create_entity(&entities).with(ConnectionStreamComponent::new(
+                packet_from_client,
+                packet_to_client,
+                &display_name,
+            ))
+            .with(ConnectionAddressComponent(address))
+            .with(RuntimeIdComponent(count.0))
+            .with(XUIDComponent(xuid))
+            .with(DisplayNameComponent(display_name))
+            .build();
         }
     }
 }

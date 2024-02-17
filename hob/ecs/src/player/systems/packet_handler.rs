@@ -12,7 +12,7 @@ use crate::{
     world::components::RuntimeIdComponent,
 };
 
-pub(crate) fn handle_packet(world: &mut World) {
+pub(crate) fn handle_packet(world: &World) {
     let mut conns = world.write_storage::<ConnectionStreamComponent>();
     let display = world.read_storage::<DisplayNameComponent>();
     let entities = world.entities();

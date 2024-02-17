@@ -40,7 +40,7 @@ impl ConnectionClient {
         Self {
             reader,
             writer,
-            address:socket.peer_addr().unwrap(),
+            address: socket.peer_addr().unwrap(),
             packet_from_client: packet_from_client_rx,
             packet_to_client: packet_to_client_tx,
             player_registry,
@@ -52,7 +52,7 @@ impl ConnectionClient {
         runtime_ref.spawn(async move {
             let result = login_process(&mut self).await;
             if result.is_err() {
-                debug!("login failed: {:?}", result);
+                debug!("login failed: {}, {:?}", self.address, result);
                 return;
             }
             self.proceed(result.unwrap()).await;
@@ -83,7 +83,7 @@ impl ConnectionClient {
                 Self::split(reader, writer, runtime);
             }
             LoginResult::Failed(e) => {
-                debug!("login failed: {:?}", e);
+                debug!("login failed: {}, {:?}", self.address, e);
             }
         }
     }

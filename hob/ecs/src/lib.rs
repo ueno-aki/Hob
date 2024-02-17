@@ -19,12 +19,15 @@ impl Game {
         let mut dispatcher = DispatcherBuilder::new();
         init_player(&mut world, &mut dispatcher);
         init_world(&mut world, &mut dispatcher);
-        Game { world, dispatcher: dispatcher.build() }
+        Game {
+            world,
+            dispatcher: dispatcher.build(),
+        }
     }
     pub fn handle(&mut self) {
         self.dispatcher.dispatch(&self.world);
-        handle_player(&mut self.world);
-        handle_world(&mut self.world);
+        handle_player(&self.world);
+        handle_world(&self.world);
         self.world.maintain();
     }
 }

@@ -6,9 +6,9 @@ pub trait ConditionalBufMut {
     fn put_varint(&mut self, n: u64) -> usize;
     fn put_zigzag32(&mut self, n: i32) -> usize;
     fn put_zigzag64(&mut self, n: i64) -> usize;
-    fn put_string_varint(&mut self, str: &str) -> usize;
-    fn put_string_lu16(&mut self, str: &str) -> usize;
-    fn put_string_lu32(&mut self, str: &str) -> usize;
+    fn put_string_varint(&mut self, str: impl AsRef<str>) -> usize;
+    fn put_string_lu16(&mut self, str: impl AsRef<str>) -> usize;
+    fn put_string_lu32(&mut self, str: impl AsRef<str>) -> usize;
     fn put_bool(&mut self, v: bool);
 }
 
@@ -32,22 +32,22 @@ impl<T: BufMut + ?Sized> ConditionalBufMut for T {
         let v = (n >> 63) ^ (n << 1);
         self.put_varint(v as u64)
     }
-    fn put_string_varint(&mut self, str: &str) -> usize {
-        let mut size = str.as_bytes().len();
+    fn put_string_varint(&mut self, str: impl AsRef<str>) -> usize {
+        let mut size = str.as_ref().as_bytes().len();
         size += self.put_varint(size as u64);
-        self.put_slice(str.as_bytes());
+        self.put_slice(str.as_ref().as_bytes());
         size
     }
-    fn put_string_lu16(&mut self, str: &str) -> usize {
-        let len = str.as_bytes().len();
+    fn put_string_lu16(&mut self, str: impl AsRef<str>) -> usize {
+        let len = str.as_ref().as_bytes().len();
         self.put_u16_le(len as u16);
-        self.put_slice(str.as_bytes());
+        self.put_slice(str.as_ref().as_bytes());
         len + 2
     }
-    fn put_string_lu32(&mut self, str: &str) -> usize {
-        let len = str.as_bytes().len();
+    fn put_string_lu32(&mut self, str: impl AsRef<str>) -> usize {
+        let len = str.as_ref().as_bytes().len();
         self.put_u32_le(len as u32);
-        self.put_slice(str.as_bytes());
+        self.put_slice(str.as_ref().as_bytes());
         len + 4
     }
     fn put_bool(&mut self, v: bool) {
