@@ -102,7 +102,7 @@ pub struct SkinData {
     pub cape_image_height: u64,
     pub cape_image_width: u64,
     pub cape_on_classic_skin: bool,
-    pub client_random_id: u64,
+    pub client_random_id: i64,
     pub compatible_with_client_side_chunk_gen: bool,
     pub current_input_mode: u8,
     pub default_input_mode: u8,
