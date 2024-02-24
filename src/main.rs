@@ -5,9 +5,8 @@ use std::{
     },
     time::Duration,
 };
-
 use anyhow::{Ok, Result};
-use hob_ecs::Game;
+use hob_ecs::{events::player_join::PlayerJoinEvent, plugin::PluginSys, Game};
 use hob_server::{logging, Server};
 use log::info;
 use tokio::{runtime::Builder, time::Instant};
@@ -33,6 +32,7 @@ fn main() -> Result<()> {
 
         let server = Server::create(Arc::clone(&runtime)).await.unwrap();
         let mut game = Game::new(server);
+        game.add_plugin(HelloWorld);
         info!("Server Created");
         loop {
             let start = Instant::now();
@@ -46,4 +46,13 @@ fn main() -> Result<()> {
         }
     });
     Ok(())
+}
+
+pub struct HelloWorld;
+impl<'a> PluginSys<'a,PlayerJoinEvent> for HelloWorld {
+    type SystemData = ();
+    fn run(&mut self, event: &'a PlayerJoinEvent, _data: Self::SystemData) -> bool {
+        info!("Hello, {}!", event.user.display_name);
+        false
+    }
 }

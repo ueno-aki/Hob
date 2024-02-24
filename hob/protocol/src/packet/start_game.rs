@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 use anyhow::anyhow;
 use hob_nbt::VarInt;
 use proto_bytes::{BufMut, ConditionalBufMut};
@@ -8,7 +10,7 @@ use super::Packet;
 #[derive(Debug)]
 pub struct StartGamePacket {
     entity_id: i64,
-    runtime_entity_id: u64,
+    runtime_id: u64,
     gamemode: GameMode,
     player_position: (f32, f32, f32),
     rotation: (f32, f32),
@@ -83,6 +85,87 @@ pub struct StartGamePacket {
     block_network_ids_are_hashes: bool,
     server_controlled_sound: bool,
 }
+impl StartGamePacket {
+    pub fn new(runtime_id: u64, game_mode: GameMode) -> Self {
+        Self {
+            entity_id: runtime_id as i64,
+            runtime_id,
+            gamemode: game_mode,
+            player_position: (0.0, 0.0, 0.0),
+            rotation: (0.0, 0.0),
+            seed: 0,
+            biome_type: 0,
+            biome_name: "".to_string(),
+            dimension: Dimension::OverWorld,
+            generator: 0,
+            world_gamemode: game_mode,
+            difficulty: 0,
+            spawn_position: (0, 0, 0),
+            achievements_disabled: false,
+            editor_world_type: EditorWorldType::NotEditor,
+            created_in_editor: false,
+            exported_from_editor: false,
+            day_cycle_stop_time: 0,
+            education_offer: 0,
+            education_features_enabled: false,
+            education_product_uuid: "".to_string(),
+            rain_level: 0.0,
+            lightning_level: 0.0,
+            has_confirmed_platform_locked_content: false,
+            is_multiplayer: false,
+            broadcast_to_lan: false,
+            xbox_live_broadcast_mode: 0,
+            platform_broadcast_mode: 0,
+            enable_commands: false,
+            is_texturepacks_required: false,
+            gamerules: Vec::new(),
+            experiments: Vec::new(),
+            experiments_previously_used: false,
+            bonus_chest: false,
+            map_enabled: false,
+            permission_level: PermissionLevel::Member,
+            server_chunk_tick_range: 0,
+            has_locked_behavior_pack: false,
+            has_locked_resource_pack: false,
+            is_from_locked_world_template: false,
+            msa_gamertags_only: false,
+            is_from_world_template: false,
+            is_world_template_settings_locked: false,
+            only_spawn_v1_villagers: false,
+            persona_disabled: false,
+            custom_skins_disabled: false,
+            emote_chat_muted: false,
+            game_version: "*".to_string(),
+            limited_world_width: 0,
+            limited_world_length: 0,
+            is_new_nether: false,
+            edu_resource_uri: EducationSharedResourceURI::default(),
+            experimental_gameplay_override: false,
+            chat_restriction_level: ChatRestrictionLevel::None,
+            disable_player_interactions: false,
+            level_id: "".to_string(),
+            world_name: "".to_string(),
+            premium_world_template_id: "".to_string(),
+            is_trial: false,
+            movement_authority: MovementAuthority::Client,
+            rewind_history_size: 0,
+            server_authoritative_block_breaking: false,
+            current_tick: 0,
+            enchantment_seed: 0,
+            block_properties: Vec::new(),
+            itemstates: Vec::new(),
+            multiplayer_correlation_id: "".to_string(),
+            server_authoritative_inventory: false,
+            engine: "".to_string(),
+            property_data: hob_nbt::value::Value::Compound(HashMap::new()),
+            block_pallette_checksum: 0,
+            world_template_id: Uuid::nil(),
+            client_side_generation: false,
+            block_network_ids_are_hashes: false,
+            server_controlled_sound: false,
+        }
+    }
+}
 
 impl Packet for StartGamePacket {
     fn decode(_bytes: &mut proto_bytes::BytesMut) -> anyhow::Result<Self>
@@ -96,7 +179,7 @@ impl Packet for StartGamePacket {
 
     fn encode(&self, bytes: &mut proto_bytes::BytesMut) -> anyhow::Result<()> {
         bytes.put_zigzag64(self.entity_id);
-        bytes.put_varint(self.runtime_entity_id);
+        bytes.put_varint(self.runtime_id);
         bytes.put_zigzag32(self.gamemode as i32);
         {
             let (x, y, z) = self.player_position;
@@ -298,7 +381,7 @@ pub enum PermissionLevel {
     Custom,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Default)]
 pub struct EducationSharedResourceURI {
     button_name: String,
     link_uri: String,
