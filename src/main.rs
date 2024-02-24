@@ -1,3 +1,7 @@
+use anyhow::{Ok, Result};
+use hob_ecs::{events::player_join::PlayerJoinEvent, plugin::PluginSys, Game};
+use hob_server::{logging, Server};
+use log::info;
 use std::{
     sync::{
         atomic::{AtomicUsize, Ordering},
@@ -5,10 +9,6 @@ use std::{
     },
     time::Duration,
 };
-use anyhow::{Ok, Result};
-use hob_ecs::{events::player_join::PlayerJoinEvent, plugin::PluginSys, Game};
-use hob_server::{logging, Server};
-use log::info;
 use tokio::{runtime::Builder, time::Instant};
 
 fn main() -> Result<()> {
@@ -49,10 +49,10 @@ fn main() -> Result<()> {
 }
 
 pub struct HelloWorld;
-impl<'a> PluginSys<'a,PlayerJoinEvent> for HelloWorld {
+impl<'a> PluginSys<'a, PlayerJoinEvent> for HelloWorld {
     type SystemData = ();
     fn run(&mut self, event: &'a PlayerJoinEvent, _data: Self::SystemData) -> bool {
-        info!("Hello, {}!", event.user.display_name);
+        info!("Hello, {}! Welcome to the server!", event.user.display_name);
         false
     }
 }

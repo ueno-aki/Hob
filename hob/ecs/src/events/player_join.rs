@@ -13,12 +13,11 @@ use crate::{
 };
 
 pub struct PlayerJoinEvent {
-    pub entity: Entity,
     pub user: ExtraUserdata,
 }
 impl PlayerJoinEvent {
-    pub fn new(entity: Entity, user: ExtraUserdata) -> Self {
-        PlayerJoinEvent { entity, user }
+    pub fn new(user: ExtraUserdata) -> Self {
+        PlayerJoinEvent { user }
     }
 }
 
@@ -37,7 +36,7 @@ pub(super) fn accept_new_player(world: &World) {
     } in server.accept_players(32)
     {
         let entity = updater.create_entity(&entities).build();
-        let ev = PlayerJoinEvent::new(entity, user);
+        let ev = PlayerJoinEvent::new(user);
         if join_ev.run(&ev, world) {
             entities.delete(entity).unwrap();
             continue;
