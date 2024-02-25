@@ -28,7 +28,7 @@ where
         let cancel = AtomicBool::new(false);
         self.plugins.par_iter_mut().for_each(|plugin| {
             if plugin.run_now(event, world) {
-                cancel.fetch_and(true, Ordering::Relaxed);
+                cancel.fetch_or(true, Ordering::Relaxed);
             }
         });
         cancel.load(Ordering::Relaxed)

@@ -10,7 +10,7 @@ impl Component for ConnectionAddressComponent {
 }
 
 pub struct ConnectionStreamComponent {
-    name: String,
+    pub name: String,
     pub packet_from_client: Receiver<PacketKind>,
     pub packet_to_client: Sender<PacketKind>,
 }

@@ -1,46 +1,66 @@
-use hob_protocol::packet::{
-    play_status::PlayStatusPacket, resource_pack_info::ResourcePacksInfoPacket,
-    resource_pack_response::ResponseStatus, resource_pack_stack::ResourcePacksStackPacket,
-    PacketKind,
-};
+use hob_protocol::packet::PacketKind;
 use log::info;
 use specs::prelude::*;
 use tokio::sync::mpsc::error::TryRecvError;
 
 use crate::{
-    player::components::{connection::ConnectionStreamComponent, DisplayNameComponent},
+    player::components::connection::ConnectionStreamComponent,
+    plugin::Plugin,
     world::components::RuntimeIdComponent,
 };
 
-pub(crate) fn handle_packet(world: &World) {
-    let mut conns = world.write_storage::<ConnectionStreamComponent>();
-    let display = world.read_storage::<DisplayNameComponent>();
-    let entities = world.entities();
-    (&mut conns, &display, &entities)
-        .par_join()
-        .for_each(|(conn, display, ent)| {
-            let packets = conn.try_recv_many_packets(32);
-            match packets {
-                Ok(packets) => {
-                    for packet in packets {
-                        match_packets(conn, packet, world, ent);
-                    }
-                }
-                Err(TryRecvError::Empty) => {}
-                Err(TryRecvError::Disconnected) => {
-                    info!("Client disconnected: {}", display.0);
-                    entities.delete(ent).unwrap();
-                }
-            }
-        });
+pub struct PacketRecvEvent {
+    pub entity: Entity,
+    pub packet: PacketKind,
+}
+impl PacketRecvEvent {
+    pub fn new(entity: Entity, packet: PacketKind) -> Self {
+        PacketRecvEvent { entity, packet }
+    }
 }
 
-fn match_packets(
-    conn: &mut ConnectionStreamComponent,
+pub(super) fn recv_packet(world: &World) {
+    let mut conns = world.write_storage::<ConnectionStreamComponent>();
+    let mut packet_ev = world.write_resource::<Plugin<PacketRecvEvent>>();
+    let entities = world.entities();
+    let mut evs:Vec<PacketRecvEvent> = Vec::new();
+    (&mut conns, &entities)
+        .join()
+        .for_each(|(conn, ent)| {
+            let packets = conn.try_recv_many_packets(32);
+            if let Err(e) = packets {
+                if e == TryRecvError::Disconnected {
+                    info!("Client disconnected: {}", conn.name);
+                    entities.delete(ent).unwrap();
+                }
+                return;
+            }
+            for packet in packets.unwrap() {
+                let ev = PacketRecvEvent::new(ent, packet);
+                evs.push(ev);
+            }
+        });
+    drop(conns);
+
+    for ev in evs {
+        if packet_ev.run(&ev, world) {
+            continue;
+        }
+        handle_packets(ev.packet, world, ev.entity)
+    }
+}
+
+fn handle_packets(
     packet: PacketKind,
     world: &World,
     ent: Entity,
 ) {
+    use hob_protocol::packet::{
+        play_status::PlayStatusPacket, resource_pack_info::ResourcePacksInfoPacket,
+        resource_pack_response::ResponseStatus, resource_pack_stack::ResourcePacksStackPacket,
+    };
+    let mut conns = world.write_storage::<ConnectionStreamComponent>();
+    let conn = conns.get_mut(ent).unwrap();
     match packet {
         PacketKind::ClientToServerHandshake(_) => {
             conn.send_packet(PlayStatusPacket::LoginSuccess);

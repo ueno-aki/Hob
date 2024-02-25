@@ -1,5 +1,8 @@
 use anyhow::{Ok, Result};
-use hob_ecs::{events::player_join::PlayerJoinEvent, plugin::PluginSys, Game};
+use hob_ecs::{
+    events::{packet_recv::PacketRecvEvent, player_join::PlayerJoinEvent}, player::components::connection::ConnectionStreamComponent, plugin::PluginSys, Game, WriteStorage
+};
+use hob_protocol::packet::{disconnect::DisconnectPacket, PacketKind};
 use hob_server::{logging, Server};
 use log::info;
 use std::{
@@ -33,6 +36,7 @@ fn main() -> Result<()> {
         let server = Server::create(Arc::clone(&runtime)).await.unwrap();
         let mut game = Game::new(server);
         game.add_plugin(HelloWorld);
+        game.add_plugin(LoginState);
         info!("Server Created");
         loop {
             let start = Instant::now();
@@ -53,6 +57,20 @@ impl<'a> PluginSys<'a, PlayerJoinEvent> for HelloWorld {
     type SystemData = ();
     fn run(&mut self, event: &'a PlayerJoinEvent, _data: Self::SystemData) -> bool {
         info!("Hello, {}! Welcome to the server!", event.user.display_name);
+        false
+    }
+}
+
+pub struct LoginState;
+impl<'a> PluginSys<'a, PacketRecvEvent> for LoginState {
+    type SystemData = WriteStorage<'a,ConnectionStreamComponent>;
+    fn run(&mut self, event: &'a PacketRecvEvent, mut conns: Self::SystemData) -> bool {
+        if let PacketKind::ClientToServerHandshake(..) = event.packet {
+            let conn = conns.get_mut(event.entity).unwrap();
+            conn.send_packet(DisconnectPacket::from("bye"));
+            info!("Client logged in");
+            return true
+        }
         false
     }
 }

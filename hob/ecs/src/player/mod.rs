@@ -1,14 +1,10 @@
 pub mod components;
-pub mod systems;
 
 use specs::{world, WorldExt};
 
-use self::{
-    components::{
-        connection::{ConnectionAddressComponent, ConnectionStreamComponent},
-        DisplayNameComponent, XUIDComponent,
-    },
-    systems::packet_handler::handle_packet,
+use self::components::{
+    connection::{ConnectionAddressComponent, ConnectionStreamComponent},
+    DisplayNameComponent, XUIDComponent,
 };
 
 pub(crate) fn init_player(world: &mut world::World, dispatcher: &mut specs::DispatcherBuilder) {
@@ -18,6 +14,4 @@ pub(crate) fn init_player(world: &mut world::World, dispatcher: &mut specs::Disp
     world.register::<ConnectionAddressComponent>();
 }
 
-pub(crate) fn handle_player(world: &world::World) {
-    handle_packet(world);
-}
+pub(crate) fn handle_player(world: &world::World) {}
